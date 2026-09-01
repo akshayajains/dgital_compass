@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">हिंदी कंपास</string>
+    <string name="title_activity_main">हिंदी कंपास</string>
+    <string name="package_name">com.hindicompass.app</string>
+    <string name="custom_url_scheme">com.hindicompass.app</string>
+</resources>

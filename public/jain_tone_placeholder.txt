@@ -1,0 +1,3 @@
+This is a placeholder file. Replace with a small OGG or MP3 replacement named "jain_tone_placeholder.(ogg|mp3)".
+Recommended: mono, 64-128kbps, < 200KB for notification use.
+Source: Freesound CC0 candidate: https://freesound.org/people/Khrinx/sounds/333696/
