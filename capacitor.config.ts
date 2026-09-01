@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.hindicompass.app',
+  appId: 'com.hcompass.app',
   appName: 'हिंदी कंपास',
   webDir: 'dist',
   server: {
