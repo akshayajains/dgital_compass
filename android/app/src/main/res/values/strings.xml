@@ -3,5 +3,5 @@
     <string name="app_name">हिंदी कंपास</string>
     <string name="title_activity_main">हिंदी कंपास</string>
     <string name="package_name">com.hcompass.app</string>
-    <string name="custom_url_scheme">com.hcompass.app</string>
+    <string name="custom_url_scheme">hindicompass</string>
 </resources>

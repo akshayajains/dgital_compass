@@ -484,7 +484,7 @@ export const CompassView = () => {
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="flex items-center gap-2">
                     {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-500" /> : <VolumeX className="w-4 h-4 text-stone-400" />}
-                    ध्वनि प्रभाव
+                    ध्वनी प्रभाव
                   </span>
                   <button
                     onClick={() => {
