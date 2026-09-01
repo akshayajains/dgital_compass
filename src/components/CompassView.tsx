@@ -17,7 +17,9 @@ import {
   Sparkles,
   AlertTriangle,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  Flashlight,
+  FlashlightOff
 } from 'lucide-react';
 import { useSunTimes } from '@/hooks/useSunTimes';
 import SunCalc from 'suncalc';
@@ -60,6 +62,67 @@ export const CompassView = () => {
   const [hapticEnabled, setHapticEnabled] = useState<boolean>(() => {
     try { return localStorage.getItem('hindi_compass_haptic') !== 'false'; } catch { return true; }
   });
+
+  // Flashlight / Torch State
+  const [isFlashlightOn, setIsFlashlightOn] = useState<boolean>(false);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+
+  // Toggle Hardware Flashlight (with screen fallback)
+  const toggleFlashlight = async () => {
+    triggerHapticFeedback(ImpactStyle.Medium);
+    try {
+      if (isFlashlightOn) {
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach(track => {
+            try {
+              (track as any).applyConstraints?.({ advanced: [{ torch: false }] });
+            } catch {}
+            track.stop();
+          });
+          mediaStreamRef.current = null;
+        }
+        setIsFlashlightOn(false);
+      } else {
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: 'environment' }
+            });
+            const track = stream.getVideoTracks()[0];
+            const capabilities = track.getCapabilities ? (track.getCapabilities() as any) : null;
+            if (capabilities && capabilities.torch) {
+              await (track as any).applyConstraints({
+                advanced: [{ torch: true }]
+              });
+              mediaStreamRef.current = stream;
+              setIsFlashlightOn(true);
+            } else {
+              // Screen torch fallback if hardware camera track torch unavailable
+              mediaStreamRef.current = stream;
+              setIsFlashlightOn(true);
+            }
+          } catch (camErr) {
+            console.warn("Camera torch access restricted, using screen torch:", camErr);
+            setIsFlashlightOn(true);
+          }
+        } else {
+          setIsFlashlightOn(true);
+        }
+      }
+    } catch (err) {
+      console.warn("Torch toggle error:", err);
+      setIsFlashlightOn(!isFlashlightOn);
+    }
+  };
+
+  // Turn off flashlight on component unmount
+  useEffect(() => {
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   // Simulator mode for web testing
   const [isSimulatedMode, setIsSimulatedMode] = useState<boolean>(false);
@@ -366,36 +429,56 @@ export const CompassView = () => {
           </div>
         </div>
 
-        {/* Top Right Action: Settings Trigger */}
-        <div className="relative">
+        {/* Top Right Action Buttons: Flashlight & Settings */}
+        <div className="flex items-center gap-2">
+          {/* 🔦 Flashlight Quick Toggle Button */}
           <button
-            onClick={() => {
-              triggerHapticFeedback();
-              setShowSettings(!showSettings);
-            }}
+            onClick={toggleFlashlight}
             className={cn(
-              "p-2.5 rounded-2xl border transition-all active:scale-95 shadow-md flex items-center justify-center",
-              showSettings 
-                ? "bg-amber-500/20 text-amber-500 border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+              "p-2.5 rounded-2xl border transition-all active:scale-95 shadow-md flex items-center justify-center relative",
+              isFlashlightOn
+                ? "bg-amber-400 text-stone-950 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.6)] animate-pulse"
                 : (theme === 'light' ? "bg-white text-stone-800 border-stone-200" : "bg-stone-900 text-stone-200 border-white/10")
             )}
-            title="सेटिंग्स"
+            title={isFlashlightOn ? "टॉर्च बंद करें" : "टॉर्च चालू करें"}
           >
-            <Settings className={cn("w-5 h-5 transition-transform duration-300", showSettings && "rotate-90 text-amber-500")} />
+            {isFlashlightOn ? (
+              <Flashlight className="w-5 h-5 text-stone-950 fill-stone-950" />
+            ) : (
+              <FlashlightOff className="w-5 h-5 text-stone-400" />
+            )}
           </button>
 
-          {/* Settings Popup Menu */}
-          {showSettings && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
-              <div className={cn(
-                "absolute right-0 mt-2 p-4 rounded-3xl border shadow-2xl backdrop-blur-xl flex flex-col gap-3 min-w-[16.5rem] z-50 animate-in fade-in zoom-in-95",
-                theme === 'light' ? "bg-white border-stone-200 text-stone-900 shadow-stone-400/30" : "bg-stone-950/95 border-white/15 text-white"
-              )}>
-                <div className="text-[11px] font-black uppercase tracking-wider text-amber-500 pb-2 border-b border-stone-200/40 dark:border-white/10 flex items-center justify-between">
-                  <span>सेटिंग्स एवं विकल्प</span>
-                  <span className="text-[9px] text-stone-500">विकल्प</span>
-                </div>
+          {/* Settings Trigger */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                triggerHapticFeedback();
+                setShowSettings(!showSettings);
+              }}
+              className={cn(
+                "p-2.5 rounded-2xl border transition-all active:scale-95 shadow-md flex items-center justify-center",
+                showSettings 
+                  ? "bg-amber-500/20 text-amber-500 border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                  : (theme === 'light' ? "bg-white text-stone-800 border-stone-200" : "bg-stone-900 text-stone-200 border-white/10")
+              )}
+              title="सेटिंग्स"
+            >
+              <Settings className={cn("w-5 h-5 transition-transform duration-300", showSettings && "rotate-90 text-amber-500")} />
+            </button>
+
+            {/* Settings Popup Menu */}
+            {showSettings && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
+                <div className={cn(
+                  "absolute right-0 mt-2 p-4 rounded-3xl border shadow-2xl backdrop-blur-xl flex flex-col gap-3 min-w-[16.5rem] z-50 animate-in fade-in zoom-in-95",
+                  theme === 'light' ? "bg-white border-stone-200 text-stone-900 shadow-stone-400/30" : "bg-stone-950/95 border-white/15 text-white"
+                )}>
+                  <div className="text-[11px] font-black uppercase tracking-wider text-amber-500 pb-2 border-b border-stone-200/40 dark:border-white/10 flex items-center justify-between">
+                    <span>सेटिंग्स एवं विकल्प</span>
+                    <span className="text-[9px] text-stone-500">विकल्प</span>
+                  </div>
 
                 {/* 1. Sound Effects */}
                 <div className="flex items-center justify-between text-xs font-bold">
@@ -468,8 +551,27 @@ export const CompassView = () => {
                   </button>
                 </div>
 
-                {/* 4. Sensor Diagnostics */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+                {/* 4. Flashlight / Torch */}
+                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-stone-200/40 dark:border-white/5">
+                  <span className="flex items-center gap-2">
+                    <Flashlight className={cn("w-4 h-4", isFlashlightOn ? "text-amber-500 fill-amber-500" : "text-stone-400")} />
+                    टॉर्च (फ्लैशलाइट)
+                  </span>
+                  <button
+                    onClick={toggleFlashlight}
+                    className={cn(
+                      "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                      isFlashlightOn 
+                        ? (theme === 'light' ? "bg-amber-100 text-amber-800 border border-amber-300" : "bg-amber-500/20 text-amber-300 border border-amber-500/40")
+                        : (theme === 'light' ? "bg-stone-100 text-stone-600 border border-stone-300" : "bg-stone-800 text-stone-400 border border-white/10")
+                    )}
+                  >
+                    {isFlashlightOn ? "चालू" : "बंद"}
+                  </button>
+                </div>
+
+                {/* 5. Sensor Diagnostics */}
+                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-stone-200/40 dark:border-white/5">
                   <span className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-emerald-400" />
                     सेंसर परीक्षण
@@ -512,6 +614,7 @@ export const CompassView = () => {
               </div>
             </>
           )}
+          </div>
         </div>
       </header>
 
