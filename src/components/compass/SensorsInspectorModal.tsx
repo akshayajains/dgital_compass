@@ -1,27 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Zap, X, CheckCircle, Activity, Gauge, Compass } from 'lucide-react';
+import React from 'react';
+import { Zap, X, CheckCircle, Activity, Gauge } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Language } from '@/types/compass';
+import { translations } from '@/lib/translations';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   theme: string;
+  language: Language;
   pitch: number;
   roll: number;
   heading: number | null;
 }
 
-export const SensorsInspectorModal: React.FC<Props> = ({ isOpen, onClose, theme, pitch, roll, heading }) => {
-  const [hasOrientation, setHasOrientation] = useState<boolean>(true);
-  const [hasMagnetometer, setHasMagnetometer] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'Magnetometer' in window) {
-      setHasMagnetometer(true);
-    }
-  }, []);
-
+export const SensorsInspectorModal: React.FC<Props> = ({
+  isOpen,
+  onClose,
+  theme,
+  language,
+  pitch,
+  roll,
+  heading
+}) => {
   if (!isOpen) return null;
+  const t = translations[language];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
@@ -43,10 +46,10 @@ export const SensorsInspectorModal: React.FC<Props> = ({ isOpen, onClose, theme,
         </div>
 
         <h3 className="text-lg font-black tracking-wide text-white mb-1">
-          डिवाइस सेंसर डायग्नोस्टिक्स
+          {t.sensorTitle}
         </h3>
         <p className="text-xs text-stone-400 mb-4">
-          सेंसर हार्डवेयर की लाइव स्थिति व शुद्धता
+          {t.sensorSubtitle}
         </p>
 
         {/* Sensors Grid */}
@@ -54,49 +57,49 @@ export const SensorsInspectorModal: React.FC<Props> = ({ isOpen, onClose, theme,
           {/* 1. Compass Heading Sensor */}
           <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold text-stone-400">कंपास दिशा</span>
+              <span className="text-[10px] uppercase font-bold text-stone-400">{t.compassHeading}</span>
               <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <span className="font-mono text-base font-black text-amber-400">
               {heading !== null ? `${Math.round(heading)}°` : '0°'}
             </span>
-            <span className="text-[9px] text-stone-500 font-medium">मैग्नेटोमीटर सक्रिय</span>
+            <span className="text-[9px] text-stone-500 font-medium">{t.magnetometerActive}</span>
           </div>
 
           {/* 2. Gyroscope / Pitch */}
           <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold text-stone-400">पिच झुकाव</span>
+              <span className="text-[10px] uppercase font-bold text-stone-400">{t.pitchTilt}</span>
               <Activity className="w-3.5 h-3.5 text-sky-400" />
             </div>
             <span className="font-mono text-base font-black text-sky-400">
               {Math.round(pitch)}°
             </span>
-            <span className="text-[9px] text-stone-500 font-medium">आगे-पीछे का झुकाव</span>
+            <span className="text-[9px] text-stone-500 font-medium">{t.pitchDesc}</span>
           </div>
 
           {/* 3. Gyroscope / Roll */}
           <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold text-stone-400">रोल झुकाव</span>
+              <span className="text-[10px] uppercase font-bold text-stone-400">{t.rollTilt}</span>
               <Activity className="w-3.5 h-3.5 text-emerald-400" />
             </div>
             <span className="font-mono text-base font-black text-emerald-400">
               {Math.round(roll)}°
             </span>
-            <span className="text-[9px] text-stone-500 font-medium">दाएं-बाएं का झुकाव</span>
+            <span className="text-[9px] text-stone-500 font-medium">{t.rollDesc}</span>
           </div>
 
           {/* 4. Sensor Accuracy */}
           <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold text-stone-400">सटीकता</span>
+              <span className="text-[10px] uppercase font-bold text-stone-400">{t.sensorAccuracy}</span>
               <Gauge className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <span className="font-mono text-base font-black text-emerald-400">
-              उच्चतम शुद्धता
+            <span className="font-mono text-xs font-black text-emerald-400">
+              {t.highestAccuracy}
             </span>
-            <span className="text-[9px] text-stone-500 font-medium">वेक्टर लो-पास फ़िल्टर</span>
+            <span className="text-[9px] text-stone-500 font-medium">{t.lowPassFilter}</span>
           </div>
         </div>
 
@@ -105,7 +108,7 @@ export const SensorsInspectorModal: React.FC<Props> = ({ isOpen, onClose, theme,
           onClick={onClose}
           className="w-full py-3 rounded-2xl bg-stone-800 text-stone-200 hover:bg-stone-700 font-black text-xs uppercase tracking-wider active:scale-98 transition-all border border-white/10"
         >
-          बंद करें
+          {t.close}
         </button>
       </div>
     </div>

@@ -1,0 +1,148 @@
+import { CompassStyleInfo, CompassStyleId } from '@/types/compass';
+
+export const COMPASS_STYLES: CompassStyleInfo[] = [
+  {
+    id: 'royal_gold',
+    nameHi: 'शाही स्वर्ण',
+    nameEn: 'Royal Gold',
+    tagHi: 'शाही पीतल एवं सोने का नक्काशीदार रूप',
+    tagEn: 'Antique royal brass & gold astrolabe',
+    category: 'luxury',
+    primaryColor: '#D4AF37',
+    accentColor: '#F59E0B',
+    previewBg: 'linear-gradient(135deg, #2D2013 0%, #150E07 100%)',
+    needleType: 'delta_bicolor'
+  },
+  {
+    id: 'cyberpunk',
+    nameHi: 'साइबरपंक नियॉन',
+    nameEn: 'Cyberpunk HUD',
+    tagHi: 'भविष्यवादी नियॉन व होलोग्राफिक इंटरफ़ेस',
+    tagEn: 'Futuristic glowing sci-fi holographic HUD',
+    category: 'modern',
+    primaryColor: '#00F0FF',
+    accentColor: '#FF0055',
+    previewBg: 'linear-gradient(135deg, #050b14 0%, #100520 100%)',
+    needleType: 'laser_hud'
+  },
+  {
+    id: 'vedic_mandala',
+    nameHi: 'वैदिक वास्तु मंडल',
+    nameEn: 'Vedic Mandala',
+    tagHi: 'श्री यंत्र, 8 दिशा देव व वास्तु चक्र',
+    tagEn: 'Sacred geometry & 8 Vastu directional deities',
+    category: 'mystic',
+    primaryColor: '#F59E0B',
+    accentColor: '#EF4444',
+    previewBg: 'linear-gradient(135deg, #2C1204 0%, #170701 100%)',
+    needleType: 'chakra_arrow'
+  },
+  {
+    id: 'minimal_onyx',
+    nameHi: 'मिनिमल डार्क',
+    nameEn: 'Minimal Onyx',
+    tagHi: 'अल्ट्रा-क्लीन आधुनिक मैट ब्लैक डिज़ाइन',
+    tagEn: 'Ultra-clean matte titanium & electric beacon',
+    category: 'modern',
+    primaryColor: '#FFFFFF',
+    accentColor: '#FF5722',
+    previewBg: 'linear-gradient(135deg, #18181B 0%, #09090B 100%)',
+    needleType: 'stealth_needle'
+  },
+  {
+    id: 'tactical_ops',
+    nameHi: 'टैक्टिकल कमांड',
+    nameEn: 'Tactical Spec-Ops',
+    tagHi: 'कार्बन फाइबर, 6400 MILS व सैन्य क्रॉसहेयर',
+    tagEn: 'Carbon weave, military 6400 MILS & reticle',
+    category: 'tactical',
+    primaryColor: '#22C55E',
+    accentColor: '#F97316',
+    previewBg: 'linear-gradient(135deg, #0F1710 0%, #0A0E0B 100%)',
+    needleType: 'tactical_crosshair'
+  },
+  {
+    id: 'nautical',
+    nameHi: 'विंटेज समुद्री',
+    nameEn: 'Vintage Nautical',
+    tagHi: 'पारंपरिक नाविक कंपास एवं 16-बिंदु रोज़',
+    tagEn: 'Aged parchment & classic mariner compass rose',
+    category: 'classic',
+    primaryColor: '#C29B70',
+    accentColor: '#8C6239',
+    previewBg: 'linear-gradient(135deg, #E6D2BA 0%, #8C6239 100%)',
+    needleType: 'ornate_spear'
+  },
+  {
+    id: 'emerald_aurora',
+    nameHi: 'मरकत आभा',
+    nameEn: 'Emerald Aurora',
+    tagHi: 'दीप्तिमान पन्ना व ध्रुवीय हरी चमक',
+    tagEn: 'Bioluminescent emerald glow & frosted crystal',
+    category: 'mystic',
+    primaryColor: '#10B981',
+    accentColor: '#34D399',
+    previewBg: 'linear-gradient(135deg, #022013 0%, #01110A 100%)',
+    needleType: 'crystal_prism'
+  },
+  {
+    id: 'cosmic_galaxy',
+    nameHi: 'ब्रह्मांडीय आकाश',
+    nameEn: 'Cosmic Galaxy',
+    tagHi: 'नेबुला तारा मंडल व खगोलीय कक्षाएं',
+    tagEn: 'Deep space nebula & glowing stellar orbits',
+    category: 'mystic',
+    primaryColor: '#818CF8',
+    accentColor: '#C084FC',
+    previewBg: 'linear-gradient(135deg, #110B29 0%, #070314 100%)',
+    needleType: 'pulsar_pointer'
+  },
+  {
+    id: 'rose_gold',
+    nameHi: 'रोज़ गोल्ड लग्जरी',
+    nameEn: 'Rose Gold Luxury',
+    tagHi: 'स्विस क्रोनोमीटर व शैम्पेन डायल',
+    tagEn: 'Swiss luxury timepiece & champagne sunray dial',
+    category: 'luxury',
+    primaryColor: '#FB7185',
+    accentColor: '#F43F5E',
+    previewBg: 'linear-gradient(135deg, #2D1418 0%, #15080A 100%)',
+    needleType: 'luxury_sword'
+  },
+  {
+    id: 'steampunk',
+    nameHi: 'एम्बर रेट्रो',
+    nameEn: 'Retro Steampunk',
+    tagHi: 'निक्सी ट्यूब, कॉपर गियर व विंटेज गेज',
+    tagEn: 'Warm phosphor nixie tubes & antique copper',
+    category: 'classic',
+    primaryColor: '#F97316',
+    accentColor: '#EA580C',
+    previewBg: 'linear-gradient(135deg, #241105 0%, #0F0602 100%)',
+    needleType: 'nixie_needle'
+  },
+  {
+    id: 'crystal_glass',
+    nameHi: 'क्रिस्टल ग्लास',
+    nameEn: 'Crystal Glass',
+    tagHi: 'पारदर्शी फ्रॉस्टेड ग्लास व प्रिज़्म चमक',
+    tagEn: 'Translucent frosted glass & chromatic border',
+    category: 'modern',
+    primaryColor: '#38BDF8',
+    accentColor: '#A855F7',
+    previewBg: 'linear-gradient(135deg, #0F172A 0%, #030712 100%)',
+    needleType: 'crystal_prism'
+  },
+  {
+    id: 'sunset_aura',
+    nameHi: 'सूर्यास्त आभा',
+    nameEn: 'Sunset Aura',
+    tagHi: 'सांध्यकालीन सूर्योदय-सूर्यास्त लालिमा',
+    tagEn: 'Vibrant sunset coral & twilight magenta gradient',
+    category: 'modern',
+    primaryColor: '#FB923C',
+    accentColor: '#E11D48',
+    previewBg: 'linear-gradient(135deg, #2D0B1E 0%, #12030B 100%)',
+    needleType: 'delta_bicolor'
+  }
+];

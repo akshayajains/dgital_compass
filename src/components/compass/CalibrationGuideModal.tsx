@@ -1,15 +1,19 @@
 import React from 'react';
-import { Sparkles, X, CheckCircle2, RotateCw } from 'lucide-react';
+import { X, CheckCircle2, RotateCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Language } from '@/types/compass';
+import { translations } from '@/lib/translations';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   theme: string;
+  language: Language;
 }
 
-export const CalibrationGuideModal: React.FC<Props> = ({ isOpen, onClose, theme }) => {
+export const CalibrationGuideModal: React.FC<Props> = ({ isOpen, onClose, theme, language }) => {
   if (!isOpen) return null;
+  const t = translations[language];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
@@ -31,10 +35,10 @@ export const CalibrationGuideModal: React.FC<Props> = ({ isOpen, onClose, theme 
         </div>
 
         <h3 className="text-lg font-black tracking-wide text-amber-400 mb-1">
-          सेंसर कैलिब्रेशन (8-आकृति)
+          {t.calibTitle}
         </h3>
         <p className="text-xs text-stone-400 mb-5">
-          सटीक दिशा व कोण प्राप्त करने के लिए अपने फोन को नीचे दिखाए अनुसार हवा में 8 के आकार में घुमाएं।
+          {t.calibSubtitle}
         </p>
 
         {/* 8-Figure Vector Animation Graphic */}
@@ -54,19 +58,19 @@ export const CalibrationGuideModal: React.FC<Props> = ({ isOpen, onClose, theme 
           </svg>
         </div>
 
-        {/* Hindi Instructions */}
+        {/* Instructions */}
         <div className="w-full flex flex-col gap-2.5 text-left text-xs mb-6">
           <div className="flex items-start gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <span className="text-stone-300 font-medium">फोन को हाथ में सीधा पकड़ें और 3-4 बार बड़े 8 के आकार में घुमाएं।</span>
+            <span className="text-stone-300 font-medium">{t.calibStep1}</span>
           </div>
           <div className="flex items-start gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <span className="text-stone-300 font-medium">किसी भी धातु या चुंबकीय वस्तु (जैसे स्पीकर, लैपटॉप) से दूर रहें।</span>
+            <span className="text-stone-300 font-medium">{t.calibStep2}</span>
           </div>
           <div className="flex items-start gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <span className="text-stone-300 font-medium">कैलिब्रेशन पूर्ण होने पर दिशा सुई तुरंत स्थिर हो जाएगी।</span>
+            <span className="text-stone-300 font-medium">{t.calibStep3}</span>
           </div>
         </div>
 
@@ -75,7 +79,7 @@ export const CalibrationGuideModal: React.FC<Props> = ({ isOpen, onClose, theme 
           onClick={onClose}
           className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg active:scale-98 transition-all hover:brightness-110"
         >
-          समझ आ गया • कैलिब्रेट हुआ
+          {t.calibDone}
         </button>
       </div>
     </div>
