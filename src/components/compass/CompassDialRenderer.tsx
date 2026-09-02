@@ -169,13 +169,25 @@ export const CompassDialRenderer: React.FC<Props> = ({
           {/* Background Decorative Rings / Graphics */}
           {styleId === 'royal_gold' && (
             <>
-              <div className="absolute inset-3.5 rounded-full border border-amber-400/35 pointer-events-none shadow-[0_0_15px_rgba(245,158,11,0.15)]" />
-              <div className="absolute inset-9 rounded-full border border-white/10 pointer-events-none" />
-              <div className="absolute inset-[4.2rem] rounded-full border border-amber-400/20 pointer-events-none" />
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="50" fill="none" stroke="#F59E0B" strokeWidth="0.6" strokeDasharray="2 2" />
-                <line x1="100" y1="18" x2="100" y2="182" stroke="#F59E0B" strokeWidth="0.4" strokeDasharray="3 3" />
-                <line x1="18" y1="100" x2="182" y2="100" stroke="#F59E0B" strokeWidth="0.4" strokeDasharray="3 3" />
+              <div className="absolute inset-3.5 rounded-full border border-amber-500/40 pointer-events-none shadow-[0_0_15px_rgba(245,158,11,0.2)]" />
+              <div className="absolute inset-8 rounded-full border border-white/10 pointer-events-none" />
+              <div className="absolute inset-16 rounded-full border border-dashed border-amber-400/25 pointer-events-none" />
+              <div className="absolute inset-24 rounded-full border border-amber-500/20 pointer-events-none" />
+              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 200 200">
+                {/* Astrolabe Celestial Arcs */}
+                <circle cx="100" cy="100" r="70" fill="none" stroke="#D4AF37" strokeWidth="0.5" />
+                <circle cx="100" cy="100" r="45" fill="none" stroke="#F59E0B" strokeWidth="0.6" strokeDasharray="3 2" />
+                <circle cx="100" cy="100" r="28" fill="none" stroke="#FDE047" strokeWidth="0.5" />
+                
+                {/* Tangent Celestial Arcs */}
+                <path d="M 30,100 A 70,70 0 0,1 170,100" fill="none" stroke="#F59E0B" strokeWidth="0.5" opacity="0.6" />
+                <path d="M 100,30 A 70,70 0 0,1 100,170" fill="none" stroke="#F59E0B" strokeWidth="0.5" opacity="0.6" />
+                <path d="M 50,50 Q 100,120 150,50" fill="none" stroke="#EAB308" strokeWidth="0.5" opacity="0.5" />
+                <path d="M 50,150 Q 100,80 150,150" fill="none" stroke="#EAB308" strokeWidth="0.5" opacity="0.5" />
+
+                {/* Coordinate Crosshairs */}
+                <line x1="100" y1="12" x2="100" y2="188" stroke="#D4AF37" strokeWidth="0.5" strokeDasharray="4 3" />
+                <line x1="12" y1="100" x2="188" y2="100" stroke="#D4AF37" strokeWidth="0.5" strokeDasharray="4 3" />
               </svg>
             </>
           )}
@@ -469,8 +481,17 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 7. Default 3D Bicolor Delta Arrow (Royal Gold, Emerald, Rose Gold, Steampunk, Crystal, Sunset) */}
-          {(styleId === 'royal_gold' || styleId === 'emerald_aurora' || styleId === 'rose_gold' || styleId === 'steampunk' || styleId === 'crystal_glass' || styleId === 'sunset_aura') && (
+          {/* 7. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
+          {styleId === 'royal_gold' && (
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_0_16px_rgba(249,115,22,0.8)]" viewBox="0 0 200 200">
+              <line x1="100" y1="16" x2="100" y2="80" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" />
+              <polygon points="100,12 92,34 100,28 108,34" fill="#F97316" className="drop-shadow-[0_0_8px_#f97316]" />
+              <circle cx="100" cy="100" r="16" fill="none" stroke="#D4AF37" strokeWidth="1.5" strokeDasharray="3 3" />
+            </svg>
+          )}
+
+          {/* 8. Other Styles 3D Bicolor Delta Arrow */}
+          {(styleId === 'emerald_aurora' || styleId === 'rose_gold' || styleId === 'steampunk' || styleId === 'crystal_glass' || styleId === 'sunset_aura') && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
               <defs>
                 <linearGradient id="needleSilver" x1="0%" y1="0%" x2="100%" y2="0%">
