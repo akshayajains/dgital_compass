@@ -70,6 +70,8 @@ export const CompassDialRenderer: React.FC<Props> = ({
   // Outer bezel styling classes
   const getBezelClass = () => {
     switch (styleId) {
+      case 'sandalwood':
+        return 'border-[20px] sm:border-[24px] border-[#C9A67E] shadow-[0_20px_60px_rgba(78,53,36,0.7),inset_0_3px_8px_rgba(255,255,255,0.7),inset_0_-8px_16px_rgba(78,53,36,0.95)] bg-gradient-to-br from-[#E8D7C2] via-[#C9A67E] to-[#8C6239]';
       case 'royal_gold':
         return 'border-[18px] sm:border-[22px] border-[#382613] shadow-[0_20px_60px_rgba(0,0,0,0.95),inset_0_4px_8px_rgba(245,158,11,0.5),inset_0_-8px_16px_rgba(0,0,0,0.95)] bg-gradient-to-tr from-[#25180A] via-[#4A3419] to-[#1C1004]';
       case 'cyberpunk':
@@ -102,6 +104,8 @@ export const CompassDialRenderer: React.FC<Props> = ({
   // Dial face background
   const getDialFaceBg = () => {
     switch (styleId) {
+      case 'sandalwood':
+        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FAF3E8] via-[#EFE2CE] to-[#DCBF9E]';
       case 'royal_gold':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#241A10] via-[#150F09] to-[#0A0704]';
       case 'cyberpunk':
@@ -167,6 +171,43 @@ export const CompassDialRenderer: React.FC<Props> = ({
         )}>
           
           {/* Background Decorative Rings / Graphics */}
+          {styleId === 'sandalwood' && (
+            <>
+              {/* Concentric Sandalwood rings */}
+              <div className="absolute inset-2.5 rounded-full border border-[#8C6239]/40 pointer-events-none" />
+              <div className="absolute inset-8 rounded-full border border-[#8C6239]/25 pointer-events-none" />
+              <div className="absolute inset-16 rounded-full border border-dashed border-[#8C6239]/20 pointer-events-none" />
+              <div className="absolute inset-24 rounded-full border border-[#8C6239]/15 pointer-events-none" />
+
+              {/* 8-Point Faceted Compass Rose Star */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
+                {/* 4 Major Points */}
+                <polygon points="100,18 100,100 90,100" fill="#E6C885" opacity="0.95" />
+                <polygon points="100,18 100,100 110,100" fill="#8C6239" opacity="0.9" />
+                <polygon points="182,100 100,100 100,90" fill="#E6C885" opacity="0.95" />
+                <polygon points="182,100 100,100 100,110" fill="#8C6239" opacity="0.9" />
+                <polygon points="100,182 100,100 110,100" fill="#E6C885" opacity="0.95" />
+                <polygon points="100,182 100,100 90,100" fill="#8C6239" opacity="0.9" />
+                <polygon points="18,100 100,100 100,110" fill="#E6C885" opacity="0.95" />
+                <polygon points="18,100 100,100 100,90" fill="#8C6239" opacity="0.9" />
+
+                {/* 4 Diagonal Points */}
+                <polygon points="155,45 100,100 96,96" fill="#F0DC9E" opacity="0.8" />
+                <polygon points="155,45 100,100 104,104" fill="#6B4724" opacity="0.8" />
+                <polygon points="155,155 100,100 104,96" fill="#F0DC9E" opacity="0.8" />
+                <polygon points="155,155 100,100 96,104" fill="#6B4724" opacity="0.8" />
+                <polygon points="45,155 100,100 104,104" fill="#F0DC9E" opacity="0.8" />
+                <polygon points="45,155 100,100 96,96" fill="#6B4724" opacity="0.8" />
+                <polygon points="45,45 100,100 96,104" fill="#F0DC9E" opacity="0.8" />
+                <polygon points="45,45 100,100 104,96" fill="#6B4724" opacity="0.8" />
+
+                {/* Coordinate Lines */}
+                <circle cx="100" cy="100" r="32" fill="none" stroke="#8C6239" strokeWidth="0.5" opacity="0.4" />
+                <circle cx="100" cy="100" r="62" fill="none" stroke="#8C6239" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.3" />
+              </svg>
+            </>
+          )}
+
           {styleId === 'royal_gold' && (
             <>
               <div className="absolute inset-3.5 rounded-full border border-amber-500/40 pointer-events-none shadow-[0_0_15px_rgba(245,158,11,0.2)]" />
@@ -341,28 +382,63 @@ export const CompassDialRenderer: React.FC<Props> = ({
           ))}
 
           {/* Cardinal Badges */}
-          {cardinalPoints.map((pt) => (
-            <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
-              <div className="flex flex-col items-center select-none mt-5">
-                <span className={cn(
-                  "font-black text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] tracking-tight",
-                  pt.isNorth
-                    ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444]"
-                    : styleId === 'nautical'
-                    ? "text-[#3E2718]"
-                    : styleId === 'cyberpunk'
-                    ? "text-cyan-300"
-                    : styleId === 'emerald_aurora'
-                    ? "text-emerald-300"
-                    : styleId === 'tactical_ops'
-                    ? "text-green-400"
-                    : "text-amber-100"
-                )}>
-                  {pt.label}
-                </span>
+          {styleId === 'sandalwood' ? (
+            [
+              { en: 'N', hi: 'उत्तर', deg: 0, isCardinal: true },
+              { en: 'NE', hi: 'ईशान्य', deg: 45, isCardinal: false },
+              { en: 'E', hi: 'पूर्व', deg: 90, isCardinal: true },
+              { en: 'SE', hi: 'आग्नेय', deg: 135, isCardinal: false },
+              { en: 'S', hi: 'दक्षिण', deg: 180, isCardinal: true },
+              { en: 'SW', hi: 'नैऋत्य', deg: 225, isCardinal: false },
+              { en: 'W', hi: 'पश्चिम', deg: 270, isCardinal: true },
+              { en: 'NW', hi: 'वायव्य', deg: 315, isCardinal: false }
+            ].map((pt) => (
+              <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
+                <div className="flex flex-col items-center select-none mt-4">
+                  {pt.isCardinal && (
+                    <div className="w-1 h-3 bg-red-600 mb-0.5 rounded-full shadow-sm" />
+                  )}
+                  <span className={cn(
+                    "font-serif font-black tracking-tight leading-none",
+                    pt.isCardinal ? "text-red-700 text-sm font-black" : "text-[#4A2E16] text-xs font-bold"
+                  )}>
+                    {pt.en}
+                  </span>
+                  <span className="font-serif font-bold text-[8.5px] text-[#5C3A1E] leading-none mt-0.5 tracking-tight">
+                    {pt.hi}
+                  </span>
+                  {pt.isCardinal && (
+                    <span className="font-mono text-[7px] font-bold text-red-600 mt-0.5">
+                      {pt.deg}°
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            cardinalPoints.map((pt) => (
+              <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
+                <div className="flex flex-col items-center select-none mt-5">
+                  <span className={cn(
+                    "font-black text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] tracking-tight",
+                    pt.isNorth
+                      ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444]"
+                      : styleId === 'nautical'
+                      ? "text-[#3E2718]"
+                      : styleId === 'cyberpunk'
+                      ? "text-cyan-300"
+                      : styleId === 'emerald_aurora'
+                      ? "text-emerald-300"
+                      : styleId === 'tactical_ops'
+                      ? "text-green-400"
+                      : "text-amber-100"
+                  )}>
+                    {pt.label}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
 
           {/* Sun Badge (Real-time Solar Position) */}
           {sunPos !== null && (
@@ -481,7 +557,26 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 7. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
+          {/* 7. Sandalwood 3D Faceted Needle (Red & Gold North, Bronze & Gold South) */}
+          {styleId === 'sandalwood' && (
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(78,53,36,0.85)]" viewBox="0 0 200 200">
+              {/* South Bronze Faceted Spear */}
+              <polygon points="100,188 90,100 100,110" fill="#8C6239" />
+              <polygon points="100,188 110,100 100,110" fill="#52361B" />
+              <line x1="100" y1="110" x2="100" y2="186" stroke="#D4AF37" strokeWidth="1.2" opacity="0.8" />
+
+              {/* North Red/Crimson Faceted Spear */}
+              <polygon points="100,12 88,100 100,90" fill="#EF4444" className="drop-shadow-[0_0_14px_rgba(239,68,68,0.7)]" />
+              <polygon points="100,12 112,100 100,90" fill="#B91C1C" />
+              <line x1="100" y1="12" x2="100" y2="90" stroke="#FDE047" strokeWidth="1.6" />
+
+              {/* Center Pivot Ring */}
+              <circle cx="100" cy="100" r="14" fill="none" stroke="#D4AF37" strokeWidth="2" className="drop-shadow-md" />
+              <circle cx="100" cy="100" r="11" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.8" />
+            </svg>
+          )}
+
+          {/* 8. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
           {styleId === 'royal_gold' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_0_16px_rgba(249,115,22,0.8)]" viewBox="0 0 200 200">
               <line x1="100" y1="16" x2="100" y2="80" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" />
@@ -490,7 +585,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 8. Other Styles 3D Bicolor Delta Arrow */}
+          {/* 9. Other Styles 3D Bicolor Delta Arrow */}
           {(styleId === 'emerald_aurora' || styleId === 'rose_gold' || styleId === 'steampunk' || styleId === 'crystal_glass' || styleId === 'sunset_aura') && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
               <defs>
@@ -530,40 +625,54 @@ export const CompassDialRenderer: React.FC<Props> = ({
 
         {/* Center Precision Liquid Spirit Bubble Hub */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          <div className={cn(
-            "w-14 h-14 rounded-full relative overflow-hidden flex flex-col items-center justify-center transition-all duration-300 backdrop-blur-md shadow-2xl",
-            isLevel
-              ? "border-2 border-emerald-400/80 bg-emerald-950/60 shadow-[0_0_20px_rgba(52,211,153,0.6)] animate-pulse"
-              : styleId === 'cyberpunk'
-              ? "border border-cyan-400/60 bg-slate-950/90 shadow-[0_0_15px_rgba(0,240,255,0.4)]"
-              : styleId === 'royal_gold'
-              ? "border-2 border-amber-400/60 bg-[#1E232B]/95 shadow-[0_4px_25px_rgba(245,158,11,0.3)]"
-              : "border border-amber-400/40 bg-stone-950/80 shadow-inner"
-          )}>
-            <div className="absolute w-full h-[0.5px] bg-white/20" />
-            <div className="absolute h-full w-[0.5px] bg-white/20" />
-            
-            <div className={cn(
-              "w-7 h-7 rounded-full border flex items-center justify-center transition-colors",
-              isLevel ? "border-emerald-400/80 shadow-[0_0_12px_#10b981]" : "border-emerald-500/40"
-            )}>
-              <span className="text-[8px] font-black text-emerald-400/80 leading-none">
-                {isHi ? 'उ' : 'N'}
-              </span>
+          {styleId === 'sandalwood' ? (
+            /* Sandalwood Center Target Hub */
+            <div className="w-13 h-13 rounded-full relative overflow-hidden flex items-center justify-center border-2 border-[#D4AF37] bg-gradient-to-tr from-[#3D2512] via-[#5C3818] to-[#2E1B0D] shadow-[0_4px_16px_rgba(78,53,36,0.85)]">
+              {/* Turquoise Ring */}
+              <div className="w-9 h-9 rounded-full border-2 border-emerald-400/90 shadow-[0_0_12px_#34d399] flex items-center justify-center">
+                {/* Inner Crimson Center */}
+                <div className="w-5 h-5 rounded-full border border-red-500/80 bg-red-950/90 flex items-center justify-center">
+                  {/* Glowing Green Core Pip */}
+                  <div className="w-2.5 h-2.5 rounded-full bg-lime-400 shadow-[0_0_8px_#a3e635]" />
+                </div>
+              </div>
             </div>
+          ) : (
+            <div className={cn(
+              "w-14 h-14 rounded-full relative overflow-hidden flex flex-col items-center justify-center transition-all duration-300 backdrop-blur-md shadow-2xl",
+              isLevel
+                ? "border-2 border-emerald-400/80 bg-emerald-950/60 shadow-[0_0_20px_rgba(52,211,153,0.6)] animate-pulse"
+                : styleId === 'cyberpunk'
+                ? "border border-cyan-400/60 bg-slate-950/90 shadow-[0_0_15px_rgba(0,240,255,0.4)]"
+                : styleId === 'royal_gold'
+                ? "border-2 border-amber-400/60 bg-[#1E232B]/95 shadow-[0_4px_25px_rgba(245,158,11,0.3)]"
+                : "border border-amber-400/40 bg-stone-950/80 shadow-inner"
+            )}>
+              <div className="absolute w-full h-[0.5px] bg-white/20" />
+              <div className="absolute h-full w-[0.5px] bg-white/20" />
+              
+              <div className={cn(
+                "w-7 h-7 rounded-full border flex items-center justify-center transition-colors",
+                isLevel ? "border-emerald-400/80 shadow-[0_0_12px_#10b981]" : "border-emerald-500/40"
+              )}>
+                <span className="text-[8px] font-black text-emerald-400/80 leading-none">
+                  {isHi ? 'उ' : 'N'}
+                </span>
+              </div>
 
-            <div 
-              className={cn(
-                "absolute w-4 h-4 rounded-full transition-transform duration-75 ease-out liquid-shine shadow-md",
-                isLevel 
-                  ? "bg-emerald-400 shadow-[0_0_14px_#34d399] scale-110" 
-                  : "bg-emerald-300/80 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
-              )}
-              style={{
-                transform: `translate(${Math.max(-14, Math.min(14, -roll * 0.5))}px, ${Math.max(-14, Math.min(14, -pitch * 0.5))}px)`
-              }}
-            />
-          </div>
+              <div 
+                className={cn(
+                  "absolute w-4 h-4 rounded-full transition-transform duration-75 ease-out liquid-shine shadow-md",
+                  isLevel 
+                    ? "bg-emerald-400 shadow-[0_0_14px_#34d399] scale-110" 
+                    : "bg-emerald-300/80 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
+                )}
+                style={{
+                  transform: `translate(${Math.max(-14, Math.min(14, -roll * 0.5))}px, ${Math.max(-14, Math.min(14, -pitch * 0.5))}px)`
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>

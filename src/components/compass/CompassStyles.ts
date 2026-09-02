@@ -2,6 +2,18 @@ import { CompassStyleInfo, CompassStyleId } from '@/types/compass';
 
 export const COMPASS_STYLES: CompassStyleInfo[] = [
   {
+    id: 'sandalwood',
+    nameHi: 'चंदन (Sandal)',
+    nameEn: 'Sandalwood',
+    tagHi: 'प्राकृतिक चंदन की लकड़ी, अष्टकोणीय तारा व द्विभाषी मंडल',
+    tagEn: 'Natural sandalwood finish, 8-point star & bilingual rose',
+    category: 'classic',
+    primaryColor: '#D2B48C',
+    accentColor: '#8C6239',
+    previewBg: 'linear-gradient(135deg, #FBF5EB 0%, #C9A67E 100%)',
+    needleType: 'ornate_spear'
+  },
+  {
     id: 'royal_gold',
     nameHi: 'शाही स्वर्ण',
     nameEn: 'Royal Gold',

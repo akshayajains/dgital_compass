@@ -24,7 +24,8 @@ import {
   X,
   Languages,
   Grid,
-  Palette
+  Palette,
+  SlidersHorizontal
 } from 'lucide-react';
 import { useSunTimes } from '@/hooks/useSunTimes';
 import SunCalc from 'suncalc';
@@ -581,37 +582,53 @@ export const CompassView = () => {
       {/* Tab 1: COMPASS VIEW */}
       {mainTab === 'compass' && (
         <>
-          {/* Horizontal 12+ Compass Styles Quick Bar */}
-          <div className="w-full max-w-sm flex items-center gap-1.5 mb-1.5 overflow-x-auto no-scrollbar py-1">
+          {/* Quick Settings Pill Button */}
+          <div className="flex justify-center mb-1">
             <button
               onClick={() => {
-                setShowStyleModal(true);
+                setShowSettings(true);
                 triggerHapticFeedback();
               }}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 border border-amber-500/50 text-amber-300 hover:text-white text-[11px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.25)] active:scale-95 transition-all"
+              className="px-4 py-1 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-white/15 text-stone-200 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
             >
-              <Palette className="w-3.5 h-3.5 text-amber-400" />
-              <span>{language === 'hi' ? '12+ शैलियां' : '12+ Styles'}</span>
+              <SlidersHorizontal className="w-3 h-3 text-amber-400" />
+              <span>{language === 'hi' ? 'सेटिंग्स ⌵' : 'SETTINGS ⌵'}</span>
             </button>
+          </div>
 
+          {/* Theme Header Strip */}
+          <div className="w-full max-w-sm flex items-center justify-between text-[9.5px] font-black uppercase tracking-widest text-stone-400 px-1 mb-1">
+            <span>{language === 'hi' ? 'कंपास थीम शैली' : 'COMPASS THEME STYLE'}</span>
+            <span className="text-stone-500">{language === 'hi' ? 'अधिक के लिए स्क्रॉल करें' : 'SCROLL FOR MORE'}</span>
+          </div>
+
+          {/* Horizontal Theme Pill Chips (Sandalwood first!) */}
+          <div className="w-full max-w-sm flex items-center gap-1.5 mb-1.5 overflow-x-auto no-scrollbar py-0.5">
             {COMPASS_STYLES.map((st) => (
               <button
                 key={st.id}
                 onClick={() => handleSelectStyle(st.id)}
                 className={cn(
-                  "px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5",
+                  "px-3.5 py-1.5 rounded-xl text-[10.5px] uppercase font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5",
                   selectedStyle === st.id
-                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 border-amber-300 font-black shadow-lg scale-[1.03]"
+                    ? "bg-[#C9A67E]/30 text-amber-300 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.35)] scale-[1.02]"
                     : "bg-stone-900/90 text-stone-300 border-white/10 hover:text-white hover:border-white/25"
                 )}
               >
-                <div 
-                  className="w-2 h-2 rounded-full shrink-0 shadow-sm"
-                  style={{ backgroundColor: st.primaryColor }}
-                />
-                <span>{language === 'hi' ? st.nameHi : st.nameEn}</span>
+                <span>{st.id === 'sandalwood' ? 'SANDALWOOD' : st.id === 'royal_gold' ? 'CLASSIC' : st.id === 'minimal_onyx' ? 'STEEL' : st.id === 'vedic_mandala' ? '32 DEVTA' : (language === 'hi' ? st.nameHi : st.nameEn).toUpperCase()}</span>
               </button>
             ))}
+
+            <button
+              onClick={() => {
+                setShowStyleModal(true);
+                triggerHapticFeedback();
+              }}
+              className="px-3 py-1.5 rounded-xl bg-stone-800/80 border border-white/10 text-stone-300 hover:text-white text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1 active:scale-95 transition-all"
+            >
+              <Palette className="w-3 h-3 text-amber-400" />
+              <span>+ MORE</span>
+            </button>
           </div>
 
           {/* Astrolabe Compass Dial */}
@@ -768,15 +785,37 @@ export const CompassView = () => {
               </div>
             </div>
 
-            {/* Center Heading Readout: 76° EAST */}
-            <div className="flex flex-col items-center justify-center my-0.5">
-              <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-white leading-none">
-                {displayHeading !== null ? Math.round(displayHeading) : 76}°
-              </span>
-              <span className="text-lg sm:text-xl font-black tracking-widest text-red-500 uppercase mt-1">
-                {language === 'hi' ? vastuInfo.name.split(' ')[0] : (vastuInfo.code === 'E' ? 'EAST' : vastuInfo.code === 'N' ? 'NORTH' : vastuInfo.code === 'S' ? 'SOUTH' : vastuInfo.code === 'W' ? 'WEST' : vastuInfo.name.split(' ')[0].toUpperCase())}
-              </span>
-            </div>
+            {/* Center Heading Readout */}
+            {selectedStyle === 'sandalwood' ? (
+              <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#FAF3E8] via-[#F3E6D3] to-[#E9D4B8] border border-[#C9A67E] text-stone-900 flex items-center justify-between shadow-md">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl sm:text-3xl font-black font-serif text-[#3E2718]">
+                    {displayHeading !== null ? Math.round(displayHeading) : 80}°
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-red-700 font-serif">
+                    {language === 'hi' ? `${vastuInfo.name.split(' ')[0]} (${vastuInfo.code})` : `${vastuInfo.name.split(' ')[0]} (${vastuInfo.code})`}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => {
+                    setUseTrueNorth(!useTrueNorth);
+                    triggerHapticFeedback();
+                  }}
+                  className="px-2.5 py-1 rounded-full bg-[#3E2718]/10 hover:bg-[#3E2718]/15 border border-[#8C6239]/40 text-[9.5px] font-black uppercase text-[#5C3A1E] tracking-wider transition-colors shadow-sm"
+                >
+                  {useTrueNorth ? 'True North' : 'Magnetic'}
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center my-0.5">
+                <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-white leading-none">
+                  {displayHeading !== null ? Math.round(displayHeading) : 76}°
+                </span>
+                <span className="text-lg sm:text-xl font-black tracking-widest text-red-500 uppercase mt-1">
+                  {language === 'hi' ? vastuInfo.name.split(' ')[0] : (vastuInfo.code === 'E' ? 'EAST' : vastuInfo.code === 'N' ? 'NORTH' : vastuInfo.code === 'S' ? 'SOUTH' : vastuInfo.code === 'W' ? 'WEST' : vastuInfo.name.split(' ')[0].toUpperCase())}
+                </span>
+              </div>
+            )}
 
             {/* GPS Coordinates & Sea Level */}
             <div className="w-full flex items-center justify-between text-xs pt-1 border-t border-white/10">
