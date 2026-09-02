@@ -581,6 +581,39 @@ export const CompassView = () => {
       {/* Tab 1: COMPASS VIEW */}
       {mainTab === 'compass' && (
         <>
+          {/* Horizontal 12+ Compass Styles Quick Bar */}
+          <div className="w-full max-w-sm flex items-center gap-1.5 mb-1.5 overflow-x-auto no-scrollbar py-1">
+            <button
+              onClick={() => {
+                setShowStyleModal(true);
+                triggerHapticFeedback();
+              }}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/25 via-yellow-500/20 to-amber-500/25 border border-amber-500/50 text-amber-300 hover:text-white text-[11px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-[0_0_12px_rgba(245,158,11,0.25)] active:scale-95 transition-all"
+            >
+              <Palette className="w-3.5 h-3.5 text-amber-400" />
+              <span>{language === 'hi' ? '12+ शैलियां' : '12+ Styles'}</span>
+            </button>
+
+            {COMPASS_STYLES.map((st) => (
+              <button
+                key={st.id}
+                onClick={() => handleSelectStyle(st.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5",
+                  selectedStyle === st.id
+                    ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 border-amber-300 font-black shadow-lg scale-[1.03]"
+                    : "bg-stone-900/90 text-stone-300 border-white/10 hover:text-white hover:border-white/25"
+                )}
+              >
+                <div 
+                  className="w-2 h-2 rounded-full shrink-0 shadow-sm"
+                  style={{ backgroundColor: st.primaryColor }}
+                />
+                <span>{language === 'hi' ? st.nameHi : st.nameEn}</span>
+              </button>
+            ))}
+          </div>
+
           {/* Astrolabe Compass Dial */}
           <CompassDialRenderer
             styleId={selectedStyle}
