@@ -1,6 +1,7 @@
 export type Language = 'hi' | 'en';
 
 export type CompassStyleId =
+  | 'satellite_earth'
   | 'sandalwood'
   | 'royal_gold'
   | 'cyberpunk'

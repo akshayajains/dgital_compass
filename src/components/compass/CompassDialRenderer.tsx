@@ -22,6 +22,13 @@ interface Props {
   onPointerUp: (e: React.PointerEvent) => void;
 }
 
+const get16WindName = (deg: number | null) => {
+  if (deg === null) return 'ENE';
+  const winds = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  const index = Math.round(((deg % 360 + 360) % 360) / 22.5) % 16;
+  return winds[index];
+};
+
 export const CompassDialRenderer: React.FC<Props> = ({
   styleId,
   language,
@@ -43,6 +50,18 @@ export const CompassDialRenderer: React.FC<Props> = ({
   const isHi = language === 'hi';
 
   const cardinalPoints = useMemo(() => {
+    if (styleId === 'satellite_earth') {
+      return [
+        { label: 'N', deg: 0, isNorth: true, code: 'N' },
+        { label: 'NE', deg: 45, isNorth: false, code: 'NE' },
+        { label: 'E', deg: 90, isNorth: false, code: 'E' },
+        { label: 'SE', deg: 135, isNorth: false, code: 'SE' },
+        { label: 'S', deg: 180, isNorth: false, code: 'S' },
+        { label: 'SW', deg: 225, isNorth: false, code: 'SW' },
+        { label: 'W', deg: 270, isNorth: false, code: 'W' },
+        { label: 'NW', deg: 315, isNorth: false, code: 'NW' }
+      ];
+    }
     if (isHi) {
       return [
         { label: 'उत्तर', deg: 0, isNorth: true, code: 'N' },
@@ -65,11 +84,13 @@ export const CompassDialRenderer: React.FC<Props> = ({
       { label: 'W', deg: 270, isNorth: false, code: 'W' },
       { label: 'NW', deg: 315, isNorth: false, code: 'NW' }
     ];
-  }, [isHi]);
+  }, [isHi, styleId]);
 
   // Outer bezel styling classes
   const getBezelClass = () => {
     switch (styleId) {
+      case 'satellite_earth':
+        return 'border-[16px] sm:border-[20px] border-[#1E293B] shadow-[0_25px_60px_rgba(0,0,0,0.95),inset_0_2px_6px_rgba(0,240,255,0.4),inset_0_-8px_16px_rgba(0,0,0,0.9)] bg-gradient-to-b from-[#2E3C4E] via-[#1E293B] to-[#0F172A]';
       case 'sandalwood':
         return 'border-[20px] sm:border-[24px] border-[#C9A67E] shadow-[0_20px_60px_rgba(78,53,36,0.7),inset_0_3px_8px_rgba(255,255,255,0.7),inset_0_-8px_16px_rgba(78,53,36,0.95)] bg-gradient-to-br from-[#E8D7C2] via-[#C9A67E] to-[#8C6239]';
       case 'royal_gold':
@@ -104,6 +125,8 @@ export const CompassDialRenderer: React.FC<Props> = ({
   // Dial face background
   const getDialFaceBg = () => {
     switch (styleId) {
+      case 'satellite_earth':
+        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1E2C3D] via-[#101824] to-[#080D14]';
       case 'sandalwood':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FAF3E8] via-[#EFE2CE] to-[#DCBF9E]';
       case 'royal_gold':
@@ -171,6 +194,44 @@ export const CompassDialRenderer: React.FC<Props> = ({
         )}>
           
           {/* Background Decorative Rings / Graphics */}
+          {styleId === 'satellite_earth' && (
+            <>
+              {/* Outer Coordinate Rings */}
+              <div className="absolute inset-2.5 rounded-full border border-slate-600/40 pointer-events-none" />
+              <div className="absolute inset-7 rounded-full border border-cyan-400/30 pointer-events-none shadow-[0_0_12px_rgba(0,240,255,0.2)]" />
+              <div className="absolute inset-16 rounded-full border border-dashed border-slate-500/25 pointer-events-none" />
+              
+              {/* Faceted 3D Compass Star */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
+                {/* 4 Cardinal Cyan Accents */}
+                <line x1="100" y1="12" x2="100" y2="24" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-[0_0_8px_#00f0ff]" />
+                <line x1="188" y1="100" x2="176" y2="100" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-[0_0_8px_#00f0ff]" />
+                <line x1="100" y1="188" x2="100" y2="176" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-[0_0_8px_#00f0ff]" />
+                <line x1="12" y1="100" x2="24" y2="100" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-[0_0_8px_#00f0ff]" />
+
+                {/* 4 Diagonal Cyan Accents */}
+                <line x1="162" y1="38" x2="154" y2="46" stroke="#00F0FF" strokeWidth="1.8" strokeLinecap="round" />
+                <line x1="162" y1="162" x2="154" y2="154" stroke="#00F0FF" strokeWidth="1.8" strokeLinecap="round" />
+                <line x1="38" y1="162" x2="46" y2="154" stroke="#00F0FF" strokeWidth="1.8" strokeLinecap="round" />
+                <line x1="38" y1="38" x2="46" y2="46" stroke="#00F0FF" strokeWidth="1.8" strokeLinecap="round" />
+
+                {/* Faceted Star Wings */}
+                <polygon points="100,24 100,100 88,100" fill="#94A3B8" opacity="0.6" />
+                <polygon points="100,24 100,100 112,100" fill="#334155" opacity="0.8" />
+                <polygon points="176,100 100,100 100,88" fill="#94A3B8" opacity="0.6" />
+                <polygon points="176,100 100,100 100,112" fill="#334155" opacity="0.8" />
+                <polygon points="100,176 100,100 112,100" fill="#94A3B8" opacity="0.6" />
+                <polygon points="100,176 100,100 88,100" fill="#334155" opacity="0.8" />
+                <polygon points="24,100 100,100 100,112" fill="#94A3B8" opacity="0.6" />
+                <polygon points="24,100 100,100 100,88" fill="#334155" opacity="0.8" />
+
+                {/* Concentric rings */}
+                <circle cx="100" cy="100" r="45" fill="none" stroke="#475569" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.4" />
+                <circle cx="100" cy="100" r="28" fill="none" stroke="#00F0FF" strokeWidth="0.5" opacity="0.3" />
+              </svg>
+            </>
+          )}
+
           {styleId === 'sandalwood' && (
             <>
               {/* Concentric Sandalwood rings */}
@@ -423,6 +484,8 @@ export const CompassDialRenderer: React.FC<Props> = ({
                     "font-black text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] tracking-tight",
                     pt.isNorth
                       ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444]"
+                      : styleId === 'satellite_earth'
+                      ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
                       : styleId === 'nautical'
                       ? "text-[#3E2718]"
                       : styleId === 'cyberpunk'
@@ -557,7 +620,21 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 7. Sandalwood 3D Faceted Needle (Red & Gold North, Bronze & Gold South) */}
+          {/* 7. Satellite Earth 3D Needle */}
+          {styleId === 'satellite_earth' && (
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_32px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
+              {/* South Dark Slate Spear */}
+              <polygon points="100,188 90,100 100,110" fill="#475569" />
+              <polygon points="100,188 110,100 100,110" fill="#1E293B" />
+
+              {/* North Red Spear with Cyan Pointer */}
+              <polygon points="100,14 86,100 100,90" fill="#EF4444" className="drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
+              <polygon points="100,14 114,100 100,90" fill="#B91C1C" />
+              <line x1="100" y1="14" x2="100" y2="40" stroke="#00F0FF" strokeWidth="2.5" strokeLinecap="round" className="drop-shadow-[0_0_6px_#00f0ff]" />
+            </svg>
+          )}
+
+          {/* 8. Sandalwood 3D Faceted Needle (Red & Gold North, Bronze & Gold South) */}
           {styleId === 'sandalwood' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(78,53,36,0.85)]" viewBox="0 0 200 200">
               {/* South Bronze Faceted Spear */}
@@ -576,7 +653,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 8. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
+          {/* 9. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
           {styleId === 'royal_gold' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_0_16px_rgba(249,115,22,0.8)]" viewBox="0 0 200 200">
               <line x1="100" y1="16" x2="100" y2="80" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" />
@@ -585,7 +662,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 9. Other Styles 3D Bicolor Delta Arrow */}
+          {/* 10. Other Styles 3D Bicolor Delta Arrow */}
           {(styleId === 'emerald_aurora' || styleId === 'rose_gold' || styleId === 'steampunk' || styleId === 'crystal_glass' || styleId === 'sunset_aura') && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
               <defs>
@@ -625,7 +702,20 @@ export const CompassDialRenderer: React.FC<Props> = ({
 
         {/* Center Precision Liquid Spirit Bubble Hub */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          {styleId === 'sandalwood' ? (
+          {styleId === 'satellite_earth' ? (
+            <div className="flex flex-col items-center justify-center pointer-events-none">
+              {/* White Donut Ring */}
+              <div className="w-14 h-14 rounded-full border-[5px] border-slate-100 bg-[#0A0F16] shadow-[0_0_25px_rgba(255,255,255,0.85),inset_0_0_12px_rgba(0,0,0,0.95)] flex items-center justify-center">
+                <div className="w-4 h-4 rounded-full bg-[#030712] border border-white/20" />
+              </div>
+              {/* Center Heading Readout below hub */}
+              <div className="mt-2 text-center select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
+                  {displayHeading !== null ? Math.round(displayHeading) : 78}° {get16WindName(displayHeading)}
+                </span>
+              </div>
+            </div>
+          ) : styleId === 'sandalwood' ? (
             /* Sandalwood Center Target Hub */
             <div className="w-13 h-13 rounded-full relative overflow-hidden flex items-center justify-center border-2 border-[#D4AF37] bg-gradient-to-tr from-[#3D2512] via-[#5C3818] to-[#2E1B0D] shadow-[0_4px_16px_rgba(78,53,36,0.85)]">
               {/* Turquoise Ring */}

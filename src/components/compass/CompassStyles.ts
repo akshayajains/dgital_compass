@@ -2,6 +2,18 @@ import { CompassStyleInfo, CompassStyleId } from '@/types/compass';
 
 export const COMPASS_STYLES: CompassStyleInfo[] = [
   {
+    id: 'satellite_earth',
+    nameHi: 'सैटेलाइट अर्थ',
+    nameEn: 'Satellite Earth',
+    tagHi: 'उपग्रह भू-दृश्य, 3D डायल एवं टेलीस्कोप मोड',
+    tagEn: 'Orbital satellite imagery, 3D floating dial & telescope suite',
+    category: 'modern',
+    primaryColor: '#EF4444',
+    accentColor: '#00F0FF',
+    previewBg: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
+    needleType: 'delta_bicolor'
+  },
+  {
     id: 'sandalwood',
     nameHi: 'चंदन (Sandal)',
     nameEn: 'Sandalwood',

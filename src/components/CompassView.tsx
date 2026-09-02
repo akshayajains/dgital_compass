@@ -65,6 +65,10 @@ export const CompassView = () => {
   const [tareOffset, setTareOffset] = useState<{ pitch: number; roll: number } | null>(null);
   const [isHeadingLocked, setIsHeadingLocked] = useState<boolean>(false);
 
+  // Satellite Earth Mode States
+  const [satelliteSubMode, setSatelliteSubMode] = useState<'telescope' | 'satellite' | 'map'>('satellite');
+  const [satelliteHeadingMode, setSatelliteHeadingMode] = useState<'magnetic' | 'true' | 'axis'>('true');
+
   // Weather state
   const [weather, setWeather] = useState<WeatherData | null>(null);
 
@@ -602,7 +606,7 @@ export const CompassView = () => {
             <span className="text-stone-500">{language === 'hi' ? 'अधिक के लिए स्क्रॉल करें' : 'SCROLL FOR MORE'}</span>
           </div>
 
-          {/* Horizontal Theme Pill Chips (Sandalwood first!) */}
+          {/* Horizontal Theme Pill Chips */}
           <div className="w-full max-w-sm flex items-center gap-1.5 mb-1.5 overflow-x-auto no-scrollbar py-0.5">
             {COMPASS_STYLES.map((st) => (
               <button
@@ -611,11 +615,20 @@ export const CompassView = () => {
                 className={cn(
                   "px-3.5 py-1.5 rounded-xl text-[10.5px] uppercase font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5",
                   selectedStyle === st.id
-                    ? "bg-[#C9A67E]/30 text-amber-300 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.35)] scale-[1.02]"
+                    ? st.id === 'satellite_earth'
+                      ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.8)] scale-[1.02]"
+                      : "bg-[#C9A67E]/30 text-amber-300 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.35)] scale-[1.02]"
                     : "bg-stone-900/90 text-stone-300 border-white/10 hover:text-white hover:border-white/25"
                 )}
               >
-                <span>{st.id === 'sandalwood' ? 'SANDALWOOD' : st.id === 'royal_gold' ? 'CLASSIC' : st.id === 'minimal_onyx' ? 'STEEL' : st.id === 'vedic_mandala' ? '32 DEVTA' : (language === 'hi' ? st.nameHi : st.nameEn).toUpperCase()}</span>
+                <span>
+                  {st.id === 'satellite_earth' ? 'SATELLITE EARTH' :
+                   st.id === 'vedic_mandala' ? '2 DEVTA CHAKRA' :
+                   st.id === 'royal_gold' ? 'HINDI GOLD' :
+                   st.id === 'sandalwood' ? 'SANDALWOOD' :
+                   st.id === 'minimal_onyx' ? 'STEEL' :
+                   (language === 'hi' ? st.nameHi : st.nameEn).toUpperCase()}
+                </span>
               </button>
             ))}
 
@@ -631,25 +644,187 @@ export const CompassView = () => {
             </button>
           </div>
 
-          {/* Astrolabe Compass Dial */}
-          <CompassDialRenderer
-            styleId={selectedStyle}
-            language={language}
-            displayHeading={displayHeading}
-            pitch={pitch}
-            roll={roll}
-            sunPos={sunPos}
-            isQiblaMode={isQiblaMode}
-            qiblaBearing={qiblaBearing}
-            qiblaDistanceKm={qiblaDistanceKm}
-            isFacingQibla={isFacingQibla}
-            vastuGridEnabled={vastuGridEnabled}
-            isLevel={isLevel}
-            dialRef={dialRef}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-          />
+          {/* Satellite Earth Suite Container */}
+          {selectedStyle === 'satellite_earth' ? (
+            <div className="w-full max-w-sm rounded-[32px] overflow-hidden border border-slate-700/60 relative p-3.5 flex flex-col items-center bg-gradient-to-b from-[#1C2A3A] via-[#101A26] to-[#080D14] shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_30px_rgba(0,240,255,0.15)] my-2">
+              {/* Satellite Terrain Backdrop Overlay */}
+              <div 
+                className="absolute inset-0 opacity-40 bg-cover bg-center mix-blend-overlay pointer-events-none"
+                style={{
+                  backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80')`
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#080D14] via-transparent to-[#101A26]/80 pointer-events-none" />
+
+              {/* 1. Sub-mode pills: TELESCOPE | SATELLITE | MAP */}
+              <div className="w-full max-w-[270px] flex items-center justify-between p-1 rounded-2xl bg-black/60 backdrop-blur-md border border-white/15 relative z-10 mb-2 shadow-inner">
+                <button
+                  onClick={() => {
+                    setSatelliteSubMode('telescope');
+                    triggerHapticFeedback();
+                  }}
+                  className={cn(
+                    "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                    satelliteSubMode === 'telescope' ? "bg-red-600 text-white shadow-md" : "text-stone-400 hover:text-white"
+                  )}
+                >
+                  TELESCOPE
+                </button>
+                <button
+                  onClick={() => {
+                    setSatelliteSubMode('satellite');
+                    triggerHapticFeedback();
+                  }}
+                  className={cn(
+                    "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                    satelliteSubMode === 'satellite' ? "bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.8)]" : "text-stone-400 hover:text-white"
+                  )}
+                >
+                  SATELLITE
+                </button>
+                <button
+                  onClick={() => {
+                    setSatelliteSubMode('map');
+                    triggerHapticFeedback();
+                  }}
+                  className={cn(
+                    "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
+                    satelliteSubMode === 'map' ? "bg-red-600 text-white shadow-md" : "text-stone-400 hover:text-white"
+                  )}
+                >
+                  MAP
+                </button>
+              </div>
+
+              {/* 2. Location & Compass Icon Row */}
+              <div className="w-full flex items-center justify-between relative z-10 px-1 mb-1">
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-xs font-bold shadow-sm">
+                  <span className="text-red-500">📍</span>
+                  <span>{location ? `Pune, Maharashtra` : 'Pune, Maharashtra'}</span>
+                </div>
+
+                <button
+                  onClick={() => triggerHapticFeedback()}
+                  className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-md active:scale-95 transition-all"
+                  title="Compass Navigation"
+                >
+                  <Compass className="w-4 h-4 text-cyan-400" />
+                </button>
+              </div>
+
+              {/* 3. Floating 3D Satellite Compass Dial */}
+              <div className="relative z-10 my-1">
+                <CompassDialRenderer
+                  styleId="satellite_earth"
+                  language={language}
+                  displayHeading={displayHeading}
+                  pitch={pitch}
+                  roll={roll}
+                  sunPos={sunPos}
+                  isQiblaMode={isQiblaMode}
+                  qiblaBearing={qiblaBearing}
+                  qiblaDistanceKm={qiblaDistanceKm}
+                  isFacingQibla={isFacingQibla}
+                  vastuGridEnabled={vastuGridEnabled}
+                  isLevel={isLevel}
+                  dialRef={dialRef}
+                  onPointerDown={handlePointerDown}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                />
+              </div>
+
+              {/* 4. Bottom Row: Mini Bubble Inclinometer Gauge & Bottom Mode Pills */}
+              <div className="w-full flex items-end justify-between relative z-10 pt-1">
+                {/* Mini Bubble Inclinometer Gauge */}
+                <div className="w-16 h-16 rounded-full border-2 border-white/40 bg-black/80 backdrop-blur-md relative overflow-hidden flex items-center justify-center shadow-lg">
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-full h-[0.5px] bg-white/30" />
+                    <div className="h-full w-[0.5px] bg-white/30" />
+                    <div className="w-7 h-7 rounded-full border border-white/30" />
+                  </div>
+                  {/* Gauge Degree Labels */}
+                  <span className="absolute top-1 text-[7.5px] font-mono font-bold text-white leading-none">0°</span>
+                  <span className="absolute right-1 text-[7.5px] font-mono font-bold text-white leading-none">90°</span>
+                  <span className="absolute bottom-1 text-[7.5px] font-mono font-bold text-white leading-none">180°</span>
+                  <span className="absolute left-1 text-[7.5px] font-mono font-bold text-white leading-none">270°</span>
+                  {/* Glowing Red Spirit Bubble */}
+                  <div 
+                    className="w-3.5 h-3.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444] border border-red-300 transition-transform duration-75 ease-out"
+                    style={{
+                      transform: `translate(${Math.max(-12, Math.min(12, -roll * 0.6))}px, ${Math.max(-12, Math.min(12, -pitch * 0.6))}px)`
+                    }}
+                  />
+                </div>
+
+                {/* Bottom Heading Selection Pills */}
+                <div className="flex items-center gap-1.5 pb-1">
+                  <button
+                    onClick={() => {
+                      setSatelliteHeadingMode('magnetic');
+                      triggerHapticFeedback();
+                    }}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all",
+                      satelliteHeadingMode === 'magnetic'
+                        ? "bg-red-950/80 border-red-500 text-red-300 shadow-[0_0_10px_rgba(239,68,68,0.4)]"
+                        : "bg-black/50 border-white/10 text-stone-400"
+                    )}
+                  >
+                    MAGNETIC FIELD
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSatelliteHeadingMode('true');
+                      triggerHapticFeedback();
+                    }}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all",
+                      satelliteHeadingMode === 'true'
+                        ? "bg-emerald-950/80 border-emerald-500 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                        : "bg-black/50 border-white/10 text-stone-400"
+                    )}
+                  >
+                    TRUE HEADING
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSatelliteHeadingMode('axis');
+                      triggerHapticFeedback();
+                    }}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all",
+                      satelliteHeadingMode === 'axis'
+                        ? "bg-cyan-950/80 border-cyan-500 text-cyan-300 shadow-[0_0_10px_rgba(0,240,255,0.4)]"
+                        : "bg-black/50 border-white/10 text-stone-400"
+                    )}
+                  >
+                    AXIS
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Regular Dial for Other Styles */
+            <CompassDialRenderer
+              styleId={selectedStyle}
+              language={language}
+              displayHeading={displayHeading}
+              pitch={pitch}
+              roll={roll}
+              sunPos={sunPos}
+              isQiblaMode={isQiblaMode}
+              qiblaBearing={qiblaBearing}
+              qiblaDistanceKm={qiblaDistanceKm}
+              isFacingQibla={isFacingQibla}
+              vastuGridEnabled={vastuGridEnabled}
+              isLevel={isLevel}
+              dialRef={dialRef}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+            />
+          )}
 
           {/* Sub-Dial Intermediate Status Strip: PITCH: 3° | ROLL: 0° | [LEVEL] | TILT: 3° */}
           <div className="w-full max-w-sm flex items-center justify-between px-4 py-2 rounded-2xl bg-stone-900/90 border border-white/10 my-1 text-xs font-bold shadow-md">
