@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Compass, 
   Sparkles, 
@@ -37,7 +37,8 @@ import {
   Sun,
   Navigation,
   Check,
-  RotateCcw
+  RotateCcw,
+  Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -108,7 +109,7 @@ export const VastuOthersView: React.FC<Props> = ({
   // Active Sub-tab (Vastu | Jyotish | Numerology | Sadhana | Feng Shui | Qibla)
   const [activeTab, setActiveTab] = useState<VastuSubTab>('vastu');
 
-  // Reverse Finder Activity
+  // Reverse Finder Activity (ONLY for VASTU)
   const [targetActivity, setTargetActivity] = useState<string>('study');
 
   // Vastu Analyzer Accordion State
@@ -142,12 +143,19 @@ export const VastuOthersView: React.FC<Props> = ({
   const [selectedRashiId, setSelectedRashiId] = useState<string>('aries');
   const [choghadiyaTimeSlot, setChoghadiyaTimeSlot] = useState<'day' | 'night'>('night');
 
-  // Numerology State
-  const [birthDate, setBirthDate] = useState<string>('1995-08-15');
+  // Numerology State (Default to 21/04/1979 as in screenshot)
+  const [birthDay, setBirthDay] = useState<string>('21');
+  const [birthMonth, setBirthMonth] = useState<string>('04');
+  const [birthYear, setBirthYear] = useState<string>('1979');
+  const [isNumerologyOpen, setIsNumerologyOpen] = useState<boolean>(true);
 
   // Sadhana State
   const [japaCount, setJapaCount] = useState<number>(0);
   const [japaTarget] = useState<number>(108);
+  const [sadhanaRoutine, setSadhanaRoutine] = useState<'dhyan' | 'study' | 'sleep' | 'eating'>('dhyan');
+  const [setupFacing, setSetupFacing] = useState<boolean>(true);
+  const [setupAsan, setSetupAsan] = useState<boolean>(true);
+  const [setupPeace, setSetupPeace] = useState<boolean>(true);
 
   // Qibla Math
   const qiblaData = useMemo(() => {
@@ -165,7 +173,6 @@ export const VastuOthersView: React.FC<Props> = ({
     let qiblaBearing = (Math.atan2(y, x) * 180) / Math.PI;
     qiblaBearing = (qiblaBearing + 360) % 360;
 
-    // Haversine Distance
     const R = 6371; // km
     const dLat = ((makkahLat - userLat) * Math.PI) / 180;
     const dLon = deltaLambda;
@@ -204,118 +211,105 @@ export const VastuOthersView: React.FC<Props> = ({
     return VEDIC_RASHIS.find(r => r.id === selectedRashiId) || VEDIC_RASHIS[0];
   }, [selectedRashiId]);
 
-  // Numerology Details
+  // Numerology Details Calculation (matches Driver 3, Conductor 6 for 21/04/1979)
   const numerologyDetails = useMemo(() => {
     try {
-      const parts = birthDate.split('-');
-      const day = parseInt(parts[2], 10);
-      const month = parseInt(parts[1], 10);
-      const year = parseInt(parts[0], 10);
+      const d = parseInt(birthDay, 10) || 1;
+      const m = parseInt(birthMonth, 10) || 1;
+      const y = parseInt(birthYear, 10) || 1980;
 
       const reduce = (n: number): number => {
         let sum = n;
         while (sum > 9) {
-          sum = sum.toString().split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
+          sum = sum.toString().split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
         }
         return sum;
       };
 
-      const mulank = reduce(day);
-      const bhagyank = reduce(day + month + year);
+      const mulank = reduce(d);
+      const digitsSum = `${d}${m}${y}`.split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
+      const bhagyank = reduce(digitsSum);
 
       // Lo Shu Magic Square Frequency Counter
-      const allDigits = `${day}${month}${year}`.replace(/0/g, '');
+      const allDigits = `${d}${m}${y}`.replace(/0/g, '');
       const loShuCounts: Record<number, number> = {};
       for (let i = 1; i <= 9; i++) loShuCounts[i] = 0;
       for (const char of allDigits) {
-        const d = parseInt(char, 10);
-        if (d >= 1 && d <= 9) loShuCounts[d] = (loShuCounts[d] || 0) + 1;
+        const num = parseInt(char, 10);
+        if (num >= 1 && num <= 9) loShuCounts[num] = (loShuCounts[num] || 0) + 1;
       }
-
-      const luckyDirs: Record<number, { dir: string; deg: string; lord: string; color: string }> = {
-        1: { dir: 'East (पूर्व)', deg: '79°-101°', lord: 'Surya (Sun)', color: 'text-amber-400' },
-        2: { dir: 'North-West (वायव्य)', deg: '304°-326°', lord: 'Chandra (Moon)', color: 'text-cyan-400' },
-        3: { dir: 'North-East (ईशान)', deg: '34°-56°', lord: 'Brihaspati (Jupiter)', color: 'text-yellow-400' },
-        4: { dir: 'South-West (नैऋत्य)', deg: '214°-236°', lord: 'Rahu', color: 'text-purple-400' },
-        5: { dir: 'North (उत्तर)', deg: '349°-11°', lord: 'Budha (Mercury)', color: 'text-emerald-400' },
-        6: { dir: 'South-East (आग्नेय)', deg: '124°-146°', lord: 'Shukra (Venus)', color: 'text-rose-400' },
-        7: { dir: 'North-East / South-West', deg: '34°-56°', lord: 'Ketu', color: 'text-indigo-400' },
-        8: { dir: 'West (पश्चिम)', deg: '259°-281°', lord: 'Shani (Saturn)', color: 'text-blue-400' },
-        9: { dir: 'South (दक्षिण)', deg: '169°-191°', lord: 'Mangal (Mars)', color: 'text-red-400' }
-      };
 
       return {
         mulank,
         bhagyank,
-        loShuCounts,
-        lucky: luckyDirs[mulank] || luckyDirs[1]
+        loShuCounts
       };
     } catch {
-      return { mulank: 1, bhagyank: 1, loShuCounts: {}, lucky: { dir: 'East', deg: '79°-101°', lord: 'Sun', color: 'text-amber-400' } };
+      return { mulank: 3, bhagyank: 6, loShuCounts: { 4: 1, 9: 2, 2: 1, 3: 1, 7: 1, 1: 2, 6: 1 } };
     }
-  }, [birthDate]);
+  }, [birthDay, birthMonth, birthYear]);
 
-  // Live heading advice
+  // Live heading advice (for Vastu)
   const liveHeadingAdvice = useMemo(() => {
     switch (liveZone.code) {
       case 'N':
-        return { idealFor: isHi ? 'धन संचय, व्यापारिक अवसर, कुबेर स्थान, तिजोरी' : 'Wealth Accumulation, Career Opportunities, Safe/Locker', avoidFor: isHi ? 'रसोई, शौचालय, भारी गोदाम' : 'Kitchen Fire, Toilet, Heavy Clutter' };
+        return { idealFor: 'Wealth Accumulation, Career Opportunities, Safe/Locker', avoidFor: 'Kitchen Fire, Toilet, Heavy Clutter' };
       case 'NNE':
-        return { idealFor: isHi ? 'औषधि, स्वास्थ्य सुधार, योग, रोग मुक्ति' : 'Medicine Cabinet, Health Healing, Recovery', avoidFor: isHi ? 'शौचालय (गंभीर रोग कारक), कबाड़' : 'Toilet, Dustbin' };
+        return { idealFor: 'Medicine Cabinet, Health Healing, Recovery', avoidFor: 'Toilet, Dustbin' };
       case 'NE':
-        return { idealFor: isHi ? 'पूजा मंदिर, ध्यान, आध्यात्मिक साधना, गहरा अध्ययन' : 'Pooja Mandir, Meditation, Spiritual Focus, Study', avoidFor: isHi ? 'शौचालय, रसोई, भारी सीढ़ी, मास्टर बेडरूम' : 'Toilet (Major Dosha), Kitchen, Heavy Stairs' };
+        return { idealFor: 'Pooja Mandir, Meditation, Spiritual Focus, Study', avoidFor: 'Toilet (Major Dosha), Kitchen, Heavy Stairs' };
       case 'ENE':
-        return { idealFor: isHi ? 'मनोरंजन, ताजगी, पारिवारिक लाउंज' : 'Recreation, Family Lounge, Refreshment', avoidFor: isHi ? 'शौचालय, कबाड़' : 'Toilet, Heavy Junk' };
+        return { idealFor: 'Recreation, Family Lounge, Refreshment', avoidFor: 'Toilet, Heavy Junk' };
       case 'E':
-        return { idealFor: isHi ? 'सामाजिक संपर्क, मुख्य द्वार, पूर्व मुखी अध्ययन' : 'Social Networking, Main Entrance, East-facing Study', avoidFor: isHi ? 'शौचालय, अंधेरा, भारी दीवारें' : 'Toilet, Dark Clutter, Blocked Windows' };
+        return { idealFor: 'Social Networking, Main Entrance, East-facing Study', avoidFor: 'Toilet, Dark Clutter, Blocked Windows' };
       case 'ESE':
-        return { idealFor: isHi ? 'मंथन, मिक्सी, वाशिंग मशीन' : 'Churning, Mixer/Grinder, Washing Machine', avoidFor: isHi ? 'शयनकक्ष (अनिद्रा व अत्यधिक चिंता), मंदिर' : 'Bedroom (Severe Anxiety & Insomnia), Mandir' };
+        return { idealFor: 'Churning, Mixer/Grinder, Washing Machine', avoidFor: 'Bedroom (Severe Anxiety & Insomnia), Mandir' };
       case 'SE':
-        return { idealFor: isHi ? 'रसोई (गैस चूल्हा), अग्नि तत्व, विद्युत उपकरण' : 'Kitchen Gas Stove, Fire Element, Electrical Inverter', avoidFor: isHi ? 'भूमिगत पानी टैंक, बेडरूम, नीला/काला रंग' : 'Water Tank, Bedroom, Blue/Black Colors' };
+        return { idealFor: 'Kitchen Gas Stove, Fire Element, Electrical Inverter', avoidFor: 'Water Tank, Bedroom, Blue/Black Colors' };
       case 'SSE':
-        return { idealFor: isHi ? 'व्यायामशाला, शारीरिक शक्ति, अन्न भंडारण' : 'Gym, Workout, Physical Stamina, Grains', avoidFor: isHi ? 'शौचालय, पानी का गड्ढा' : 'Toilet, Underground Pit' };
+        return { idealFor: 'Gym, Workout, Physical Stamina, Grains', avoidFor: 'Toilet, Underground Pit' };
       case 'S':
-        return { idealFor: isHi ? 'गहरी शांत नींद, विश्राम, भारी अलमारी' : 'Deep Restful Sleep, Heavy Furniture, Rest', avoidFor: isHi ? 'भूमिगत पानी, खुला स्थान' : 'Underground Tank, Water Fountains' };
+        return { idealFor: 'Deep Restful Sleep, Heavy Furniture, Rest', avoidFor: 'Underground Tank, Water Fountains' };
       case 'SSW':
-        return { idealFor: isHi ? 'शौचालय, सेप्टिक टैंक, कचरा विसर्जन' : 'Toilet & Septic Tank (Ideal Zone of Disposal)', avoidFor: isHi ? 'बेडरूम (स्वास्थ्य हानि), तिजोरी, मंदिर' : 'Bedroom, Cash Safe, Mandir' };
+        return { idealFor: 'Toilet & Septic Tank (Ideal Zone of Disposal)', avoidFor: 'Bedroom, Cash Safe, Mandir' };
       case 'SW':
-        return { idealFor: isHi ? 'मास्टर बेडरूम, स्थायित्व, गृहस्वामी, भारी ओवरहेड टंकी' : 'Master Bedroom, Head of Family, Stability, Overhead Tank', avoidFor: isHi ? 'शौचालय (पारिवारिक कलह), भूमिगत टैंक, मंदिर' : 'Toilet, Underground Tank, Mandir' };
+        return { idealFor: 'Master Bedroom, Head of Family, Stability, Overhead Tank', avoidFor: 'Toilet, Underground Tank, Mandir' };
       case 'WSW':
-        return { idealFor: isHi ? 'विद्या पद: अध्ययन कक्ष, स्टडी टेबल, पुस्तकें, बचत' : 'Vidya Pada: Study Desk, Books, Knowledge, Savings', avoidFor: isHi ? 'शौचालय (विद्या का नाश), रसोई' : 'Toilet (Washes away education), Kitchen' };
+        return { idealFor: 'Vidya Pada: Study Desk, Books, Knowledge, Savings', avoidFor: 'Toilet (Washes away education), Kitchen' };
       case 'W':
-        return { idealFor: isHi ? 'व्यापारिक लाभ, डाइनिंग टेबल, बच्चों का बेडरूम' : 'Business Profits, Gains, Dining Room, Kids Bedroom', avoidFor: isHi ? 'भूमिगत जल टैंक' : 'Underground Water Tank' };
+        return { idealFor: 'Business Profits, Gains, Dining Room, Kids Bedroom', avoidFor: 'Underground Water Tank' };
       case 'WNW':
-        return { idealFor: isHi ? 'डिटॉक्स, विरेचन, रद्दी कागज' : 'Emotional Detoxing, Releasing Grief, Waste Paper', avoidFor: isHi ? 'बेडरूम (उदासी व अवसाद), स्टडी टेबल' : 'Bedroom (Depression), Study Desk' };
+        return { idealFor: 'Emotional Detoxing, Releasing Grief, Waste Paper', avoidFor: 'Bedroom (Depression), Study Desk' };
       case 'NW':
-        return { idealFor: isHi ? 'अतिथि कक्ष, बैंक दस्तावेज, सहयोग, तैयार माल' : 'Guest Room, Banking, Support, Ready Goods', avoidFor: isHi ? 'मास्टर बेडरूम, भारी स्थायी सामान' : 'Master Bedroom, Heavy Fixed Vaults' };
+        return { idealFor: 'Guest Room, Banking, Support, Ready Goods', avoidFor: 'Master Bedroom, Heavy Fixed Vaults' };
       case 'NNW':
-        return { idealFor: isHi ? 'नवविवाहित युगल, आकर्षण, इत्र व सौंदर्य' : 'Newly Married Couple, Romance, Charm, Attire', avoidFor: isHi ? 'बच्चों का अध्ययन कक्ष, शौचालय' : 'Children Study Desk, Toilet' };
+        return { idealFor: 'Newly Married Couple, Romance, Charm, Attire', avoidFor: 'Children Study Desk, Toilet' };
       default:
-        return { idealFor: isHi ? 'सामान्य कार्य' : 'General Work', avoidFor: isHi ? 'कबाड़' : 'Clutter' };
+        return { idealFor: 'General Work', avoidFor: 'Clutter' };
     }
-  }, [liveZone.code, isHi]);
+  }, [liveZone.code]);
 
-  // Reverse activity finder
+  // Reverse activity finder (for Vastu)
   const activityDirections = useMemo(() => {
     switch (targetActivity) {
       case 'study':
-        return { title: isHi ? 'अध्ययन एवं परीक्षा (Study / Exams)' : 'Study & Competitive Exams', bestZones: ['WSW (236°-258°)', 'NE (34°-56°)', 'East (79°-101°)'], facing: isHi ? 'पढ़ते समय मुख पूर्व (याददाश्त) या उत्तर (एकाग्रता) रखें।' : 'Face East (Retention) or North (Analytical focus).', targetDeg: 247.5, color: 'text-indigo-400' };
+        return { title: 'Study & Competitive Exams', bestZones: ['WSW (236°-258°)', 'NE (34°-56°)', 'East (79°-101°)'], facing: 'Face East (Retention) or North (Analytical focus).', targetDeg: 247.5, color: 'text-indigo-400' };
       case 'work':
-        return { title: isHi ? 'वर्क फ्रॉम होम / ऑफिस (Work / Office)' : 'Work From Home & Office', bestZones: ['North (349°-11°)', 'West (259°-281°)', 'East (79°-101°)'], facing: isHi ? 'बैठते समय मुख उत्तर या पूर्व की ओर रखें।' : 'Sit facing North (Career opportunities) or East.', targetDeg: 0, color: 'text-sky-400' };
+        return { title: 'Work From Home & Office', bestZones: ['North (349°-11°)', 'West (259°-281°)', 'East (79°-101°)'], facing: 'Sit facing North (Career opportunities) or East.', targetDeg: 0, color: 'text-sky-400' };
       case 'sleep':
-        return { title: isHi ? 'मास्टर बेडरूम व शयन (Master Bedroom)' : 'Master Bedroom & Sleep', bestZones: ['SW (214°-236°)', 'South (169°-191°)', 'West (259°-281°)'], facing: isHi ? 'सिर हमेशा दक्षिण (सर्वोत्तम) या पूर्व में रखें। उत्तर में सिर कभी न करें।' : 'Head towards South (Best) or East. Never North.', targetDeg: 225, color: 'text-amber-400' };
+        return { title: 'Master Bedroom & Sleep', bestZones: ['SW (214°-236°)', 'South (169°-191°)', 'West (259°-281°)'], facing: 'Head towards South (Best) or East. Never North.', targetDeg: 225, color: 'text-amber-400' };
       case 'mandir':
-        return { title: isHi ? 'पूजा मंदिर व ध्यान (Pooja Mandir)' : 'Pooja Mandir & Spiritual Space', bestZones: ['NE (34°-56°)', 'East (79°-101°)', 'North (349°-11°)'], facing: isHi ? 'पूजा करते समय उपासक का मुख पूर्व या उत्तर की ओर होना चाहिए।' : 'Devotee faces East or North during prayer.', targetDeg: 45, color: 'text-yellow-400' };
+        return { title: 'Pooja Mandir & Spiritual Space', bestZones: ['NE (34°-56°)', 'East (79°-101°)', 'North (349°-11°)'], facing: 'Devotee faces East or North during prayer.', targetDeg: 45, color: 'text-yellow-400' };
       case 'kitchen':
-        return { title: isHi ? 'रसोईघर व गैस चूल्हा (Kitchen Stove)' : 'Kitchen & Gas Stove', bestZones: ['SE (124°-146°)', 'SSE (146°-169°)', 'NW (304°-326°)'], facing: isHi ? 'खाना बनाते समय मुख हमेशा पूर्व दिशा की ओर होना चाहिए।' : 'Cook must face East while cooking.', targetDeg: 135, color: 'text-orange-400' };
+        return { title: 'Kitchen & Gas Stove', bestZones: ['SE (124°-146°)', 'SSE (146°-169°)', 'NW (304°-326°)'], facing: 'Cook must face East while cooking.', targetDeg: 135, color: 'text-orange-400' };
       case 'cash':
-        return { title: isHi ? 'तिजोरी व धन स्थान (Cash Vault)' : 'Cash Vault & Wealth Safe', bestZones: ['North (349°-11°)', 'SW (214°-236°)', 'West (259°-281°)'], facing: isHi ? 'तिजोरी का द्वार हमेशा उत्तर की ओर खुलना चाहिए (कुबेर का वास)।' : 'Locker door must open towards North (Lord Kuber).', targetDeg: 0, color: 'text-emerald-400' };
+        return { title: 'Cash Vault & Wealth Safe', bestZones: ['North (349°-11°)', 'SW (214°-236°)', 'West (259°-281°)'], facing: 'Locker door must open towards North (Lord Kuber).', targetDeg: 0, color: 'text-emerald-400' };
       case 'toilet':
-        return { title: isHi ? 'शौचालय व सेप्टिक टैंक (Toilet)' : 'Toilet & Septic Tank', bestZones: ['SSW (191°-214°)', 'WNW (281°-304°)', 'ESE (101°-124°)'], facing: isHi ? 'बैठते समय मुख उत्तर या दक्षिण की ओर होना चाहिए।' : 'Commode user should face North or South.', targetDeg: 202.5, color: 'text-purple-400' };
+        return { title: 'Toilet & Septic Tank', bestZones: ['SSW (191°-214°)', 'WNW (281°-304°)', 'ESE (101°-124°)'], facing: 'Commode user should face North or South.', targetDeg: 202.5, color: 'text-purple-400' };
       default:
-        return { title: isHi ? 'अध्ययन कक्ष' : 'Study Room', bestZones: ['WSW', 'NE', 'East'], facing: isHi ? 'मुख पूर्व या उत्तर रखें।' : 'Face East or North.', targetDeg: 247.5, color: 'text-indigo-400' };
+        return { title: 'Study Room', bestZones: ['WSW', 'NE', 'East'], facing: 'Face East or North.', targetDeg: 247.5, color: 'text-indigo-400' };
     }
-  }, [targetActivity, isHi]);
+  }, [targetActivity]);
 
   // 9-grid score
   const floorplanScore = useMemo(() => {
@@ -423,7 +417,7 @@ export const VastuOthersView: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Big Heading Readout Box: 91° पूर्व (E) True North */}
+        {/* Big Heading Readout Box: 89° पूर्व (E) True North */}
         <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#FBF3E8] via-[#EFE2CE] to-[#DCBF9E] text-stone-950 flex items-center justify-between shadow-lg">
           <span className="text-xl font-black font-serif tracking-tight">
             {displayDeg}° {liveZone.nameHi.split(' ')[0]} ({liveZone.code})
@@ -444,7 +438,7 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {/* 2. THE 6 SUB-TABS (EXACTLY AS IN USER SCREENSHOTS) */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-sm flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 my-1">
+      <div className="w-full max-w-sm flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1">
         {[
           { id: 'vastu', label: 'Vastu', icon: '✨' },
           { id: 'jyotish', label: 'Jyotish', icon: '⭐' },
@@ -476,78 +470,76 @@ export const VastuOthersView: React.FC<Props> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 3. LIVE DIRECTION ADVICE & REVERSE FINDER (PRESENT IN VASTU SUITE) */}
-      {/* ========================================================================= */}
-      <div className="w-full rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-[#1E140C] via-[#2A180E] to-[#140A04] shadow-xl my-1.5 flex flex-col gap-1.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-amber-400 text-[10px] font-black uppercase tracking-wider">
-            <Compass className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
-            <span>{isHi ? 'लाइव दिशा सुझाव (Live Advice)' : 'Live Direction Recommendation'}</span>
-          </div>
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
-            {liveZone.code} • {isHi ? liveZone.elementHi : liveZone.element}
-          </span>
-        </div>
-
-        <div className="text-xs font-bold leading-snug">
-          <span className="text-emerald-400 font-black block">
-            {isHi ? '✓ इसके लिए उत्तम:' : '✓ Optimal For:'} <span className="text-white">{liveHeadingAdvice.idealFor}</span>
-          </span>
-          <span className="text-rose-400 font-bold text-[11px] block mt-0.5">
-            {isHi ? '✕ इससे बचें:' : '✕ Strictly Avoid:'} <span className="text-stone-300">{liveHeadingAdvice.avoidFor}</span>
-          </span>
-        </div>
-      </div>
-
-      {/* Reverse Finder: "What do you want to place?" */}
-      <div className="w-full rounded-2xl p-3 bg-black/60 border border-white/10 my-1 flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[10.5px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-            <Search className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isHi ? 'किस कार्य हेतु दिशा चाहिए?' : 'Find Best Direction For:'}</span>
-          </span>
-          <select
-            value={targetActivity}
-            onChange={(e) => {
-              setTargetActivity(e.target.value);
-              triggerHaptic();
-            }}
-            className="p-1 px-2 rounded-lg bg-stone-900 border border-white/20 text-xs font-black text-amber-300 focus:outline-none"
-          >
-            <option value="study">{isHi ? '📚 अध्ययन / पढ़ाई (Study)' : '📚 Study & Reading'}</option>
-            <option value="work">{isHi ? '💻 वर्क फ्रॉम होम / ऑफिस' : '💻 Work / Home Office'}</option>
-            <option value="sleep">{isHi ? '🛏️ मास्टर बेडरूम / शयन' : '🛏️ Master Bedroom'}</option>
-            <option value="mandir">{isHi ? '🪔 पूजा घर / मंदिर' : '🪔 Pooja Mandir'}</option>
-            <option value="kitchen">{isHi ? '🍳 रसोई / गैस चूल्हा' : '🍳 Kitchen / Cooking'}</option>
-            <option value="cash">{isHi ? '💰 तिजोरी / रोकड़' : '💰 Cash Safe / Vault'}</option>
-            <option value="toilet">{isHi ? '🚿 शौचालय / निष्कासन' : '🚿 Toilet / Disposal'}</option>
-          </select>
-        </div>
-
-        <div className="p-2.5 rounded-xl bg-stone-900/90 border border-amber-500/30 flex flex-col gap-1 text-xs">
-          <div className="flex items-center justify-between">
-            <span className={cn("font-black text-sm", activityDirections.color)}>
-              {activityDirections.title}
-            </span>
-            <span className="text-[9px] font-bold text-stone-400">
-              {isHi ? 'लक्ष्य कोण:' : 'Target Angle:'} <strong className="text-white font-mono">{activityDirections.targetDeg}°</strong>
-            </span>
-          </div>
-          <div className="flex items-center gap-1 text-[11px] text-stone-200">
-            <strong className="text-emerald-400">{isHi ? 'सर्वोत्तम दिशाएं:' : 'Best Zones:'}</strong>
-            <span>{activityDirections.bestZones.join(', ')}</span>
-          </div>
-          <p className="text-[11px] text-amber-200/90 font-bold leading-snug">
-            {activityDirections.facing}
-          </p>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 4. TAB CONTENT: 1. VASTU */}
+      {/* 3. TAB CONTENT: 1. VASTU (LIVE DIRECTION & FIND BEST DIRECTION LIVE HERE) */}
       {/* ========================================================================= */}
       {activeTab === 'vastu' && (
         <div className="w-full flex flex-col gap-3">
+          {/* LIVE DIRECTION RECOMMENDATION (ONLY UNDER VASTU TAB AS REQUESTED) */}
+          <div className="w-full rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-[#1E140C] via-[#2A180E] to-[#140A04] shadow-xl flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-amber-400 text-[10px] font-black uppercase tracking-wider">
+                <Compass className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
+                <span>LIVE DIRECTION RECOMMENDATION</span>
+              </div>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                {liveZone.code} • {liveZone.element.toUpperCase()}
+              </span>
+            </div>
+
+            <div className="text-xs font-bold leading-snug">
+              <span className="text-emerald-400 font-black block">
+                ✓ Optimal For: <span className="text-white">{liveHeadingAdvice.idealFor}</span>
+              </span>
+              <span className="text-rose-400 font-bold text-[11px] block mt-0.5">
+                ✕ Strictly Avoid: <span className="text-stone-300">{liveHeadingAdvice.avoidFor}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* FIND BEST DIRECTION FOR (ONLY UNDER VASTU TAB AS REQUESTED) */}
+          <div className="w-full rounded-2xl p-3 bg-black/60 border border-white/10 flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10.5px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <Search className="w-3.5 h-3.5 text-amber-400" />
+                <span>FIND BEST DIRECTION FOR:</span>
+              </span>
+              <select
+                value={targetActivity}
+                onChange={(e) => {
+                  setTargetActivity(e.target.value);
+                  triggerHaptic();
+                }}
+                className="p-1 px-2 rounded-lg bg-stone-900 border border-white/20 text-xs font-black text-amber-300 focus:outline-none"
+              >
+                <option value="study">📚 Study & Reading ⌵</option>
+                <option value="work">💻 Work / Home Office ⌵</option>
+                <option value="sleep">🛏️ Master Bedroom ⌵</option>
+                <option value="mandir">🪔 Pooja Mandir ⌵</option>
+                <option value="kitchen">🍳 Kitchen / Cooking ⌵</option>
+                <option value="cash">💰 Cash Safe / Vault ⌵</option>
+                <option value="toilet">🚿 Toilet / Disposal ⌵</option>
+              </select>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-stone-900/90 border border-amber-500/30 flex flex-col gap-1 text-xs">
+              <div className="flex items-center justify-between">
+                <span className={cn("font-black text-sm", activityDirections.color)}>
+                  {activityDirections.title}
+                </span>
+                <span className="text-[9px] font-bold text-stone-400">
+                  Target Angle: <strong className="text-white font-mono">{activityDirections.targetDeg}°</strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-[11px] text-stone-200">
+                <strong className="text-emerald-400">Best Zones:</strong>
+                <span>{activityDirections.bestZones.join(', ')}</span>
+              </div>
+              <p className="text-[11px] text-amber-200/90 font-bold leading-snug">
+                {activityDirections.facing}
+              </p>
+            </div>
+          </div>
+
           {/* VASTU ANALYZER (COLLAPSIBLE ACCORDION) */}
           <div className="w-full rounded-3xl border border-amber-500/40 bg-gradient-to-b from-[#1E140C] via-[#140D07] to-[#0D0704] shadow-2xl overflow-hidden">
             <button
@@ -560,7 +552,7 @@ export const VastuOthersView: React.FC<Props> = ({
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <span className="font-black text-sm text-amber-400 uppercase tracking-wider">
-                  {isHi ? 'वास्तु विश्लेषक (Vastu Analyzer)' : 'VASTU ANALYZER'}
+                  VASTU ANALYZER
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -576,7 +568,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 {/* 1. Select Room Type */}
                 <div className="flex flex-col gap-1">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-wider">
-                    {isHi ? 'कक्ष का प्रकार चुनें (SELECT ROOM TYPE):' : 'SELECT ROOM TYPE:'}
+                    SELECT ROOM TYPE:
                   </label>
                   <select
                     value={analyzerRoomType}
@@ -596,7 +588,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 {/* 2. Direction Input (Degrees) */}
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-black text-stone-400 uppercase tracking-wider">
-                    {isHi ? 'मुख्य द्वार दिशा (अंश):' : 'MAIN DOOR DIRECTION (DEGREES):'}
+                    MAIN DOOR DIRECTION (DEGREES):
                   </label>
                   <button
                     onClick={() => {
@@ -605,7 +597,7 @@ export const VastuOthersView: React.FC<Props> = ({
                     }}
                     className="text-[9px] font-bold text-cyan-400 hover:underline"
                   >
-                    {isHi ? 'लाइव दिशा लें' : 'Use Live Compass'}
+                    Use Live Compass
                   </button>
                 </div>
 
@@ -624,7 +616,7 @@ export const VastuOthersView: React.FC<Props> = ({
                     className="ml-auto px-3 py-2 rounded-xl bg-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center gap-1 shadow-md active:scale-95"
                   >
                     <Save className="w-3.5 h-3.5" />
-                    <span>{isHi ? 'सहेजें' : 'SAVE'}</span>
+                    <span>SAVE</span>
                   </button>
                 </div>
 
@@ -632,7 +624,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 {savedRooms.length > 0 && (
                   <div className="flex flex-col gap-1 p-2 rounded-xl bg-black/40 border border-white/10">
                     <span className="text-[9.5px] font-black text-stone-400 uppercase">
-                      {isHi ? 'सहेजे गए कक्ष:' : 'SAVED ROOMS:'}
+                      SAVED ROOMS:
                     </span>
                     {savedRooms.map(rm => (
                       <div key={rm.id} className="flex items-center justify-between text-[11px] py-0.5">
@@ -663,15 +655,15 @@ export const VastuOthersView: React.FC<Props> = ({
                   </div>
                   <p className="text-[11px] text-stone-200 font-bold">
                     {analyzerPada.isAuspicious 
-                      ? (isHi ? 'प्रभाव: समृद्धि, धन लाभ, पारिवारिक सुख' : 'Effect: Prosperity, wealth influx, family harmony')
-                      : (isHi ? 'प्रभाव: दुर्घटना भय, अकारण धन हानि, चिंता' : 'Effect: Accident hazard, losses, restlessness')}
+                      ? 'Effect: Prosperity, wealth influx, family harmony'
+                      : 'Effect: Accident hazard, losses, restlessness'}
                   </p>
                 </div>
 
                 {/* Vastu Tips & Brahmasthan */}
                 <div className="flex flex-col gap-1 mt-1">
                   <span className="text-amber-400 font-black text-[10px] uppercase tracking-wider">
-                    {isHi ? 'वास्तु परामर्श (VASTU TIPS):' : 'VASTU TIPS'}
+                    VASTU TIPS
                   </span>
                   <p className="text-[11px] text-stone-300 leading-snug">
                     Look for the favorable BEST directions highlighted on the compass dial for optimal room placement.
@@ -680,7 +672,7 @@ export const VastuOthersView: React.FC<Props> = ({
 
                 <div className="flex flex-col gap-1">
                   <span className="text-amber-400 font-black text-[10px] uppercase tracking-wider">
-                    {isHi ? 'ब्रह्मस्थान (केंद्र बिंदु):' : 'BRAHMASTHAN (CENTER POINT)'}
+                    BRAHMASTHAN (CENTER POINT)
                   </span>
                   <p className="text-[11px] text-stone-300 leading-snug">
                     The exact center of your home is the Brahmasthan. Keep it clean, empty, light, and free from heavy pillars, walls, toilets, or kitchens.
@@ -690,7 +682,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 {/* Easy Vastu Remedies */}
                 <div className="flex flex-col gap-1.5 mt-1 pt-2 border-t border-white/10">
                   <span className="text-amber-400 font-black text-[10px] uppercase tracking-wider">
-                    {isHi ? 'सरल वास्तु उपाय (EASY VASTU REMEDIES):' : 'EASY VASTU REMEDIES'}
+                    EASY VASTU REMEDIES
                   </span>
                   <div className="flex flex-col gap-1 text-[11px] text-stone-300">
                     <div>
@@ -717,7 +709,7 @@ export const VastuOthersView: React.FC<Props> = ({
               <div className="flex items-center gap-2">
                 <span className="text-amber-400 text-sm">▦</span>
                 <span className="font-black text-xs text-amber-400 uppercase tracking-wider">
-                  {isHi ? 'इंटरैक्टिव ९-ग्रिड नक्शा' : 'INTERACTIVE 9-GRID FLOORPLAN MAPPER'}
+                  INTERACTIVE 9-GRID FLOORPLAN MAPPER
                 </span>
               </div>
               <span className={cn(
@@ -852,7 +844,7 @@ export const VastuOthersView: React.FC<Props> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 5. TAB CONTENT: 2. JYOTISH (VEDIC ASTROLOGY & CHOGHADIYA) */}
+      {/* 4. TAB CONTENT: 2. JYOTISH (VEDIC ASTROLOGY & CHOGHADIYA) */}
       {/* ========================================================================= */}
       {activeTab === 'jyotish' && (
         <div className="w-full flex flex-col gap-3">
@@ -1029,149 +1021,299 @@ export const VastuOthersView: React.FC<Props> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 6. TAB CONTENT: 3. NUMEROLOGY (LO SHU GRID & LUCKY DIRECTIONS) */}
+      {/* 5. TAB CONTENT: 3. NUMEROLOGY (MATCHING SCREENSHOT media_1788369729061.png) */}
       {/* ========================================================================= */}
       {activeTab === 'numerology' && (
         <div className="w-full flex flex-col gap-3">
-          <div className="w-full rounded-3xl p-4 border border-purple-900/40 bg-gradient-to-b from-[#180A24] to-[#0B0412] shadow-2xl flex flex-col gap-3 text-xs">
-            <span className="font-black text-sm text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>#</span>
-              <span>Numerology & Lo Shu Grid</span>
-            </span>
-
-            {/* Birth Date Picker */}
-            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-stone-900 border border-white/10">
-              <span className="text-[10.5px] font-black text-stone-300 uppercase">
-                {isHi ? 'जन्म तिथि दर्ज करें:' : 'Birth Date:'}
-              </span>
-              <input
-                type="date"
-                value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
-                className="bg-black text-white p-1.5 px-2 rounded-xl border border-white/20 text-xs font-mono font-bold focus:outline-none"
-              />
-            </div>
-
-            {/* Driver & Conductor */}
-            <div className="grid grid-cols-2 gap-2 text-center">
-              <div className="p-3 rounded-2xl bg-purple-950/40 border border-purple-500/40">
-                <span className="text-[9.5px] font-black text-purple-300 uppercase block">
-                  {isHi ? 'मूलांक (Driver):' : 'Driver (Mulank):'}
+          {/* Accordion Header: # NUMEROLOGY */}
+          <div className="w-full rounded-3xl border border-sky-900/40 bg-gradient-to-b from-[#081524] via-[#040C16] to-[#02060C] shadow-2xl overflow-hidden">
+            <button
+              onClick={() => {
+                setIsNumerologyOpen(!isNumerologyOpen);
+                triggerHaptic();
+              }}
+              className="w-full p-3.5 flex items-center justify-between bg-[#06121E] border-b border-white/10 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <span className="font-black text-sm text-sky-400 uppercase tracking-wider">
+                  # NUMEROLOGY
                 </span>
-                <span className="text-3xl font-black text-white font-mono">{numerologyDetails.mulank}</span>
-                <span className="text-[9px] text-stone-400 block mt-0.5">{numerologyDetails.lucky.lord}</span>
               </div>
+              {isNumerologyOpen ? <ChevronUp className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
+            </button>
 
-              <div className="p-3 rounded-2xl bg-purple-950/40 border border-purple-500/40">
-                <span className="text-[9.5px] font-black text-purple-300 uppercase block">
-                  {isHi ? 'भाग्यांक (Conductor):' : 'Conductor (Bhagyank):'}
-                </span>
-                <span className="text-3xl font-black text-white font-mono">{numerologyDetails.bhagyank}</span>
-                <span className="text-[9px] text-stone-400 block mt-0.5">Destiny Path</span>
+            {isNumerologyOpen && (
+              <div className="p-4 flex flex-col gap-3 text-xs">
+                <h3 className="text-sm font-serif font-black text-sky-300">
+                  Numerology Alignment
+                </h3>
+
+                {/* ENTER YOUR DATE OF BIRTH */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-[9.5px] font-black text-stone-400 uppercase tracking-wider">
+                    ENTER YOUR DATE OF BIRTH:
+                  </label>
+                  <div className="flex items-center gap-1.5 p-2 rounded-2xl bg-stone-900 border border-white/15">
+                    <input
+                      type="number"
+                      min={1}
+                      max={31}
+                      value={birthDay}
+                      onChange={(e) => setBirthDay(e.target.value)}
+                      placeholder="DD"
+                      className="w-10 bg-transparent text-center font-mono font-black text-sm text-white focus:outline-none"
+                    />
+                    <span className="text-stone-500">/</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={birthMonth}
+                      onChange={(e) => setBirthMonth(e.target.value)}
+                      placeholder="MM"
+                      className="w-10 bg-transparent text-center font-mono font-black text-sm text-white focus:outline-none"
+                    />
+                    <span className="text-stone-500">/</span>
+                    <input
+                      type="number"
+                      min={1900}
+                      max={2099}
+                      value={birthYear}
+                      onChange={(e) => setBirthYear(e.target.value)}
+                      placeholder="YYYY"
+                      className="w-16 bg-transparent text-center font-mono font-black text-sm text-white focus:outline-none"
+                    />
+                    <ChevronDown className="w-4 h-4 text-stone-400 ml-auto" />
+                  </div>
+                </div>
+
+                {/* DRIVER (MULANK) & CONDUCTOR (BHAGYANK) SQUARE CARDS */}
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <div className="p-3.5 rounded-2xl bg-[#0F2236] border border-sky-500/30 flex flex-col">
+                    <span className="text-[9px] font-black uppercase text-stone-400">DRIVER (MULANK)</span>
+                    <span className="text-3xl font-black font-sans text-sky-400 mt-1">
+                      {numerologyDetails.mulank}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-2xl bg-[#0F2236] border border-sky-500/30 flex flex-col">
+                    <span className="text-[9px] font-black uppercase text-stone-400">CONDUCTOR (BHAGYANK)</span>
+                    <span className="text-3xl font-black font-sans text-sky-400 mt-1">
+                      {numerologyDetails.bhagyank}
+                    </span>
+                  </div>
+                </div>
+
+                {/* LO SHU GRID MAGIC SQUARE (AS IN SCREENSHOT) */}
+                <div className="p-4 rounded-3xl bg-[#06121E] border border-white/10 flex flex-col items-center gap-3">
+                  <span className="text-[10px] font-serif font-black tracking-wider text-sky-300 uppercase">
+                    LO SHU GRID MAGIC SQUARE
+                  </span>
+
+                  <div className="grid grid-cols-3 gap-2.5 w-full max-w-[260px]">
+                    {[4, 9, 2, 3, 5, 7, 8, 1, 6].map((num) => {
+                      const count = numerologyDetails.loShuCounts[num] || 0;
+                      const isPresent = count > 0;
+                      return (
+                        <div 
+                          key={num}
+                          className={cn(
+                            "h-14 rounded-2xl border flex flex-col items-center justify-center transition-all",
+                            isPresent 
+                              ? "bg-[#0E3A4D] border-sky-400 text-white shadow-[0_0_10px_rgba(56,189,248,0.25)]" 
+                              : "bg-[#081522] border-white/5 text-stone-700 opacity-60"
+                          )}
+                        >
+                          <span className="text-lg font-black">{num}</span>
+                          {isPresent && (
+                            <span className="text-[8.5px] font-mono text-sky-200">
+                              x{count}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <p className="text-[9.5px] text-stone-400 text-center leading-tight">
+                    Highlighted numbers are present in your chart. Dimmed numbers represent missing energies.
+                  </p>
+                </div>
               </div>
-            </div>
-
-            {/* Lo Shu 3x3 Magic Grid */}
-            <div className="p-3 rounded-2xl bg-black/50 border border-white/10 flex flex-col gap-2">
-              <span className="text-[10px] font-black text-purple-300 uppercase">
-                Lo Shu 3x3 Magic Grid Mapping:
-              </span>
-              <div className="grid grid-cols-3 gap-2 text-center font-mono font-black text-base">
-                {[4, 9, 2, 3, 5, 7, 8, 1, 6].map((num) => {
-                  const count = numerologyDetails.loShuCounts[num] || 0;
-                  const isPresent = count > 0;
-                  return (
-                    <div 
-                      key={num}
-                      className={cn(
-                        "p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all",
-                        isPresent ? "bg-purple-600/30 border-purple-400/60 text-white shadow-sm" : "bg-stone-900/60 border-white/10 text-stone-600"
-                      )}
-                    >
-                      <span>{num}</span>
-                      <span className="text-[8px] font-sans font-bold text-stone-400">
-                        {isPresent ? `${count}x` : '—'}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Lucky Direction Card */}
-            <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/50 flex flex-col gap-1">
-              <span className="text-purple-300 font-black text-[11px] uppercase">
-                🎯 {isHi ? 'आपके मूलांक की शुभ दिशा:' : 'Personal Lucky Compass Direction:'}
-              </span>
-              <span className="text-base font-black text-white">
-                {numerologyDetails.lucky.dir} ({numerologyDetails.lucky.deg})
-              </span>
-              <p className="text-[11px] text-stone-300 leading-snug">
-                Align your study desk or work chair to face <strong className="text-white">{numerologyDetails.lucky.dir}</strong> to activate positive cosmic vibrations.
-              </p>
-            </div>
+            )}
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 7. TAB CONTENT: 4. SADHANA (MEDITATION POSTURE & SACRED ALIGNMENT) */}
+      {/* 6. TAB CONTENT: 4. SADHANA (MATCHING SCREENSHOT media_1788369685841.png) */}
       {/* ========================================================================= */}
       {activeTab === 'sadhana' && (
         <div className="w-full flex flex-col gap-3">
-          <div className="w-full rounded-3xl p-4 border border-amber-900/40 bg-gradient-to-b from-[#241A08] to-[#0E0A02] shadow-2xl flex flex-col gap-3 text-xs">
-            <span className="font-black text-sm text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>⊙</span>
-              <span>Sadhana & Meditation Direction</span>
-            </span>
+          {/* DIGITAL MALA HEADER & CIRCULAR BEAD COUNTER */}
+          <div className="w-full rounded-3xl p-5 border border-amber-900/40 bg-gradient-to-b from-[#1C1206] via-[#100B04] to-[#080502] shadow-2xl flex flex-col items-center gap-4 text-center">
+            <h3 className="text-base font-serif font-black tracking-widest text-amber-300 uppercase">
+              DIGITAL MALA
+            </h3>
 
-            {/* Sacred Directions Rules */}
-            <div className="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex flex-col gap-1.5 text-[11px] text-stone-200">
-              <strong className="text-amber-300">Sacred Facing Rules for Sadhana:</strong>
-              <p>• <strong>Face East (पूर्व मुखी):</strong> Ideal for Gayatri Japa, Surya Sadhana, mental clarity, and intellectual light.</p>
-              <p>• <strong>Face North (उत्तर मुखी):</strong> Ideal for Lakshmi, Kuber, and mental stillness.</p>
-              <p>• <strong>Face North-East (ईशान मुखी):</strong> Supreme for Mahadev, Guru Mantra, Kundalini, and Moksha.</p>
-              <p className="text-rose-400 font-bold mt-0.5">• Never face South for routine daily peaceful meditation.</p>
+            {/* Glowing Circular Bead Ring */}
+            <div className="w-36 h-36 rounded-full border-4 border-amber-500/40 bg-gradient-to-b from-[#2A1808] to-[#120A03] flex flex-col items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.2)] relative">
+              <span className="text-4xl font-black font-sans text-amber-400 leading-none">
+                {japaCount}
+              </span>
+              <span className="text-xs font-bold text-stone-400 mt-1">
+                / {japaTarget}
+              </span>
             </div>
 
-            {/* Interactive Japa Mala Counter */}
-            <div className="p-4 rounded-2xl bg-stone-900/90 border border-amber-500/40 flex flex-col items-center text-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">
-                108 MALA JAPA COUNTER
-              </span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-black font-mono text-amber-300">{japaCount}</span>
-                <span className="text-stone-400 text-sm">/ {japaTarget}</span>
-              </div>
+            {/* Control Buttons: Reset + Wide Glowing Orange COUNT button */}
+            <div className="flex items-center gap-3 w-full max-w-[260px]">
+              <button
+                onClick={() => {
+                  setJapaCount(0);
+                  triggerHaptic();
+                }}
+                className="w-12 h-12 rounded-full bg-stone-900 border border-white/15 text-stone-400 hover:text-white flex items-center justify-center active:scale-95 transition-all shadow-md shrink-0"
+                title="Reset"
+              >
+                <RotateCcw className="w-5 h-5 text-stone-300" />
+              </button>
 
-              <div className="flex items-center gap-3 mt-1">
-                <button
-                  onClick={() => {
-                    setJapaCount(prev => (prev + 1) % 109);
-                    triggerHaptic();
-                  }}
-                  className="px-6 py-2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all"
-                >
-                  COUNT JAPA 📿
-                </button>
-                <button
-                  onClick={() => {
-                    setJapaCount(0);
-                    triggerHaptic();
-                  }}
-                  className="p-2 rounded-full bg-stone-800 text-stone-400 hover:text-white"
-                  title="Reset"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
+              <button
+                onClick={() => {
+                  setJapaCount(prev => (prev + 1) % 109);
+                  triggerHaptic();
+                }}
+                className="flex-1 py-3 px-6 rounded-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(245,158,11,0.4)] active:scale-95 transition-all"
+              >
+                <span className="text-base">⊙</span>
+                <span>COUNT</span>
+              </button>
+            </div>
+          </div>
+
+          {/* SADHANA SETUP CHECKLIST */}
+          <div className="w-full rounded-3xl p-4 border border-white/10 bg-black/60 shadow-xl flex flex-col gap-2.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-stone-400">
+              SADHANA SETUP
+            </span>
+
+            <div 
+              onClick={() => { setSetupFacing(!setupFacing); triggerHaptic(); }}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-stone-900/90 border border-white/10 cursor-pointer active:scale-98 transition-all"
+            >
+              <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center", setupFacing ? "bg-amber-500 border-amber-400 text-stone-950" : "border-stone-600 bg-black")}>
+                {setupFacing && <Check className="w-3.5 h-3.5 stroke-[3]" />}
               </div>
+              <span className="text-xs font-bold text-stone-200">Facing correct direction</span>
+            </div>
+
+            <div 
+              onClick={() => { setSetupAsan(!setupAsan); triggerHaptic(); }}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-stone-900/90 border border-white/10 cursor-pointer active:scale-98 transition-all"
+            >
+              <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center", setupAsan ? "bg-amber-500 border-amber-400 text-stone-950" : "border-stone-600 bg-black")}>
+                {setupAsan && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+              </div>
+              <span className="text-xs font-bold text-stone-200">Katasanu (Asan) properly placed</span>
+            </div>
+
+            <div 
+              onClick={() => { setSetupPeace(!setupPeace); triggerHaptic(); }}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-stone-900/90 border border-white/10 cursor-pointer active:scale-98 transition-all"
+            >
+              <div className={cn("w-5 h-5 rounded-md border flex items-center justify-center", setupPeace ? "bg-amber-500 border-amber-400 text-stone-950" : "border-stone-600 bg-black")}>
+                {setupPeace && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+              </div>
+              <span className="text-xs font-bold text-stone-200">Peaceful environment</span>
+            </div>
+          </div>
+
+          {/* DAILY ROUTINE DIRECTIONS (2x2 GRID AS IN SCREENSHOT) */}
+          <div className="w-full rounded-3xl p-4 border border-white/10 bg-black/60 shadow-xl flex flex-col gap-2.5">
+            <span className="text-[10px] font-black uppercase tracking-wider text-stone-400">
+              DAILY ROUTINE DIRECTIONS
+            </span>
+
+            <div className="grid grid-cols-2 gap-2 text-center text-xs">
+              <button
+                onClick={() => { setSadhanaRoutine('dhyan'); triggerHaptic(); }}
+                className={cn(
+                  "p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all",
+                  sadhanaRoutine === 'dhyan' ? "bg-amber-500/15 border-amber-500/80 text-amber-300 shadow-md" : "bg-stone-900/80 border-white/10 text-stone-400"
+                )}
+              >
+                <span className="text-sm">⊙</span>
+                <span className="text-[10px] font-black uppercase">DHYAN / JAAP</span>
+              </button>
+
+              <button
+                onClick={() => { setSadhanaRoutine('study'); triggerHaptic(); }}
+                className={cn(
+                  "p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all",
+                  sadhanaRoutine === 'study' ? "bg-amber-500/15 border-amber-500/80 text-amber-300 shadow-md" : "bg-stone-900/80 border-white/10 text-stone-400"
+                )}
+              >
+                <span className="text-sm">♡</span>
+                <span className="text-[10px] font-black uppercase">STUDY</span>
+              </button>
+
+              <button
+                onClick={() => { setSadhanaRoutine('sleep'); triggerHaptic(); }}
+                className={cn(
+                  "p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all",
+                  sadhanaRoutine === 'sleep' ? "bg-amber-500/15 border-amber-500/80 text-amber-300 shadow-md" : "bg-stone-900/80 border-white/10 text-stone-400"
+                )}
+              >
+                <span className="text-sm">☼</span>
+                <span className="text-[10px] font-black uppercase">SLEEP</span>
+              </button>
+
+              <button
+                onClick={() => { setSadhanaRoutine('eating'); triggerHaptic(); }}
+                className={cn(
+                  "p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all",
+                  sadhanaRoutine === 'eating' ? "bg-amber-500/15 border-amber-500/80 text-amber-300 shadow-md" : "bg-stone-900/80 border-white/10 text-stone-400"
+                )}
+              >
+                <span className="text-sm">✦</span>
+                <span className="text-[10px] font-black uppercase">EATING</span>
+              </button>
+            </div>
+
+            {/* Routine Direction Advice */}
+            <div className="p-3 rounded-2xl bg-stone-900/90 border border-amber-500/30 text-xs">
+              {sadhanaRoutine === 'dhyan' && (
+                <p className="text-amber-200/90 leading-snug">
+                  <strong className="text-amber-400 block mb-0.5">Dhyan / Jaap Direction:</strong>
+                  Face East for Gayatri & Surya Mantra, North for Lakshmi & Kuber, or North-East for Mahadev & Moksha.
+                </p>
+              )}
+              {sadhanaRoutine === 'study' && (
+                <p className="text-indigo-200/90 leading-snug">
+                  <strong className="text-indigo-400 block mb-0.5">Study Direction:</strong>
+                  Place desk in West-South-West (WSW) or North-East (NE). Always sit facing East or North while studying.
+                </p>
+              )}
+              {sadhanaRoutine === 'sleep' && (
+                <p className="text-amber-200/90 leading-snug">
+                  <strong className="text-amber-400 block mb-0.5">Sleeping Direction:</strong>
+                  Keep head towards South (best for heart health and longevity) or East. Never sleep with head towards North.
+                </p>
+              )}
+              {sadhanaRoutine === 'eating' && (
+                <p className="text-emerald-200/90 leading-snug">
+                  <strong className="text-emerald-400 block mb-0.5">Eating Direction:</strong>
+                  Face East while dining to enhance digestion, longevity, and positive metabolic energy.
+                </p>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 8. TAB CONTENT: 5. FENG SHUI (BAGUA MAP FROM SCREENSHOT) */}
+      {/* 7. TAB CONTENT: 5. FENG SHUI (BAGUA MAP FROM SCREENSHOT) */}
       {/* ========================================================================= */}
       {activeTab === 'feng_shui' && (
         <div className="w-full flex flex-col gap-3">
@@ -1272,7 +1414,7 @@ export const VastuOthersView: React.FC<Props> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 9. TAB CONTENT: 6. QIBLA (LIVE KAABA BEARING) */}
+      {/* 8. TAB CONTENT: 6. QIBLA (LIVE KAABA BEARING) */}
       {/* ========================================================================= */}
       {activeTab === 'qibla' && (
         <div className="w-full flex flex-col gap-3">
@@ -1302,7 +1444,7 @@ export const VastuOthersView: React.FC<Props> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* 10. CREATOR BRANDING FOOTER CARD (EXACTLY AS IN ALL SCREENSHOTS) */}
+      {/* 9. CREATOR BRANDING FOOTER CARD (EXACTLY AS IN ALL SCREENSHOTS) */}
       {/* ========================================================================= */}
       <div className="w-full max-w-sm rounded-[24px] p-4 bg-gradient-to-r from-[#181109] via-[#2A180B] to-[#140C04] border border-amber-500/40 shadow-2xl flex flex-col items-center justify-center text-center mt-4">
         <div className="flex items-center gap-2 mb-1">
