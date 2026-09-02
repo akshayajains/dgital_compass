@@ -639,7 +639,10 @@ export const CompassView = () => {
           </div>
 
           {/* Horizontal Theme Pill Chips */}
-          <div className="w-full max-w-sm flex items-center gap-1.5 mb-1.5 overflow-x-auto no-scrollbar py-0.5">
+          <div 
+            className="w-full max-w-sm flex items-center gap-1.5 mb-1.5 overflow-x-auto no-scrollbar py-0.5 touch-pan-x"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             {COMPASS_STYLES.map((st) => (
               <button
                 key={st.id}

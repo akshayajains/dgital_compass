@@ -438,7 +438,10 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {/* 2. THE 6 SUB-TABS (EXACTLY AS IN USER SCREENSHOTS) */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-sm flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1">
+      <div 
+        className="w-full max-w-sm flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1 touch-pan-x"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
         {[
           { id: 'vastu', label: 'Vastu', icon: '✨' },
           { id: 'jyotish', label: 'Jyotish', icon: '⭐' },
