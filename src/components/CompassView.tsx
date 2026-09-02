@@ -45,6 +45,9 @@ import { getVastuDetails, getWeatherDescription, translations } from '@/lib/tran
 import { AdvancedLevelView } from '@/components/level/AdvancedLevelView';
 import { VastuOthersView } from '@/components/vastu/VastuOthersView';
 import { CreatorBanner } from '@/components/CreatorBanner';
+import { TelescopeCameraCompass } from '@/components/compass/TelescopeCameraCompass';
+import { MapCompassView } from '@/components/compass/MapCompassView';
+import { get32Pada } from '@/lib/vastu32Devta';
 
 const STYLE_STORAGE_KEY = 'com.hcompass.app_style';
 
@@ -617,13 +620,15 @@ export const CompassView = () => {
                   selectedStyle === st.id
                     ? st.id === 'satellite_earth'
                       ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.8)] scale-[1.02]"
+                      : st.id === 'vedic_mandala'
+                      ? "bg-[#00F0FF]/30 text-teal-200 border-teal-400 shadow-[0_0_15px_rgba(0,240,255,0.6)] scale-[1.02]"
                       : "bg-[#C9A67E]/30 text-amber-300 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.35)] scale-[1.02]"
                     : "bg-stone-900/90 text-stone-300 border-white/10 hover:text-white hover:border-white/25"
                 )}
               >
                 <span>
                   {st.id === 'satellite_earth' ? 'SATELLITE EARTH' :
-                   st.id === 'vedic_mandala' ? '2 DEVTA CHAKRA' :
+                   st.id === 'vedic_mandala' ? '32 DEVTA CHAKRA' :
                    st.id === 'royal_gold' ? 'HINDI GOLD' :
                    st.id === 'sandalwood' ? 'SANDALWOOD' :
                    st.id === 'minimal_onyx' ? 'STEEL' :
@@ -665,7 +670,7 @@ export const CompassView = () => {
                   }}
                   className={cn(
                     "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                    satelliteSubMode === 'telescope' ? "bg-red-600 text-white shadow-md" : "text-stone-400 hover:text-white"
+                    satelliteSubMode === 'telescope' ? "bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.8)]" : "text-stone-400 hover:text-white"
                   )}
                 >
                   TELESCOPE
@@ -689,7 +694,7 @@ export const CompassView = () => {
                   }}
                   className={cn(
                     "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                    satelliteSubMode === 'map' ? "bg-red-600 text-white shadow-md" : "text-stone-400 hover:text-white"
+                    satelliteSubMode === 'map' ? "bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.8)]" : "text-stone-400 hover:text-white"
                   )}
                 >
                   MAP
@@ -712,26 +717,40 @@ export const CompassView = () => {
                 </button>
               </div>
 
-              {/* 3. Floating 3D Satellite Compass Dial */}
-              <div className="relative z-10 my-1">
-                <CompassDialRenderer
-                  styleId="satellite_earth"
-                  language={language}
-                  displayHeading={displayHeading}
-                  pitch={pitch}
-                  roll={roll}
-                  sunPos={sunPos}
-                  isQiblaMode={isQiblaMode}
-                  qiblaBearing={qiblaBearing}
-                  qiblaDistanceKm={qiblaDistanceKm}
-                  isFacingQibla={isFacingQibla}
-                  vastuGridEnabled={vastuGridEnabled}
-                  isLevel={isLevel}
-                  dialRef={dialRef}
-                  onPointerDown={handlePointerDown}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={handlePointerUp}
-                />
+              {/* 3. Sub-Mode Views: Real Camera TELESCOPE | SATELLITE Dial | Interactive MAP Compass */}
+              <div className="w-full relative z-10 my-1">
+                {satelliteSubMode === 'telescope' ? (
+                  <TelescopeCameraCompass
+                    heading={displayHeading}
+                    pitch={pitch}
+                    roll={roll}
+                    location={location}
+                  />
+                ) : satelliteSubMode === 'map' ? (
+                  <MapCompassView
+                    heading={displayHeading}
+                    location={location}
+                  />
+                ) : (
+                  <CompassDialRenderer
+                    styleId="satellite_earth"
+                    language={language}
+                    displayHeading={displayHeading}
+                    pitch={pitch}
+                    roll={roll}
+                    sunPos={sunPos}
+                    isQiblaMode={isQiblaMode}
+                    qiblaBearing={qiblaBearing}
+                    qiblaDistanceKm={qiblaDistanceKm}
+                    isFacingQibla={isFacingQibla}
+                    vastuGridEnabled={vastuGridEnabled}
+                    isLevel={isLevel}
+                    dialRef={dialRef}
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                  />
+                )}
               </div>
 
               {/* 4. Bottom Row: Mini Bubble Inclinometer Gauge & Bottom Mode Pills */}
@@ -961,7 +980,26 @@ export const CompassView = () => {
             </div>
 
             {/* Center Heading Readout */}
-            {selectedStyle === 'sandalwood' ? (
+            {selectedStyle === 'vedic_mandala' ? (
+              <div className="w-full p-2.5 rounded-2xl bg-[#14120E] border border-amber-500/50 text-white flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.8)] my-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 font-mono font-black text-xs border border-amber-500/40">
+                    {get32Pada(displayHeading).code} • {get32Pada(displayHeading).nameHi}
+                  </span>
+                  <span className="text-xs text-stone-300 font-mono font-bold">
+                    {get32Pada(displayHeading).startDeg.toFixed(1)}° - {get32Pada(displayHeading).endDeg.toFixed(1)}°
+                  </span>
+                </div>
+                <span className={cn(
+                  "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
+                  get32Pada(displayHeading).isAuspicious
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_8px_#10b981]"
+                    : "bg-rose-950/70 text-rose-300 border-rose-500/40 shadow-sm"
+                )}>
+                  {get32Pada(displayHeading).isAuspicious ? "AUSPICIOUS" : "INAUSPICIOUS"}
+                </span>
+              </div>
+            ) : selectedStyle === 'sandalwood' ? (
               <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#FAF3E8] via-[#F3E6D3] to-[#E9D4B8] border border-[#C9A67E] text-stone-900 flex items-center justify-between shadow-md">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl sm:text-3xl font-black font-serif text-[#3E2718]">

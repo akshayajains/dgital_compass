@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { CompassStyleId, Language } from '@/types/compass';
 import { Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { VASTU_32_PADAS } from '@/lib/vastu32Devta';
 
 interface Props {
   styleId: CompassStyleId;
@@ -50,6 +51,14 @@ export const CompassDialRenderer: React.FC<Props> = ({
   const isHi = language === 'hi';
 
   const cardinalPoints = useMemo(() => {
+    if (styleId === 'vedic_mandala') {
+      return [
+        { label: 'N', deg: 0, isNorth: true, code: 'N' },
+        { label: 'E', deg: 90, isNorth: false, code: 'E' },
+        { label: 'S', deg: 180, isNorth: false, code: 'S' },
+        { label: 'W', deg: 270, isNorth: false, code: 'W' }
+      ];
+    }
     if (styleId === 'satellite_earth') {
       return [
         { label: 'N', deg: 0, isNorth: true, code: 'N' },
@@ -104,7 +113,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
       case 'emerald_aurora':
         return 'border-[16px] sm:border-[20px] border-[#042817] shadow-[0_0_45px_rgba(16,185,129,0.35),inset_0_0_15px_rgba(16,185,129,0.3)] bg-gradient-to-tr from-[#02180E] via-[#08331E] to-[#02180E]';
       case 'vedic_mandala':
-        return 'border-[18px] sm:border-[22px] border-[#3B1705] shadow-[0_20px_50px_rgba(0,0,0,0.95),inset_0_3px_8px_rgba(245,158,11,0.6)] bg-gradient-to-tr from-[#311102] via-[#5C2307] to-[#240A00]';
+        return 'border-[18px] sm:border-[22px] border-[#D97706] shadow-[0_20px_60px_rgba(0,0,0,0.95),inset_0_3px_8px_rgba(254,240,138,0.7),inset_0_-8px_16px_rgba(180,83,9,0.9)] bg-gradient-to-tr from-[#D97706] via-[#FBBF24] to-[#B45309]';
       case 'tactical_ops':
         return 'border-[16px] sm:border-[20px] border-[#1C261D] shadow-[0_20px_50px_rgba(0,0,0,0.95),inset_0_0_15px_rgba(34,197,94,0.2)] bg-gradient-to-tr from-[#121A13] via-[#233125] to-[#0D140E]';
       case 'cosmic_galaxy':
@@ -140,7 +149,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
       case 'emerald_aurora':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#032314] via-[#01140B] to-[#000804]';
       case 'vedic_mandala':
-        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#3A1402] via-[#200A01] to-[#0F0400]';
+        return 'bg-[#0B131B]';
       case 'tactical_ops':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#141C15] via-[#0B110C] to-[#050805]';
       case 'cosmic_galaxy':
@@ -310,17 +319,101 @@ export const CompassDialRenderer: React.FC<Props> = ({
 
           {styleId === 'vedic_mandala' && (
             <>
-              <div className="absolute inset-3 rounded-full border border-amber-500/40 pointer-events-none shadow-[0_0_20px_rgba(245,158,11,0.25)]" />
-              <div className="absolute inset-8 rounded-full border border-red-500/30 pointer-events-none" />
-              <div className="absolute inset-16 rounded-full border border-dashed border-amber-400/25 pointer-events-none" />
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 200 200">
-                {/* Sri Yantra Sacred Geometry Triangles */}
-                <polygon points="100,30 155,145 45,145" fill="none" stroke="#F59E0B" strokeWidth="0.6" />
-                <polygon points="100,170 155,55 45,55" fill="none" stroke="#F59E0B" strokeWidth="0.6" />
-                <polygon points="100,45 145,135 55,135" fill="none" stroke="#EF4444" strokeWidth="0.5" />
-                <polygon points="100,155 145,65 55,65" fill="none" stroke="#EF4444" strokeWidth="0.5" />
-                <circle cx="100" cy="100" r="24" fill="none" stroke="#F59E0B" strokeWidth="0.5" strokeDasharray="2 2" />
-                <circle cx="100" cy="100" r="12" fill="none" stroke="#EF4444" strokeWidth="0.6" />
+              {/* Inner Circle Border */}
+              <div className="absolute inset-16 rounded-full border border-amber-400/40 pointer-events-none shadow-[0_0_15px_rgba(245,158,11,0.2)]" />
+              <div className="absolute inset-24 rounded-full border border-white/10 pointer-events-none" />
+
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
+                {/* 32 Vastu Devta Outer Annular Ring Sectors */}
+                {VASTU_32_PADAS.map((pada) => (
+                  <g key={pada.code} transform={`rotate(${pada.centerDeg}, 100, 100)`}>
+                    {/* Sector Arc Background */}
+                    <path
+                      d="M 90.69,5.46 A 95,95 0 0,1 109.31,5.46 L 106.57,33.32 A 67,67 0 0,0 93.43,33.32 Z"
+                      fill={pada.isAuspicious ? '#00F0FF' : pada.color}
+                      stroke="#F59E0B"
+                      strokeWidth="0.4"
+                      opacity={pada.isAuspicious ? 0.95 : 0.85}
+                    />
+
+                    {/* Pada Code: N3*, E1, etc. */}
+                    <text
+                      x="100"
+                      y="11.5"
+                      textAnchor="middle"
+                      fill={pada.isAuspicious ? '#020617' : '#FDE047'}
+                      fontSize="3.6"
+                      fontWeight="900"
+                    >
+                      {pada.code}
+                    </text>
+
+                    {/* Hindi/Sanskrit Deity Name */}
+                    <text
+                      x="100"
+                      y="18.5"
+                      textAnchor="middle"
+                      fill={pada.isAuspicious ? '#020617' : '#FFFFFF'}
+                      fontSize="4"
+                      fontWeight="900"
+                    >
+                      {pada.nameHi}
+                    </text>
+
+                    {/* English Deity Name */}
+                    <text
+                      x="100"
+                      y="25.5"
+                      textAnchor="middle"
+                      fill={pada.isAuspicious ? '#020617' : '#94A3B8'}
+                      fontSize="3"
+                      fontWeight="700"
+                    >
+                      {pada.nameEn}
+                    </text>
+                  </g>
+                ))}
+
+                {/* 32 Radial Energy Spokes */}
+                {VASTU_32_PADAS.map((pada) => (
+                  <line
+                    key={`spoke-${pada.code}`}
+                    x1="100"
+                    y1="33.5"
+                    x2="100"
+                    y2="100"
+                    stroke="#F59E0B"
+                    strokeWidth="0.4"
+                    opacity="0.35"
+                    transform={`rotate(${pada.startDeg}, 100, 100)`}
+                  />
+                ))}
+
+                {/* Center 16-Point Multi-faceted Energy Star */}
+                {/* 4 Major Cyan/Teal Points */}
+                <polygon points="100,34 100,100 93,100" fill="#00F0FF" opacity="0.9" />
+                <polygon points="100,34 100,100 107,100" fill="#0E7490" opacity="0.9" />
+                <polygon points="166,100 100,100 100,93" fill="#00F0FF" opacity="0.9" />
+                <polygon points="166,100 100,100 100,107" fill="#0E7490" opacity="0.9" />
+                <polygon points="100,166 100,100 107,100" fill="#00F0FF" opacity="0.9" />
+                <polygon points="100,166 100,100 93,100" fill="#0E7490" opacity="0.9" />
+                <polygon points="34,100 100,100 100,107" fill="#00F0FF" opacity="0.9" />
+                <polygon points="34,100 100,100 100,93" fill="#0E7490" opacity="0.9" />
+
+                {/* 4 Diagonal Gold Points */}
+                <polygon points="146,54 100,100 96,96" fill="#F59E0B" opacity="0.85" />
+                <polygon points="146,54 100,100 104,104" fill="#78350F" opacity="0.85" />
+                <polygon points="146,146 100,100 104,96" fill="#F59E0B" opacity="0.85" />
+                <polygon points="146,146 100,100 96,104" fill="#78350F" opacity="0.85" />
+                <polygon points="54,146 100,100 104,104" fill="#F59E0B" opacity="0.85" />
+                <polygon points="54,146 100,100 96,96" fill="#78350F" opacity="0.85" />
+                <polygon points="54,54 100,100 96,104" fill="#F59E0B" opacity="0.85" />
+                <polygon points="54,54 100,100 104,96" fill="#78350F" opacity="0.85" />
+
+                {/* Inner Concentric Circles */}
+                <circle cx="100" cy="100" r="67" fill="none" stroke="#F59E0B" strokeWidth="0.8" />
+                <circle cx="100" cy="100" r="48" fill="none" stroke="#00F0FF" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.5" />
+                <circle cx="100" cy="100" r="28" fill="none" stroke="#F59E0B" strokeWidth="0.6" opacity="0.6" />
               </svg>
             </>
           )}
@@ -634,7 +727,25 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 8. Sandalwood 3D Faceted Needle (Red & Gold North, Bronze & Gold South) */}
+          {/* 8. Vedic 32 Devta Chakra Needle */}
+          {styleId === 'vedic_mandala' && (
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
+              {/* South Dark Bronze Spear */}
+              <polygon points="100,188 90,100 100,110" fill="#451A03" />
+              <polygon points="100,188 110,100 100,110" fill="#78350F" />
+              <line x1="100" y1="110" x2="100" y2="186" stroke="#F59E0B" strokeWidth="1.2" />
+
+              {/* North Red/Crimson Spear */}
+              <polygon points="100,12 86,100 100,90" fill="#EF4444" className="drop-shadow-[0_0_15px_rgba(239,68,68,0.85)]" />
+              <polygon points="100,12 114,100 100,90" fill="#B91C1C" />
+              <line x1="100" y1="12" x2="100" y2="90" stroke="#FDE047" strokeWidth="1.6" />
+
+              {/* Center Pivot Ring */}
+              <circle cx="100" cy="100" r="14" fill="none" stroke="#D4AF37" strokeWidth="2" />
+            </svg>
+          )}
+
+          {/* 9. Sandalwood 3D Faceted Needle (Red & Gold North, Bronze & Gold South) */}
           {styleId === 'sandalwood' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(78,53,36,0.85)]" viewBox="0 0 200 200">
               {/* South Bronze Faceted Spear */}
@@ -653,7 +764,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 9. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
+          {/* 10. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
           {styleId === 'royal_gold' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_0_16px_rgba(249,115,22,0.8)]" viewBox="0 0 200 200">
               <line x1="100" y1="16" x2="100" y2="80" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" />
@@ -662,7 +773,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 10. Other Styles 3D Bicolor Delta Arrow */}
+          {/* 11. Other Styles 3D Bicolor Delta Arrow */}
           {(styleId === 'emerald_aurora' || styleId === 'rose_gold' || styleId === 'steampunk' || styleId === 'crystal_glass' || styleId === 'sunset_aura') && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
               <defs>
@@ -702,7 +813,19 @@ export const CompassDialRenderer: React.FC<Props> = ({
 
         {/* Center Precision Liquid Spirit Bubble Hub */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          {styleId === 'satellite_earth' ? (
+          {styleId === 'vedic_mandala' || styleId === 'sandalwood' ? (
+            /* Golden Ring + Turquoise Middle + Crimson Core + Lime Pip */
+            <div className="w-13 h-13 rounded-full relative overflow-hidden flex items-center justify-center border-2 border-[#D4AF37] bg-gradient-to-tr from-[#3D2512] via-[#5C3818] to-[#2E1B0D] shadow-[0_4px_16px_rgba(78,53,36,0.85)]">
+              {/* Turquoise Ring */}
+              <div className="w-9 h-9 rounded-full border-2 border-emerald-400/90 shadow-[0_0_12px_#34d399] flex items-center justify-center">
+                {/* Inner Crimson Center */}
+                <div className="w-5 h-5 rounded-full border border-red-500/80 bg-red-950/90 flex items-center justify-center">
+                  {/* Glowing Green Core Pip */}
+                  <div className="w-2.5 h-2.5 rounded-full bg-lime-400 shadow-[0_0_8px_#a3e635]" />
+                </div>
+              </div>
+            </div>
+          ) : styleId === 'satellite_earth' ? (
             <div className="flex flex-col items-center justify-center pointer-events-none">
               {/* White Donut Ring */}
               <div className="w-14 h-14 rounded-full border-[5px] border-slate-100 bg-[#0A0F16] shadow-[0_0_25px_rgba(255,255,255,0.85),inset_0_0_12px_rgba(0,0,0,0.95)] flex items-center justify-center">
@@ -713,18 +836,6 @@ export const CompassDialRenderer: React.FC<Props> = ({
                 <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
                   {displayHeading !== null ? Math.round(displayHeading) : 78}° {get16WindName(displayHeading)}
                 </span>
-              </div>
-            </div>
-          ) : styleId === 'sandalwood' ? (
-            /* Sandalwood Center Target Hub */
-            <div className="w-13 h-13 rounded-full relative overflow-hidden flex items-center justify-center border-2 border-[#D4AF37] bg-gradient-to-tr from-[#3D2512] via-[#5C3818] to-[#2E1B0D] shadow-[0_4px_16px_rgba(78,53,36,0.85)]">
-              {/* Turquoise Ring */}
-              <div className="w-9 h-9 rounded-full border-2 border-emerald-400/90 shadow-[0_0_12px_#34d399] flex items-center justify-center">
-                {/* Inner Crimson Center */}
-                <div className="w-5 h-5 rounded-full border border-red-500/80 bg-red-950/90 flex items-center justify-center">
-                  {/* Glowing Green Core Pip */}
-                  <div className="w-2.5 h-2.5 rounded-full bg-lime-400 shadow-[0_0_8px_#a3e635]" />
-                </div>
               </div>
             </div>
           ) : (
