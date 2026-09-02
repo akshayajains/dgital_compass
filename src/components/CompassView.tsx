@@ -19,7 +19,12 @@ import {
   Info,
   CheckCircle2,
   Flashlight,
-  FlashlightOff
+  FlashlightOff,
+  Grid,
+  CloudSun,
+  Wind,
+  Droplets,
+  X
 } from 'lucide-react';
 import { useSunTimes } from '@/hooks/useSunTimes';
 import SunCalc from 'suncalc';
@@ -47,75 +52,164 @@ export const CompassView = () => {
   const [mainTab, setMainTab] = useState<'compass' | 'level'>('compass');
   const [tareOffset, setTareOffset] = useState<{ pitch: number; roll: number } | null>(null);
 
-  // 3 Themes: "क्लासिक" (Classic), "चंदन" (Chandan), and "डार्क" (Dark)
+  // Weather state
+  const [weather, setWeather] = useState<{
+    temp: number;
+    humidity: number;
+    pressure: number;
+    windSpeed: number;
+    code: number;
+  } | null>(null);
+
+  // 3 Themes: "classic", "chandan", and "dark"
   const [selectedStyle, setSelectedStyle] = useState<'classic' | 'chandan' | 'dark'>('classic');
 
   // Persisted Preferences
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('hindi_compass_sound') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('com.hcompass.app_sound') !== 'false'; } catch { return true; }
   });
 
   const [useTrueNorth, setUseTrueNorth] = useState<boolean>(() => {
-    try { return localStorage.getItem('hindi_compass_true_north') === 'true'; } catch { return false; }
+    try { return localStorage.getItem('com.hcompass.app_true_north') === 'true'; } catch { return false; }
   });
 
   const [hapticEnabled, setHapticEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('hindi_compass_haptic') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('com.hcompass.app_haptic') !== 'false'; } catch { return true; }
+  });
+
+  // Vastu Grid Overlay State
+  const [vastuGridEnabled, setVastuGridEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('com.hcompass.app_vastu') !== 'false'; } catch { return true; }
   });
 
   // Flashlight / Torch State
   const [isFlashlightOn, setIsFlashlightOn] = useState<boolean>(false);
   const mediaStreamRef = useRef<MediaStream | null>(null);
 
-  // Toggle Hardware Flashlight (with screen fallback)
+  // Qibla (Kaaba) Direction Mode State
+  const [isQiblaMode, setIsQiblaMode] = useState<boolean>(false);
+
+  // Geodesic Qibla Angle Calculation to Makkah (21.4225° N, 39.8262° E)
+  const qiblaBearing = useMemo(() => {
+    if (!location) return 268;
+    const lat1 = (location.latitude * Math.PI) / 180;
+    const lon1 = (location.longitude * Math.PI) / 180;
+    const lat2 = (21.4225 * Math.PI) / 180;
+    const lon2 = (39.8262 * Math.PI) / 180;
+    const dLon = lon2 - lon1;
+    const y = Math.sin(dLon);
+    const x = Math.cos(lat1) * Math.tan(lat2) - Math.sin(lat1) * Math.cos(dLon);
+    let qibla = (Math.atan2(y, x) * 180) / Math.PI;
+    return Math.round((qibla + 360) % 360);
+  }, [location]);
+
+  // Exact Distance to Holy Kaaba (Makkah) in Kilometers
+  const qiblaDistanceKm = useMemo(() => {
+    if (!location) return 3850;
+    const R = 6371;
+    const dLat = ((21.4225 - location.latitude) * Math.PI) / 180;
+    const dLon = ((39.8262 - location.longitude) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((location.latitude * Math.PI) / 180) *
+        Math.cos((21.4225 * Math.PI) / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c);
+  }, [location]);
+
+  // Fetch real-time Weather
+  useEffect(() => {
+    if (!location) return;
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m`);
+        const data = await res.json();
+        if (data && data.current) {
+          setWeather({
+            temp: Math.round(data.current.temperature_2m),
+            humidity: data.current.relative_humidity_2m,
+            pressure: Math.round(data.current.surface_pressure),
+            windSpeed: Math.round(data.current.wind_speed_10m),
+            code: data.current.weather_code
+          });
+        }
+      } catch (e) {
+        console.warn("Weather fetch fallback", e);
+      }
+    };
+    fetchWeather();
+  }, [location?.latitude, location?.longitude]);
+
+  // Fully localized weather descriptions
+  const getWeatherDesc = (code?: number) => {
+    if (code === undefined || code === null) return 'साफ़ आसमान';
+    if (code === 0) return 'साफ़ आसमान';
+    if (code >= 1 && code <= 3) return 'हल्के बादल';
+    if (code === 45 || code === 48) return 'कोहरा';
+    if (code >= 51 && code <= 65) return 'वर्षा';
+    if (code >= 80 && code <= 82) return 'बौछारें';
+    if (code >= 95) return 'गरज के साथ वर्षा';
+    return 'सुहावना मौसम';
+  };
+
+  const getWeatherIcon = (code?: number) => {
+    if (code === undefined || code === null) return '☀️';
+    if (code === 0) return '☀️';
+    if (code >= 1 && code <= 3) return '🌤️';
+    if (code === 45 || code === 48) return '🌫️';
+    if (code >= 51 && code <= 65) return '🌧️';
+    if (code >= 80 && code <= 82) return '🌦️';
+    if (code >= 95) return '⛈️';
+    return '🌤️';
+  };
+
+  // Toggle Hardware Flashlight (Safe)
   const toggleFlashlight = async () => {
     triggerHapticFeedback(ImpactStyle.Medium);
-    try {
-      if (isFlashlightOn) {
-        if (mediaStreamRef.current) {
-          mediaStreamRef.current.getTracks().forEach(track => {
-            try {
-              (track as any).applyConstraints?.({ advanced: [{ torch: false }] });
-            } catch {}
-            track.stop();
-          });
-          mediaStreamRef.current = null;
-        }
-        setIsFlashlightOn(false);
-      } else {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (isFlashlightOn) {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach(track => {
           try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: 'environment' }
-            });
-            const track = stream.getVideoTracks()[0];
-            const capabilities = track.getCapabilities ? (track.getCapabilities() as any) : null;
-            if (capabilities && capabilities.torch) {
+            (track as any).applyConstraints?.({ advanced: [{ torch: false }] });
+          } catch {}
+          track.stop();
+        });
+        mediaStreamRef.current = null;
+      }
+      setIsFlashlightOn(false);
+      return;
+    }
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }
+        });
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          const capabilities = typeof (track as any).getCapabilities === 'function' ? (track as any).getCapabilities() : null;
+          if (capabilities && capabilities.torch) {
+            try {
               await (track as any).applyConstraints({
                 advanced: [{ torch: true }]
               });
               mediaStreamRef.current = stream;
-              setIsFlashlightOn(true);
-            } else {
-              // Screen torch fallback if hardware camera track torch unavailable
-              mediaStreamRef.current = stream;
-              setIsFlashlightOn(true);
+            } catch (torchErr) {
+              track.stop();
             }
-          } catch (camErr) {
-            console.warn("Camera torch access restricted, using screen torch:", camErr);
-            setIsFlashlightOn(true);
+          } else {
+            track.stop();
           }
-        } else {
-          setIsFlashlightOn(true);
         }
       }
     } catch (err) {
-      console.warn("Torch toggle error:", err);
-      setIsFlashlightOn(!isFlashlightOn);
+      console.info("Visual torch mode.");
     }
+
+    setIsFlashlightOn(true);
   };
 
-  // Turn off flashlight on component unmount
   useEffect(() => {
     return () => {
       if (mediaStreamRef.current) {
@@ -124,12 +218,10 @@ export const CompassView = () => {
     };
   }, []);
 
-  // Simulator mode for web testing
   const [isSimulatedMode, setIsSimulatedMode] = useState<boolean>(false);
   const dialRef = useRef<HTMLDivElement>(null);
   const isDraggingDialRef = useRef<boolean>(false);
 
-  // Smoothing filters & refs
   const smoothedVectorRef = useRef<{ x: number; y: number } | null>(null);
   const smoothedPitchRef = useRef<number>(0);
   const smoothedRollRef = useRef<number>(0);
@@ -138,16 +230,13 @@ export const CompassView = () => {
   const lastSoundZone = useRef<string | null>(null);
   const lastRotaryTickRef = useRef<number>(0);
 
-  // Magnetic declination estimate (India avg ~0.5° - 1.5°)
   const declination = useMemo(() => {
     if (!location) return 0.8;
-    // Simple declination estimate for Indian subcontinent
     const lat = location.latitude;
     const lon = location.longitude;
     return (28 - lat) * 0.1 + (lon - 77) * 0.05 + 0.5;
   }, [location]);
 
-  // Haptic feedback trigger
   const triggerHapticFeedback = async (style = ImpactStyle.Light) => {
     if (!hapticEnabled) return;
     try {
@@ -159,7 +248,6 @@ export const CompassView = () => {
     }
   };
 
-  // Auspicious bell chord
   const playBellSound = (type: 'bell' | 'chime' = 'bell') => {
     if (!soundEnabled) return;
     try {
@@ -185,7 +273,6 @@ export const CompassView = () => {
     } catch {}
   };
 
-  // Sun Azimuth Calculation
   const sunPos = useMemo(() => {
     if (!location) return null;
     try {
@@ -196,21 +283,16 @@ export const CompassView = () => {
     }
   }, [location]);
 
-  // Orientation event handler with vector low-pass filter
   const handleOrientation = (event: any, isAbsolute: boolean) => {
     if (!isAbsolute && usingAbsoluteRef.current) return;
-
     let compassHeading: number | null = null;
 
     if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
-      // iOS
       compassHeading = event.webkitCompassHeading;
     } else if (isAbsolute && event.alpha !== null && event.alpha !== undefined) {
-      // Android absolute
       usingAbsoluteRef.current = true;
       compassHeading = (360 - event.alpha + 360) % 360;
     } else if (!usingAbsoluteRef.current && event.alpha !== null && event.alpha !== undefined) {
-      // Android relative fallback with tilt compensation
       const alpha = event.alpha;
       const beta = event.beta ?? 0;
       const gamma = event.gamma ?? 0;
@@ -229,97 +311,73 @@ export const CompassView = () => {
     if (compassHeading !== null) {
       compassHeading = ((compassHeading % 360) + 360) % 360;
       const targetRad = compassHeading * (Math.PI / 180);
-      const targetX = Math.cos(targetRad);
-      const targetY = Math.sin(targetRad);
+      const targetVec = { x: Math.sin(targetRad), y: Math.cos(targetRad) };
 
-      if (smoothedVectorRef.current === null) {
-        smoothedVectorRef.current = { x: targetX, y: targetY };
+      if (!smoothedVectorRef.current) {
+        smoothedVectorRef.current = targetVec;
       } else {
-        const curRad = Math.atan2(smoothedVectorRef.current.y, smoothedVectorRef.current.x);
-        let curDeg = curRad * (180 / Math.PI);
-        if (curDeg < 0) curDeg += 360;
-
-        let diff = compassHeading - curDeg;
-        while (diff < -180) diff += 360;
-        while (diff > 180) diff -= 360;
-        const absDiff = Math.abs(diff);
-
-        let factor: number;
-        if (absDiff < 0.5) factor = 0.00;
-        else if (absDiff < 3.0) factor = 0.04;
-        else if (absDiff < 15.0) factor = 0.10;
-        else factor = 0.16;
-
-        const maxStepRad = 3.0 * (Math.PI / 180);
-        const stepX = factor * (targetX - smoothedVectorRef.current.x);
-        const stepY = factor * (targetY - smoothedVectorRef.current.y);
-        const stepMag = Math.sqrt(stepX * stepX + stepY * stepY);
-        const clampedMag = Math.min(stepMag, maxStepRad);
-        const scale = stepMag > 0 ? clampedMag / stepMag : 0;
-
-        smoothedVectorRef.current.x += stepX * scale;
-        smoothedVectorRef.current.y += stepY * scale;
-
-        const mag = Math.sqrt(smoothedVectorRef.current.x ** 2 + smoothedVectorRef.current.y ** 2);
-        if (mag > 0) {
-          smoothedVectorRef.current.x /= mag;
-          smoothedVectorRef.current.y /= mag;
-        }
+        const factor = 0.15;
+        smoothedVectorRef.current = {
+          x: smoothedVectorRef.current.x + (targetVec.x - smoothedVectorRef.current.x) * factor,
+          y: smoothedVectorRef.current.y + (targetVec.y - smoothedVectorRef.current.y) * factor
+        };
       }
 
-      const smoothRad = Math.atan2(smoothedVectorRef.current.y, smoothedVectorRef.current.x);
-      let smoothed = smoothRad * (180 / Math.PI);
-      if (smoothed < 0) smoothed += 360;
-      setHeading(smoothed);
+      const smoothedRad = Math.atan2(smoothedVectorRef.current.x, smoothedVectorRef.current.y);
+      let finalHeading = smoothedRad * (180 / Math.PI);
+      if (finalHeading < 0) finalHeading += 360;
+      setHeading(finalHeading);
 
-      // Micro-tick haptic on cardinal 45°
-      if (hapticEnabled) {
-        const tickStep = Math.floor(smoothed / 45) * 45;
-        if (tickStep !== lastRotaryTickRef.current) {
-          lastRotaryTickRef.current = tickStep;
-          triggerHapticFeedback(ImpactStyle.Light);
-        }
+      const currentTick = Math.floor(finalHeading / 15);
+      if (currentTick !== lastRotaryTickRef.current) {
+        lastRotaryTickRef.current = currentTick;
+        triggerHapticFeedback(ImpactStyle.Light);
       }
-
-      // Auspicious cardinal bell
-      const cardinalZone = smoothed > 355 || smoothed < 5 ? 'North' : smoothed > 85 && smoothed < 95 ? 'East' : null;
-      if (cardinalZone && cardinalZone !== lastSoundZone.current) {
-        playBellSound(cardinalZone === 'North' ? 'bell' : 'chime');
-      }
-      lastSoundZone.current = cardinalZone;
     }
 
-    // Pitch & Roll
-    if (event.beta !== null && event.beta !== undefined && event.gamma !== null && event.gamma !== undefined) {
-      smoothedPitchRef.current += 0.25 * (event.beta - smoothedPitchRef.current);
-      smoothedRollRef.current += 0.25 * (event.gamma - smoothedRollRef.current);
+    if (event.beta !== null && event.beta !== undefined) {
+      smoothedPitchRef.current += (event.beta - smoothedPitchRef.current) * 0.2;
       setPitch(smoothedPitchRef.current);
+    }
+    if (event.gamma !== null && event.gamma !== undefined) {
+      smoothedRollRef.current += (event.gamma - smoothedRollRef.current) * 0.2;
       setRoll(smoothedRollRef.current);
     }
   };
 
   useEffect(() => {
-    const onAbsolute = (e: DeviceOrientationEvent) => handleOrientation(e, true);
-    const onRelative = (e: DeviceOrientationEvent) => handleOrientation(e, false);
-
-    window.addEventListener('deviceorientationabsolute', onAbsolute, true);
-    window.addEventListener('deviceorientation', onRelative, true);
-
-    const simTimeout = setTimeout(() => {
-      if (heading === null) {
-        setIsSimulatedMode(true);
-        setHeading(0);
+    let removeListener: (() => void) | null = null;
+    const setupSensors = async () => {
+      if (typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+        try {
+          const res = await (DeviceOrientationEvent as any).requestPermission();
+          if (res !== 'granted') {
+            setIsSimulatedMode(true);
+            return;
+          }
+        } catch {
+          setIsSimulatedMode(true);
+        }
       }
-    }, 800);
 
-    return () => {
-      clearTimeout(simTimeout);
-      window.removeEventListener('deviceorientationabsolute', onAbsolute, true);
-      window.removeEventListener('deviceorientation', onRelative, true);
+      const onAbsolute = (e: any) => handleOrientation(e, true);
+      const onStandard = (e: any) => handleOrientation(e, false);
+
+      window.addEventListener('deviceorientationabsolute' as any, onAbsolute, true);
+      window.addEventListener('deviceorientation', onStandard, true);
+
+      removeListener = () => {
+        window.removeEventListener('deviceorientationabsolute' as any, onAbsolute, true);
+        window.removeEventListener('deviceorientation', onStandard, true);
+      };
     };
-  }, []);
 
-  // Pointer drag for web testing
+    setupSensors();
+    return () => {
+      if (removeListener) removeListener();
+    };
+  }, [hapticEnabled, soundEnabled]);
+
   const updateHeadingFromPointer = (clientX: number, clientY: number) => {
     if (!dialRef.current) return;
     const rect = dialRef.current.getBoundingClientRect();
@@ -349,18 +407,32 @@ export const CompassView = () => {
     try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
   };
 
-  // Hindi Cardinal Helpers
-  const getHindiCardinal = (deg: number | null) => {
-    if (deg === null || isNaN(deg)) return 'उत्तर';
+  // 100% Fully localized Vastu & Cardinal information
+  const getVastuInfo = (deg: number | null) => {
+    if (deg === null || isNaN(deg)) return { name: 'उत्तर (North)', code: 'N', vastuTitle: 'कुबेर स्थान (उत्तर)', vastuDesc: 'धन, व्यापार व समृद्धि • जल तत्व', color: 'text-red-400' };
     const norm = ((deg % 360) + 360) % 360;
-    if (norm >= 337.5 || norm < 22.5) return 'उत्तर';
-    if (norm >= 22.5 && norm < 67.5) return 'ईशान्य';
-    if (norm >= 67.5 && norm < 112.5) return 'पूर्व';
-    if (norm >= 112.5 && norm < 157.5) return 'आग्नेय';
-    if (norm >= 157.5 && norm < 202.5) return 'दक्षिण';
-    if (norm >= 202.5 && norm < 247.5) return 'नैऋत्य';
-    if (norm >= 247.5 && norm < 292.5) return 'पश्चिम';
-    return 'वायव्य';
+    if (norm >= 337.5 || norm < 22.5) {
+      return { name: 'उत्तर (North)', code: 'N', vastuTitle: 'कुबेर स्थान (उत्तर)', vastuDesc: 'धन, व्यापार व समृद्धि • जल तत्व', color: 'text-red-400' };
+    }
+    if (norm >= 22.5 && norm < 67.5) {
+      return { name: 'ईशान (North-East)', code: 'NE', vastuTitle: 'मंदिर व पूजा स्थल', vastuDesc: 'देव स्थान • ध्यान व सकारात्मक ऊर्जा (शुभ)', color: 'text-yellow-400' };
+    }
+    if (norm >= 67.5 && norm < 112.5) {
+      return { name: 'पूर्व (East)', code: 'E', vastuTitle: 'इंद्र स्थान (पूर्व)', vastuDesc: 'मुख्य द्वार, स्वास्थ्य व नव ऊर्जा', color: 'text-emerald-400' };
+    }
+    if (norm >= 112.5 && norm < 157.5) {
+      return { name: 'आग्नेय (South-East)', code: 'SE', vastuTitle: 'रसोई व अग्नि तत्व (Rasoi)', vastuDesc: 'भोजन, ऊर्जा व पाचन शक्ति', color: 'text-orange-400' };
+    }
+    if (norm >= 157.5 && norm < 202.5) {
+      return { name: 'दक्षिण (South)', code: 'S', vastuTitle: 'यम स्थान (दक्षिण)', vastuDesc: 'स्थिरता, विश्राम व भारी निर्माण', color: 'text-red-400' };
+    }
+    if (norm >= 202.5 && norm < 247.5) {
+      return { name: 'नैऋत्य (South-West)', code: 'SW', vastuTitle: 'मुख्य शयन कक्ष (Shayan)', vastuDesc: 'गृहस्वामी कक्ष • नेतृत्व व स्थायित्व', color: 'text-yellow-400' };
+    }
+    if (norm >= 247.5 && norm < 292.5) {
+      return { name: 'पश्चिम (West)', code: 'W', vastuTitle: 'वरुण स्थान (पश्चिम)', vastuDesc: 'अध्ययन कक्ष, लाभ व भोजन कक्ष', color: 'text-slate-200' };
+    }
+    return { name: 'वायव्य (North-West)', code: 'NW', vastuTitle: 'अतिथि कक्ष (Atithi)', vastuDesc: 'वायु तत्व • भंडार व संबंध', color: 'text-sky-400' };
   };
 
   const displayHeading = useMemo(() => {
@@ -369,47 +441,53 @@ export const CompassView = () => {
     return ((heading + declination) % 360 + 360) % 360;
   }, [heading, useTrueNorth, declination]);
 
+  const isFacingQibla = useMemo(() => {
+    if (displayHeading === null) return false;
+    let diff = Math.abs(displayHeading - qiblaBearing);
+    if (diff > 180) diff = 360 - diff;
+    return diff <= 3.5;
+  }, [displayHeading, qiblaBearing]);
+
   const isLevel = Math.abs(pitch) < 2.0 && Math.abs(roll) < 2.0;
 
   const copyCoordinates = async () => {
     triggerHapticFeedback();
-    const lat = location ? location.latitude.toFixed(6) : '28.613900';
-    const lng = location ? location.longitude.toFixed(6) : '77.209000';
-    const text = `🧭 हिंदी कंपास रीडिंग:\nदिशा: ${Math.round(displayHeading)}° ${getHindiCardinal(displayHeading)}\nअक्षांश: ${lat}°N, देशांतर: ${lng}°E\nसमतल स्तर: पिच ${Math.round(pitch)}°, रोल ${Math.round(roll)}°`;
+    const lat = location ? location.latitude.toFixed(6) : '18.520400';
+    const lng = location ? location.longitude.toFixed(6) : '73.856700';
+    const text = `🧭 हिंदी कंपास:\nउत्तर: ${Math.round(displayHeading)}°\nLat: ${lat}°N, Lon: ${lng}°E`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'हिंदी कंपास रीडिंग', text });
+        await navigator.share({ title: 'हिंदी कंपास', text });
       } else {
         await navigator.clipboard.writeText(text);
-        toast.success('अक्षांश एवं देशांतर कॉपी हो गए!');
+        toast.success('Coordinates copied!');
       }
     } catch {
       try {
         await navigator.clipboard.writeText(text);
-        toast.success('अक्षांश एवं देशांतर कॉपी हो गए!');
+        toast.success('Coordinates copied!');
       } catch {}
     }
   };
 
-  const formatTime = (d: Date | null) => {
-    if (!d) return '--:--';
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const formatTime = (date: Date | null) => {
+    if (!date) return '--:--';
+    return date.toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
     <div className={cn(
-      "w-full min-h-screen flex flex-col items-center pt-6 pb-10 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
+      "w-full min-h-screen flex flex-col items-center pt-4 pb-8 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
       theme === 'light' 
         ? "bg-gradient-to-b from-amber-50/60 via-stone-100 to-stone-200 text-stone-900" 
         : "bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#181510] via-[#0C0A08] to-[#050403] text-white"
     )}>
-      {/* Background ambient gold glow */}
       <div className="absolute top-16 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
 
-      {/* Top Header Bar */}
-      <header className="w-full flex items-center justify-between py-2 px-1 mb-2 relative z-50">
+      {/* Top Header */}
+      <header className="w-full flex items-center justify-between py-1 px-1 mb-2 relative z-50">
         <div className="flex items-center gap-2.5">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-[2px] shadow-lg shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-[2px] shadow-lg shrink-0">
             <img 
               src="/icon.png" 
               alt="हिंदी कंपास" 
@@ -417,216 +495,76 @@ export const CompassView = () => {
             />
           </div>
           <div className="flex flex-col text-left justify-center">
-            <h1 className="text-xl font-black tracking-tight leading-snug pt-0.5 pb-0 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent">
+            <h1 className="text-lg font-black tracking-tight leading-snug pt-0.5 pb-0 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent">
               हिंदी कंपास
             </h1>
             <span className={cn(
               "text-[10px] font-bold leading-tight -mt-0.5",
               theme === 'light' ? "text-stone-600" : "text-stone-400"
             )}>
-              सटीक 360° दिशा एवं समतल स्तर
+              सटीक 360° दिशा एवं वास्तु दर्शक
             </span>
           </div>
         </div>
 
-        {/* Top Right Action Buttons: Flashlight & Settings */}
-        <div className="flex items-center gap-2">
-          {/* 🔦 Flashlight Quick Toggle Button */}
-          <button
-            onClick={toggleFlashlight}
-            className={cn(
-              "p-2.5 rounded-2xl border transition-all active:scale-95 shadow-md flex items-center justify-center relative",
-              isFlashlightOn
-                ? "bg-amber-400 text-stone-950 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.6)] animate-pulse"
-                : (theme === 'light' ? "bg-white text-stone-800 border-stone-200" : "bg-stone-900 text-stone-200 border-white/10")
-            )}
-            title={isFlashlightOn ? "टॉर्च बंद करें" : "टॉर्च चालू करें"}
-          >
-            {isFlashlightOn ? (
-              <Flashlight className="w-5 h-5 text-stone-950 fill-stone-950" />
-            ) : (
-              <FlashlightOff className="w-5 h-5 text-stone-400" />
-            )}
-          </button>
-
-          {/* Settings Trigger */}
-          <div className="relative">
+        {/* Theme Switcher */}
+        {mainTab === 'compass' && (
+          <div className="flex items-center p-1 rounded-2xl bg-stone-950/70 border border-white/10 shadow-sm">
             <button
               onClick={() => {
+                setSelectedStyle('classic');
                 triggerHapticFeedback();
-                setShowSettings(!showSettings);
               }}
               className={cn(
-                "p-2.5 rounded-2xl border transition-all active:scale-95 shadow-md flex items-center justify-center",
-                showSettings 
-                  ? "bg-amber-500/20 text-amber-500 border-amber-400/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                  : (theme === 'light' ? "bg-white text-stone-800 border-stone-200" : "bg-stone-900 text-stone-200 border-white/10")
+                "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                selectedStyle === 'classic'
+                  ? "bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-stone-950 shadow-md scale-100 font-black"
+                  : "text-stone-400 hover:text-white"
               )}
-              title="सेटिंग्स"
             >
-              <Settings className={cn("w-5 h-5 transition-transform duration-300", showSettings && "rotate-90 text-amber-500")} />
+              क्लासिक
             </button>
-
-            {/* Settings Popup Menu */}
-            {showSettings && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
-                <div className={cn(
-                  "absolute right-0 mt-2 p-4 rounded-3xl border shadow-2xl backdrop-blur-xl flex flex-col gap-3 min-w-[16.5rem] z-50 animate-in fade-in zoom-in-95",
-                  theme === 'light' ? "bg-white border-stone-200 text-stone-900 shadow-stone-400/30" : "bg-stone-950/95 border-white/15 text-white"
-                )}>
-                  <div className="text-[11px] font-black uppercase tracking-wider text-amber-500 pb-2 border-b border-stone-200/40 dark:border-white/10 flex items-center justify-between">
-                    <span>सेटिंग्स एवं विकल्प</span>
-                    <span className="text-[9px] text-stone-500">विकल्प</span>
-                  </div>
-
-                {/* 1. Sound Effects */}
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="flex items-center gap-2">
-                    {soundEnabled ? <Volume2 className="w-4 h-4 text-amber-500" /> : <VolumeX className="w-4 h-4 text-stone-400" />}
-                    ध्वनी प्रभाव
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      const next = !soundEnabled;
-                      setSoundEnabled(next);
-                      localStorage.setItem('hindi_compass_sound', next.toString());
-                      if (next) playBellSound('chime');
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                      soundEnabled 
-                        ? (theme === 'light' ? "bg-amber-100 text-amber-800 border border-amber-300" : "bg-amber-500/20 text-amber-300 border border-amber-500/40")
-                        : (theme === 'light' ? "bg-stone-100 text-stone-600 border border-stone-300" : "bg-stone-800 text-stone-400 border border-white/10")
-                    )}
-                  >
-                    {soundEnabled ? "चालू" : "बंद"}
-                  </button>
-                </div>
-
-                {/* 2. True North */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-stone-200/40 dark:border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Navigation className="w-4 h-4 text-sky-500 rotate-45" />
-                    भौगोलिक उत्तर
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      const next = !useTrueNorth;
-                      setUseTrueNorth(next);
-                      localStorage.setItem('hindi_compass_true_north', next.toString());
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                      useTrueNorth 
-                        ? (theme === 'light' ? "bg-sky-100 text-sky-800 border border-sky-300" : "bg-sky-500/20 text-sky-300 border border-sky-500/40")
-                        : (theme === 'light' ? "bg-stone-100 text-stone-600 border border-stone-300" : "bg-stone-800 text-stone-400 border border-white/10")
-                    )}
-                  >
-                    {useTrueNorth ? "चालू" : "बंद"}
-                  </button>
-                </div>
-
-                {/* 3. Cardinal Vibration Haptic */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-2">
-                    <CircleDot className="w-4 h-4 text-emerald-400" />
-                    दिशा कंपन
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      const next = !hapticEnabled;
-                      setHapticEnabled(next);
-                      localStorage.setItem('hindi_compass_haptic', next.toString());
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                      hapticEnabled ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-stone-800 text-stone-400 border border-white/10"
-                    )}
-                  >
-                    {hapticEnabled ? "चालू" : "बंद"}
-                  </button>
-                </div>
-
-                {/* 4. Flashlight / Torch */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-stone-200/40 dark:border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Flashlight className={cn("w-4 h-4", isFlashlightOn ? "text-amber-500 fill-amber-500" : "text-stone-400")} />
-                    टॉर्च (फ्लैशलाइट)
-                  </span>
-                  <button
-                    onClick={toggleFlashlight}
-                    className={cn(
-                      "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                      isFlashlightOn 
-                        ? (theme === 'light' ? "bg-amber-100 text-amber-800 border border-amber-300" : "bg-amber-500/20 text-amber-300 border border-amber-500/40")
-                        : (theme === 'light' ? "bg-stone-100 text-stone-600 border border-stone-300" : "bg-stone-800 text-stone-400 border border-white/10")
-                    )}
-                  >
-                    {isFlashlightOn ? "चालू" : "बंद"}
-                  </button>
-                </div>
-
-                {/* 5. Sensor Diagnostics */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-stone-200/40 dark:border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-emerald-400" />
-                    सेंसर परीक्षण
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      setShowSettings(false);
-                      setShowSensorsModal(true);
-                    }}
-                    className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-                  >
-                    जांचें
-                  </button>
-                </div>
-
-                {/* 5. Calibration Guide */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    8-आकृति कैलिब्रेशन
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      setShowSettings(false);
-                      setShowCalibrationModal(true);
-                    }}
-                    className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40"
-                  >
-                    देखें
-                  </button>
-                </div>
-
-                {/* 6. Theme Mode Toggle */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span>थीम मोड</span>
-                  <ThemeToggle />
-                </div>
-              </div>
-            </>
-          )}
+            <button
+              onClick={() => {
+                setSelectedStyle('chandan');
+                triggerHapticFeedback();
+              }}
+              className={cn(
+                "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                selectedStyle === 'chandan'
+                  ? "bg-gradient-to-r from-amber-700 to-yellow-600 text-amber-100 shadow-md scale-100 font-black"
+                  : "text-stone-400 hover:text-white"
+              )}
+            >
+              चंदन
+            </button>
+            <button
+              onClick={() => {
+                setSelectedStyle('dark');
+                triggerHapticFeedback();
+              }}
+              className={cn(
+                "px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                selectedStyle === 'dark'
+                  ? "bg-white text-stone-950 shadow-md scale-100 border border-white font-black"
+                  : "text-stone-400 hover:text-white"
+              )}
+            >
+              डार्क
+            </button>
           </div>
-        </div>
+        )}
       </header>
 
-      {/* Primary Mode Switcher: Compass vs Minimal Level View */}
-      <div className="w-full max-w-sm flex items-center justify-center p-1 rounded-2xl bg-stone-900/90 border border-white/10 mb-3 shadow-inner">
+      {/* Mode Switcher */}
+      <div className="w-full max-w-sm flex items-center justify-center p-1 rounded-2xl bg-stone-900/90 border border-white/10 mb-2 shadow-inner">
         <button
           onClick={() => {
             setMainTab('compass');
             triggerHapticFeedback();
           }}
           className={cn(
-            "flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5",
+            "flex-1 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5",
             mainTab === 'compass'
               ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 shadow-md scale-100"
               : "text-stone-400 hover:text-white"
@@ -641,7 +579,7 @@ export const CompassView = () => {
             triggerHapticFeedback();
           }}
           className={cn(
-            "flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5",
+            "flex-1 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5",
             mainTab === 'level'
               ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-stone-950 shadow-md scale-100"
               : "text-stone-400 hover:text-white"
@@ -652,59 +590,9 @@ export const CompassView = () => {
         </button>
       </div>
 
-      {/* Theme Switcher: 3 Themes ("क्लासिक", "चंदन", "डिफरेंट") - Visible when in Compass mode */}
-      {mainTab === 'compass' && (
-        <div className="w-full max-w-xs flex items-center justify-center p-1 rounded-2xl bg-stone-950/60 border border-white/5 mb-3 shadow-sm">
-          <button
-            onClick={() => {
-              setSelectedStyle('classic');
-              triggerHapticFeedback();
-            }}
-            className={cn(
-              "flex-1 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300",
-              selectedStyle === 'classic'
-                ? "bg-gradient-to-r from-[#D4AF37] to-[#F59E0B] text-stone-950 shadow-md scale-100"
-                : "text-stone-400 hover:text-white"
-            )}
-          >
-            क्लासिक
-          </button>
-          <button
-            onClick={() => {
-              setSelectedStyle('chandan');
-              triggerHapticFeedback();
-            }}
-            className={cn(
-              "flex-1 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300",
-              selectedStyle === 'chandan'
-                ? "bg-gradient-to-r from-amber-700 to-yellow-600 text-amber-100 shadow-md scale-100"
-                : "text-stone-400 hover:text-white"
-            )}
-          >
-            चंदन
-          </button>
-          <button
-            onClick={() => {
-              setSelectedStyle('dark');
-              triggerHapticFeedback();
-            }}
-            className={cn(
-              "flex-1 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300",
-              selectedStyle === 'dark'
-                ? "bg-white text-stone-950 shadow-md scale-100 border border-white"
-                : "text-stone-400 hover:text-white"
-            )}
-          >
-            डार्क
-          </button>
-        </div>
-      )}
-
-      {/* MAIN CONTENT: LEVEL VIEW vs COMPASS VIEW */}
       {mainTab === 'level' ? (
-        /* DEDICATED MINIMAL 3D SPIRIT LEVEL VIEW */
+        /* Spirit Level View */
         <div className="w-full max-w-sm flex flex-col items-center justify-center my-4 animate-in fade-in zoom-in-95">
-          {/* Tare Zero Button & Level Angle Readout */}
           <div className="w-full flex items-center justify-between mb-4 px-2">
             <span className={cn(
               "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border",
@@ -733,22 +621,17 @@ export const CompassView = () => {
             </button>
           </div>
 
-          {/* Big Minimal 3D Bullseye Spirit Vial */}
           <div className={cn(
             "relative w-64 h-64 sm:w-72 sm:h-72 rounded-full flex items-center justify-center border-[14px] sm:border-[16px] shadow-2xl transition-all duration-300 overflow-hidden",
             isLevel 
               ? "border-emerald-500/70 bg-gradient-to-tr from-[#021A0F] via-[#042817] to-[#021A0F] shadow-[0_0_50px_rgba(16,185,129,0.4)]" 
               : "border-stone-800 bg-gradient-to-tr from-[#12161C] via-[#090C10] to-[#050709] shadow-[0_0_40px_rgba(0,0,0,0.8)]"
           )}>
-            {/* Concentric Bullseye Rings */}
             <div className="absolute inset-8 rounded-full border border-white/15 pointer-events-none" />
             <div className="absolute inset-16 rounded-full border border-dashed border-white/10 pointer-events-none" />
-            
-            {/* Crosshairs */}
             <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-white/20 pointer-events-none" />
             <div className="absolute inset-y-0 left-1/2 w-[0.5px] bg-white/20 pointer-events-none" />
 
-            {/* Target 0° Center Circle */}
             <div className={cn(
               "w-12 h-12 rounded-full border flex items-center justify-center transition-colors pointer-events-none",
               isLevel ? "border-emerald-400 bg-emerald-500/20 shadow-[0_0_20px_#10b981]" : "border-white/25 bg-white/5"
@@ -759,7 +642,6 @@ export const CompassView = () => {
               )} />
             </div>
 
-            {/* Floating Spirit Bubble */}
             <div
               className={cn(
                 "absolute w-12 h-12 rounded-full transition-transform duration-75 ease-out liquid-shine shadow-xl border border-white/80",
@@ -773,7 +655,6 @@ export const CompassView = () => {
             />
           </div>
 
-          {/* Precise Angle Display Cards */}
           <div className="w-full grid grid-cols-2 gap-3 mt-6">
             <div className="p-3.5 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col items-center">
               <span className="text-[10px] font-bold uppercase text-stone-400">पिच (आगे-पीछे)</span>
@@ -790,17 +671,13 @@ export const CompassView = () => {
           </div>
         </div>
       ) : (
-        /* COMPASS VIEW CONTAINER */
+        /* Compass Dial View */
         <>
-          {/* Main Dial Container */}
           <div className="relative my-2 flex flex-col items-center justify-center">
-            
-            {/* Top Pointer Triangle on Outer Bezel (Crimson Red Arrowhead at 0°) */}
-            <div className="absolute -top-3 z-30 flex flex-col items-center pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            <div className="absolute -top-3 z-30 flex flex-col items-center pointer-events-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
               <div className="w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-t-[14px] border-t-[#EF4444]" />
             </div>
 
-            {/* Rotating Compass Dial Body */}
             <div
               ref={dialRef}
               onPointerDown={handlePointerDown}
@@ -810,45 +687,87 @@ export const CompassView = () => {
               className={cn(
                 "w-[21.5rem] h-[21.5rem] sm:w-[23.5rem] sm:h-[23.5rem] rounded-full flex items-center justify-center relative transition-transform duration-75 ease-out select-none cursor-grab active:cursor-grabbing touch-none",
                 selectedStyle === 'classic'
-                  ? "border-[14px] sm:border-[18px] border-[#2A2E38] shadow-[0_18px_50px_rgba(0,0,0,0.95),inset_0_2px_4px_rgba(255,255,255,0.35),inset_0_-4px_10px_rgba(0,0,0,0.9)] bg-gradient-to-tr from-[#1A1D24] via-[#3E4554] to-[#14161C]"
+                  ? "border-[16px] sm:border-[20px] border-[#374151] shadow-[0_20px_60px_rgba(0,0,0,0.95),inset_0_3px_6px_rgba(251,191,36,0.4),inset_0_-6px_14px_rgba(0,0,0,0.95)] bg-gradient-to-tr from-[#1E293B] via-[#475569] to-[#0F172A]"
                   : selectedStyle === 'chandan'
                   ? "border-[20px] sm:border-[24px] border-[#C29B70] shadow-[0_15px_45px_rgba(78,53,36,0.6),inset_0_3px_6px_rgba(255,255,255,0.7),inset_0_-6px_12px_rgba(78,53,36,0.9)] bg-gradient-to-br from-[#E6D2BA] via-[#C9A67E] to-[#8C6239]"
-                  : "border-[14px] sm:border-[18px] border-[#1C1C1E] shadow-[0_15px_45px_rgba(0,0,0,0.95),inset_0_1px_2px_rgba(255,255,255,0.2)] bg-[#0C0C0E]"
+                  : "border-[16px] sm:border-[20px] border-[#22201D] shadow-[0_25px_60px_rgba(0,0,0,0.98),inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-5px_12px_rgba(0,0,0,0.95)] bg-[#11100E]"
               )}
               style={{
                 transform: `rotate(${displayHeading !== null ? -displayHeading : 0}deg)`,
                 willChange: 'transform'
               }}
             >
-              {/* Dial Face Inner Canvas */}
               <div className={cn(
                 "absolute inset-0 rounded-full overflow-hidden flex items-center justify-center",
                 selectedStyle === 'classic'
-                  ? "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#242933] via-[#171A21] to-[#0C0E12]"
+                  ? "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1E232D] via-[#12161F] to-[#090B0F]"
                   : selectedStyle === 'chandan'
                   ? "bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#F4E8D8] via-[#E2CEB5] to-[#C9A882]"
-                  : "bg-black"
+                  : "bg-[#09090A]"
               )}>
                 
-                {/* Concentric Geometry Guides */}
-                {selectedStyle !== 'dark' && (
+                {selectedStyle === 'classic' && (
                   <>
-                    <div className="absolute inset-4 rounded-full border border-amber-500/20 pointer-events-none" />
-                    <div className="absolute inset-8 rounded-full border border-dashed border-amber-500/15 pointer-events-none" />
-                    <div className="absolute inset-14 rounded-full border border-amber-500/20 pointer-events-none" />
-                    {/* Golden Wireframe Geometry for Classic Theme */}
-                    {selectedStyle === 'classic' && (
-                      <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" viewBox="0 0 200 200">
-                        <polygon points="100,20 180,100 100,180 20,100" fill="none" stroke="#F59E0B" strokeWidth="0.5" />
-                        <polygon points="100,20 156,156 44,156" fill="none" stroke="#F59E0B" strokeWidth="0.4" />
-                        <polygon points="100,180 44,44 156,44" fill="none" stroke="#F59E0B" strokeWidth="0.4" />
-                        <circle cx="100" cy="100" r="55" fill="none" stroke="#F59E0B" strokeWidth="0.5" strokeDasharray="3 3" />
-                      </svg>
-                    )}
+                    <div className="absolute inset-3.5 rounded-full border border-amber-400/35 pointer-events-none shadow-[0_0_15px_rgba(245,158,11,0.15)]" />
+                    <div className="absolute inset-9 rounded-full border border-white/10 pointer-events-none" />
+                    <div className="absolute inset-[4.2rem] rounded-full border border-amber-400/20 pointer-events-none" />
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" viewBox="0 0 200 200">
+                      <circle cx="100" cy="100" r="50" fill="none" stroke="#F59E0B" strokeWidth="0.6" strokeDasharray="2 2" />
+                      <line x1="100" y1="18" x2="100" y2="182" stroke="#F59E0B" strokeWidth="0.4" strokeDasharray="3 3" />
+                      <line x1="18" y1="100" x2="182" y2="100" stroke="#F59E0B" strokeWidth="0.4" strokeDasharray="3 3" />
+                    </svg>
                   </>
                 )}
 
-                {/* Dial Ticks for Classic and Chandan (Every 5° and 10°) */}
+                {selectedStyle === 'dark' && vastuGridEnabled && (
+                  <>
+                    <div className="absolute inset-10 rounded-full border border-amber-500/15 pointer-events-none" />
+                    <div className="absolute inset-20 rounded-full border border-dashed border-amber-500/10 pointer-events-none" />
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-30" viewBox="0 0 200 200">
+                      <rect x="44" y="44" width="112" height="112" fill="none" stroke="#F59E0B" strokeWidth="0.5" strokeDasharray="2 2" />
+                      <circle cx="100" cy="100" r="56" fill="none" stroke="#F59E0B" strokeWidth="0.5" />
+                      <circle cx="100" cy="100" r="28" fill="none" stroke="#F59E0B" strokeWidth="0.4" />
+                      <line x1="44" y1="44" x2="156" y2="156" stroke="#F59E0B" strokeWidth="0.4" strokeDasharray="2 2" />
+                      <line x1="156" y1="44" x2="44" y2="156" stroke="#F59E0B" strokeWidth="0.4" strokeDasharray="2 2" />
+                      <line x1="100" y1="16" x2="100" y2="184" stroke="#F59E0B" strokeWidth="0.4" />
+                      <line x1="16" y1="100" x2="184" y2="100" stroke="#F59E0B" strokeWidth="0.4" />
+                    </svg>
+
+                    {/* Vastu Room Labels in native script */}
+                    <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(45deg)' }}>
+                      <div className="flex flex-col items-center mt-14 select-none">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mb-0.5 shadow-[0_0_6px_#f59e0b]" />
+                        <span className="text-[9px] font-black text-amber-400 leading-none">ईशान</span>
+                        <span className="text-[7.5px] font-bold text-amber-300/90 tracking-wide leading-none mt-0.5">मंदिर</span>
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(135deg)' }}>
+                      <div className="flex flex-col items-center mt-14 select-none">
+                        <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mb-0.5 shadow-[0_0_6px_#f97316]" />
+                        <span className="text-[9px] font-black text-orange-400 leading-none">आग्नेय</span>
+                        <span className="text-[7.5px] font-bold text-orange-300/90 tracking-wide leading-none mt-0.5">रसोई</span>
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(225deg)' }}>
+                      <div className="flex flex-col items-center mt-14 select-none">
+                        <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 mb-0.5 shadow-[0_0_6px_#eab308]" />
+                        <span className="text-[9px] font-black text-yellow-400 leading-none">नैऋत्य</span>
+                        <span className="text-[7.5px] font-bold text-yellow-300/90 tracking-wide leading-none mt-0.5">शयन</span>
+                      </div>
+                    </div>
+
+                    <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(315deg)' }}>
+                      <div className="flex flex-col items-center mt-14 select-none">
+                        <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mb-0.5 shadow-[0_0_6px_#38bdf8]" />
+                        <span className="text-[9px] font-black text-sky-400 leading-none">वायव्य</span>
+                        <span className="text-[7.5px] font-bold text-sky-300/90 tracking-wide leading-none mt-0.5">अतिथि</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 {selectedStyle !== 'dark' && (
                   [...Array(72)].map((_, i) => {
                     const deg = i * 5;
@@ -859,42 +778,42 @@ export const CompassView = () => {
                         <div className={cn(
                           "rounded-full mt-2",
                           isMajor 
-                            ? "w-[2px] h-3 bg-[#EF4444] shadow-sm" 
+                            ? "w-[2.5px] h-3.5 bg-[#EF4444] shadow-sm" 
                             : isMid 
-                            ? (selectedStyle === 'classic' ? "w-[1.5px] h-2.5 bg-amber-400/80" : "w-[1.5px] h-2.5 bg-[#8C5824]") 
-                            : (selectedStyle === 'classic' ? "w-[1px] h-1.5 bg-amber-400/30" : "w-[1px] h-1.5 bg-[#8C5824]/40")
+                            ? (selectedStyle === 'classic' ? "w-[1.8px] h-3 bg-amber-400/90 shadow-[0_0_4px_rgba(245,158,11,0.5)]" : "w-[1.5px] h-2.5 bg-[#8C5824]") 
+                            : (selectedStyle === 'classic' ? "w-[1px] h-1.5 bg-amber-400/35" : "w-[1px] h-1.5 bg-[#8C5824]/40")
                         )} />
                       </div>
                     );
                   })
                 )}
 
-                {/* Dial Ticks for Dark Theme (180 Fine White Ticks every 2°) */}
                 {selectedStyle === 'dark' && (
                   [...Array(180)].map((_, i) => {
                     const deg = i * 2;
                     const isCardinal = deg % 90 === 0;
                     const isMajor30 = deg % 30 === 0;
+                    const isMajor45 = deg % 45 === 0;
                     return (
                       <div key={deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${deg}deg)` }}>
                         <div className={cn(
                           "rounded-full mt-1.5",
-                          isCardinal ? "w-[2.5px] h-3.5 bg-white" :
+                          isCardinal ? "w-[2.5px] h-4 bg-red-500 shadow-[0_0_6px_#ef4444]" :
+                          isMajor45 ? "w-[2px] h-3.5 bg-amber-400 shadow-[0_0_4px_#f59e0b]" :
                           isMajor30 ? "w-[2px] h-3 bg-white" :
-                          "w-[1px] h-1.5 bg-white/40"
+                          "w-[1px] h-1.5 bg-white/30"
                         )} />
                       </div>
                     );
                   })
                 )}
 
-                {/* Inner Degree Numbers: 0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330 */}
                 {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
                   <div key={deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${deg}deg)` }}>
                     <div className="flex flex-col items-center select-none mt-1">
                       <span className={cn(
                         "font-mono font-bold text-[0.52rem] drop-shadow-md",
-                        selectedStyle === 'classic' ? "text-amber-200/90" : selectedStyle === 'chandan' ? "text-[#5C3818]" : "text-stone-300"
+                        selectedStyle === 'classic' ? "text-amber-200/90" : selectedStyle === 'chandan' ? "text-[#5C3818]" : "text-stone-400 font-semibold"
                       )}>
                         {deg}
                       </span>
@@ -902,41 +821,83 @@ export const CompassView = () => {
                   </div>
                 ))}
 
-                {/* 8 Cardinal Directions in Hindi: उत्तर, ईशान्य, पूर्व, आग्नेय, दक्षिण, नैऋत्य, पश्चिम, वायव्य */}
-                {[
-                  { l: 'उत्तर', d: 0, isRed: true },
-                  { l: 'ईशान्य', d: 45 },
-                  { l: 'पूर्व', d: 90 },
-                  { l: 'आग्नेय', d: 135 },
-                  { l: 'दक्षिण', d: 180 },
-                  { l: 'नैऋत्य', d: 225 },
-                  { l: 'पश्चिम', d: 270 },
-                  { l: 'वायव्य', d: 315 }
-                ].map((pt) => (
-                  <div key={pt.l} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.d}deg)` }}>
-                    <div className="flex flex-col items-center select-none mt-6">
-                      {selectedStyle === 'dark' && pt.isRed && (
-                        <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[7px] border-b-red-500 mb-0.5" />
-                      )}
-                      <span className={cn(
-                        "font-black text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] tracking-tight",
-                        pt.isRed 
-                          ? "text-[#EF4444] text-base font-black scale-105" 
-                          : (selectedStyle === 'chandan' ? "text-[#3E2718]" : "text-white")
-                      )}>
-                        {pt.l}
-                      </span>
+                {/* Regional Cardinal Badges */}
+                {selectedStyle === 'dark' ? (
+                  [
+                    { code: 'उत्तर', degNum: '0°', d: 0, color: 'text-red-500 font-black scale-105', barColor: 'bg-red-500' },
+                    { code: 'ईशान', degNum: '45°', d: 45, color: 'text-yellow-400', barColor: 'bg-yellow-400' },
+                    { code: 'पूर्व', degNum: '90°', d: 90, color: 'text-emerald-400', barColor: 'bg-emerald-400' },
+                    { code: 'आग्नेय', degNum: '135°', d: 135, color: 'text-orange-400', barColor: 'bg-orange-400' },
+                    { code: 'दक्षिण', degNum: '180°', d: 180, color: 'text-red-500 font-black scale-105', barColor: 'bg-red-500' },
+                    { code: 'नैऋत्य', degNum: '225°', d: 225, color: 'text-yellow-400', barColor: 'bg-yellow-400' },
+                    { code: 'पश्चिम', degNum: '270°', d: 270, color: 'text-slate-200', barColor: 'bg-slate-200' },
+                    { code: 'वायव्य', degNum: '315°', d: 315, color: 'text-sky-400', barColor: 'bg-sky-400' }
+                  ].map((pt) => (
+                    <div key={pt.code} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.d}deg)` }}>
+                      <div className="flex flex-col items-center select-none mt-5">
+                        <div className={cn("w-1.5 h-2.5 rounded-full mb-0.5", pt.barColor)} />
+                        <span className={cn("font-black text-[10px] tracking-tight drop-shadow-md leading-none", pt.color)}>
+                          {pt.code}
+                        </span>
+                        <span className={cn("font-mono text-[7.5px] font-bold leading-none mt-0.5", pt.color)}>
+                          {pt.degNum}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  [
+                    { l: 'उत्तर', d: 0, isRed: true },
+                    { l: 'ईशान', d: 45 },
+                    { l: 'पूर्व', d: 90 },
+                    { l: 'आग्नेय', d: 135 },
+                    { l: 'दक्षिण', d: 180 },
+                    { l: 'नैऋत्य', d: 225 },
+                    { l: 'पश्चिम', d: 270 },
+                    { l: 'वायव्य', d: 315 }
+                  ].map((pt) => (
+                    <div key={pt.l} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.d}deg)` }}>
+                      <div className="flex flex-col items-center select-none mt-5">
+                        <span className={cn(
+                          "font-black text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] tracking-tight",
+                          pt.isRed 
+                            ? "text-[#EF4444] text-base font-black scale-105" 
+                            : (selectedStyle === 'chandan' ? "text-[#3E2718]" : "text-amber-100")
+                        )}>
+                          {pt.l}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
 
-                {/* Dynamic Sun Position & Badge on Dial */}
+                {/* Sun Badge */}
                 {sunPos !== null && (
                   <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${sunPos}deg)` }}>
                     <div className="flex flex-col items-center mt-12 animate-pulse">
-                      <div className="flex items-center gap-1 bg-amber-500/90 text-stone-950 px-1.5 py-0.5 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.8)] border border-amber-300">
+                      <div className="flex items-center gap-1 bg-amber-500/90 text-stone-950 px-1.5 py-0.5 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.9)] border border-amber-300">
                         <Sun className="w-3 h-3 fill-amber-300 text-stone-950" />
                         <span className="text-[8px] font-black tracking-wider leading-none">सूर्य</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Qibla Indicator on Dial */}
+                {isQiblaMode && (
+                  <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${qiblaBearing}deg)` }}>
+                    <div className="flex flex-col items-center mt-9 animate-bounce">
+                      <div className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-2xl transition-all duration-300",
+                        isFacingQibla 
+                          ? "bg-gradient-to-r from-emerald-400 to-teal-400 text-stone-950 border-emerald-200 shadow-[0_0_25px_#10b981] scale-110 font-black" 
+                          : "bg-stone-950/95 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                      )}>
+                        <span className="text-sm">🕋</span>
+                        <div className="flex flex-col text-left leading-none">
+                          <span className="text-[9px] font-black tracking-wider">किबला {qiblaBearing}°</span>
+                          <span className="text-[7px] font-bold opacity-80 mt-0.5">{qiblaDistanceKm.toLocaleString('hi-IN')} किमी</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -944,262 +905,405 @@ export const CompassView = () => {
               </div>
             </div>
 
-        {/* Overlay 3D Needle & Center Spirit Bubble Level (Stationary with Upright Orientation) */}
-        <div 
-          className="absolute inset-0 rounded-full pointer-events-none flex items-center justify-center overflow-visible z-20"
-          style={{
-            transform: `translate3d(${roll * 0.15}px, ${-pitch * 0.15}px, 0px)`
-          }}
-        >
-          {/* Precision 3D Needle (Classic / Chandan) or Minimal Heading Pointer */}
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            {selectedStyle === 'classic' ? (
-              <svg className="w-full h-full p-4 drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]" viewBox="0 0 200 200">
-                {/* Secondary 3D Diagonal Points (NE, SE, SW, NW) */}
-                <polygon points="100,100 135,65 100,88" fill="#475569" opacity="0.7" />
-                <polygon points="100,100 135,65 112,100" fill="#1E293B" opacity="0.7" />
-                <polygon points="100,100 135,135 112,100" fill="#475569" opacity="0.7" />
-                <polygon points="100,100 135,135 100,112" fill="#1E293B" opacity="0.7" />
-                <polygon points="100,100 65,135 100,112" fill="#475569" opacity="0.7" />
-                <polygon points="100,100 65,135 88,100" fill="#1E293B" opacity="0.7" />
-                <polygon points="100,100 65,65 88,100" fill="#475569" opacity="0.7" />
-                <polygon points="100,100 65,65 100,88" fill="#1E293B" opacity="0.7" />
+            {/* Stationary Needle Overlay */}
+            <div 
+              className="absolute inset-0 rounded-full pointer-events-none flex items-center justify-center overflow-visible z-20"
+              style={{
+                transform: `translate3d(${roll * 0.15}px, ${-pitch * 0.15}px, 0px)`
+              }}
+            >
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                {selectedStyle === 'classic' ? (
+                  /* Classic: Bold 3D Bicolor Delta Arrow (Clean, zero overlap with North) */
+                  <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
+                    <defs>
+                      <linearGradient id="classicGreyWhite" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#FFFFFF" />
+                        <stop offset="60%" stopColor="#E2E8F0" />
+                        <stop offset="100%" stopColor="#CBD5E1" />
+                      </linearGradient>
+                      <linearGradient id="classicCrimsonRed" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#EF4444" />
+                        <stop offset="50%" stopColor="#DC2626" />
+                        <stop offset="100%" stopColor="#991B1B" />
+                      </linearGradient>
+                    </defs>
 
-                {/* East & West Points */}
-                <polygon points="175,100 100,92 112,100" fill="#475569" opacity="0.8" />
-                <polygon points="175,100 100,108 112,100" fill="#1E293B" opacity="0.8" />
-                <polygon points="25,100 100,92 88,100" fill="#475569" opacity="0.8" />
-                <polygon points="25,100 100,108 88,100" fill="#1E293B" opacity="0.8" />
+                    <polygon
+                      points="100,36 78,76 100,64"
+                      fill="url(#classicGreyWhite)"
+                      stroke="#94A3B8"
+                      strokeWidth="0.8"
+                      strokeLinejoin="round"
+                      className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
+                    />
+                    <polygon
+                      points="100,36 100,64 122,76"
+                      fill="url(#classicCrimsonRed)"
+                      stroke="#7F1D1D"
+                      strokeWidth="0.8"
+                      strokeLinejoin="round"
+                      className="drop-shadow-[0_4px_16px_rgba(239,68,68,0.7)]"
+                    />
+                    <line x1="100" y1="36" x2="100" y2="64" stroke="#475569" strokeWidth="1" />
+                    <circle cx="100" cy="100" r="14" fill="none" stroke="#D4AF37" strokeWidth="1.8" />
+                  </svg>
+                ) : selectedStyle === 'chandan' ? (
+                  /* Chandan: Full Majestic 2-Sided 3D Needle */
+                  <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(78,53,36,0.95)]" viewBox="0 0 200 200">
+                    <polygon points="100,190 90,100 100,112" fill="#8C6239" />
+                    <polygon points="100,190 110,100 100,112" fill="#4E3524" />
+                    <line x1="100" y1="112" x2="100" y2="188" stroke="#D4AF37" strokeWidth="1" opacity="0.7" />
 
-                {/* South Point (3D Slate) */}
-                <polygon points="100,175 88,100 100,112" fill="#64748B" />
-                <polygon points="100,175 112,100 100,112" fill="#334155" />
+                    <polygon points="100,10 88,100 100,88" fill="#EF4444" className="drop-shadow-[0_0_16px_rgba(239,68,68,0.85)]" />
+                    <polygon points="100,10 112,100 100,88" fill="#B91C1C" />
+                    <line x1="100" y1="10" x2="100" y2="88" stroke="#FDE047" strokeWidth="1.6" />
 
-                {/* Dashed Center Vector Line to North */}
-                <line x1="100" y1="52" x2="100" y2="82" stroke="#FFFFFF" strokeWidth="1.8" strokeDasharray="3 3" opacity="0.85" />
-
-                {/* North 3D Arrowhead (White & Slate split from reference image) */}
-                <polygon points="100,10 84,55 100,46" fill="#FFFFFF" className="drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]" />
-                <polygon points="100,10 116,55 100,46" fill="#94A3B8" />
-              </svg>
-            ) : selectedStyle === 'chandan' ? (
-              <svg className="w-full h-full p-4 drop-shadow-[0_4px_16px_rgba(0,0,0,0.85)]" viewBox="0 0 200 200">
-                {/* North Pointer (3D Split Vibrant Crimson Red) */}
-                <polygon points="100,8 91,100 100,86" fill="#EF4444" className="drop-shadow-[0_0_12px_rgba(239,68,68,0.7)]" />
-                <polygon points="100,8 109,100 100,86" fill="#B91C1C" />
-                <line x1="100" y1="10" x2="100" y2="86" stroke="#FDE047" strokeWidth="1.2" opacity="0.9" />
-
-                {/* South Pointer (3D Split Slate Charcoal) */}
-                <polygon points="100,192 91,100 100,114" fill="#64748B" />
-                <polygon points="100,192 109,100 100,114" fill="#334155" />
-                <line x1="100" y1="114" x2="100" y2="190" stroke="#94A3B8" strokeWidth="1.2" opacity="0.6" />
-
-                {/* Outer Gold Spindle Ring */}
-                <circle cx="100" cy="100" r="16" fill="none" stroke="#D4AF37" strokeWidth="2.5" className="drop-shadow-md" />
-                <circle cx="100" cy="100" r="14" fill="none" stroke="#FFFBEB" strokeWidth="0.8" opacity="0.7" />
-              </svg>
-            ) : (
-              /* Minimal Dark Style Top Heading Lubber Line */
-              <div className="absolute top-2 w-[3.5px] h-6 bg-red-500 rounded-full shadow-[0_0_10px_#ef4444] z-30" />
-            )}
-          </div>
-
-          {/* Center Precision Liquid Spirit Bubble Hub (with Live Heading and Green Target) */}
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            <div className={cn(
-              "w-16 h-16 rounded-full relative overflow-hidden flex flex-col items-center justify-center transition-all duration-300 backdrop-blur-md shadow-2xl",
-              selectedStyle === 'classic'
-                ? "border border-white/20 bg-[#1E232B]/90 shadow-[0_4px_20px_rgba(0,0,0,0.8)]"
-                : isLevel 
-                ? "border-2 border-emerald-400/80 bg-emerald-950/50 shadow-[0_0_20px_rgba(52,211,153,0.5)] animate-pulse" 
-                : "border border-amber-400/40 bg-stone-950/70 shadow-inner"
-            )}>
-              {/* Live Degree Angle in Center Hub */}
-              <span className="font-mono font-black text-sm text-white tracking-tight leading-none z-10 drop-shadow-md">
-                {displayHeading !== null ? Math.round(displayHeading) : 0}
-              </span>
-
-              {/* Crosshairs */}
-              <div className="absolute w-full h-[0.5px] bg-white/20" />
-              <div className="absolute h-full w-[0.5px] bg-white/20" />
-              
-              {/* Center Target Circle (Green Target from reference) */}
-              <div className={cn(
-                "absolute w-8 h-8 rounded-full border flex items-center justify-center transition-colors",
-                isLevel ? "border-emerald-400/80 shadow-[0_0_12px_#10b981]" : "border-emerald-500/40"
-              )}>
-                <span className="text-[8px] font-black text-emerald-400/80 leading-none">उ</span>
+                    <circle cx="100" cy="100" r="15" fill="none" stroke="#C29B70" strokeWidth="2.5" className="drop-shadow-md" />
+                    <circle cx="100" cy="100" r="12" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.8" />
+                  </svg>
+                ) : (
+                  /* Dark: Minimal pointer with emerald beacon */
+                  <div className="absolute top-2 flex flex-col items-center z-30">
+                    <div className="w-[3.5px] h-6 bg-gradient-to-b from-red-500 to-red-600 rounded-full shadow-[0_0_12px_#ef4444]" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981] -mt-1" />
+                  </div>
+                )}
               </div>
 
-              {/* Dynamic Floating Spirit Bubble */}
-              <div 
-                className={cn(
-                  "absolute w-4 h-4 rounded-full transition-transform duration-75 ease-out liquid-shine shadow-md",
-                  isLevel 
-                    ? "bg-emerald-400 shadow-[0_0_12px_#34d399] scale-110" 
-                    : "bg-emerald-300/80 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
-                )}
-                style={{
-                  transform: `translate(${Math.max(-14, Math.min(14, -roll * 0.5))}px, ${Math.max(-14, Math.min(14, -pitch * 0.5))}px)`
-                }}
-              />
+              {/* Center Precision Liquid Spirit Bubble Hub */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className={cn(
+                  "w-14 h-14 rounded-full relative overflow-hidden flex flex-col items-center justify-center transition-all duration-300 backdrop-blur-md shadow-2xl",
+                  selectedStyle === 'classic'
+                    ? "border-2 border-amber-400/60 bg-[#1E232B]/95 shadow-[0_4px_25px_rgba(245,158,11,0.3)]"
+                    : isLevel 
+                    ? "border-2 border-emerald-400/80 bg-emerald-950/60 shadow-[0_0_20px_rgba(52,211,153,0.6)] animate-pulse" 
+                    : "border border-amber-400/40 bg-stone-950/80 shadow-inner"
+                )}>
+                  <div className="absolute w-full h-[0.5px] bg-white/20" />
+                  <div className="absolute h-full w-[0.5px] bg-white/20" />
+                  
+                  <div className={cn(
+                    "absolute w-7 h-7 rounded-full border flex items-center justify-center transition-colors",
+                    isLevel ? "border-emerald-400/80 shadow-[0_0_12px_#10b981]" : "border-emerald-500/40"
+                  )}>
+                    <span className="text-[8px] font-black text-emerald-400/80 leading-none">उ</span>
+                  </div>
+
+                  <div 
+                    className={cn(
+                      "absolute w-4 h-4 rounded-full transition-transform duration-75 ease-out liquid-shine shadow-md",
+                      isLevel 
+                        ? "bg-emerald-400 shadow-[0_0_14px_#34d399] scale-110" 
+                        : "bg-emerald-300/80 shadow-[0_0_8px_rgba(52,211,153,0.7)]"
+                    )}
+                    style={{
+                      transform: `translate(${Math.max(-14, Math.min(14, -roll * 0.5))}px, ${Math.max(-14, Math.min(14, -pitch * 0.5))}px)`
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Large Impactful Reading Display Pill (272° पश्चिम / Gold Glow Pill) */}
-      <div className="w-full max-w-sm mt-3 flex flex-col items-center gap-2">
-        <div className={cn(
-          "w-full py-2.5 px-6 rounded-3xl border-2 flex items-center justify-between text-center transition-colors duration-300 shadow-xl",
-          theme === 'light'
-            ? "bg-gradient-to-r from-amber-50 via-white to-amber-50 border-amber-400/80 shadow-[0_4px_25px_rgba(245,158,11,0.2)] text-stone-900"
-            : "bg-gradient-to-r from-stone-950 via-[#1C180E] to-stone-950 border-[#D4AF37] shadow-[0_0_30px_rgba(212,175,55,0.35)] text-white"
-        )}>
-          <div className="flex flex-col text-left">
-            <span className={cn(
-              "text-2xl sm:text-3xl font-black tracking-tight leading-none",
-              theme === 'light' ? "text-stone-900" : "text-white"
-            )}>
-              {displayHeading !== null ? `${Math.round(displayHeading)}° ` : '0° '}
-              <span className={theme === 'light' ? "text-amber-600" : "text-amber-400"}>
-                {getHindiCardinal(displayHeading)}
+          {/* Same Line Degree & Cardinal Readout */}
+          <div className="w-full max-w-sm flex flex-col items-center text-center my-1 animate-in fade-in zoom-in-95">
+            <div className="flex items-baseline justify-center gap-2.5">
+              <span className={cn(
+                "text-4xl sm:text-5xl font-black font-mono tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] leading-none",
+                theme === 'light' ? "text-stone-900" : "text-white"
+              )}>
+                {displayHeading !== null ? Math.round(displayHeading) : 0}<span className="text-2xl sm:text-3xl text-stone-400">°</span>
               </span>
-            </span>
+              <span className={cn(
+                "text-2xl sm:text-3xl font-black tracking-wide drop-shadow-md",
+                getVastuInfo(displayHeading).color || "text-amber-400"
+              )}>
+                {getVastuInfo(displayHeading).name}
+              </span>
+            </div>
+
             <span className={cn(
-              "text-[10px] font-bold mt-0.5",
-              theme === 'light' ? "text-stone-600" : "text-stone-400"
+              "text-xs sm:text-sm font-semibold mt-1 px-2 text-center",
+              theme === 'light' ? "text-stone-600" : "text-stone-300"
             )}>
-              {useTrueNorth ? 'भौगोलिक उत्तर (सटीक)' : 'चुंबकीय उत्तर'}
+              {isQiblaMode ? (
+                <span className={cn(
+                  "px-3 py-1 rounded-full inline-flex items-center gap-1.5 border shadow-sm transition-all",
+                  isFacingQibla 
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.4)] animate-pulse font-bold" 
+                    : "bg-emerald-950/40 text-emerald-300/90 border-emerald-500/30"
+                )}>
+                  <span>🕋</span>
+                  {isFacingQibla 
+                    ? `✓ मक्का किबला की सटीक दिशा • काबा दूरी: ${qiblaDistanceKm.toLocaleString('hi-IN')} किमी` 
+                    : `मक्का (किबला) दिशा: ${qiblaBearing}° • दूरी: ${qiblaDistanceKm.toLocaleString('hi-IN')} किमी`}
+                </span>
+              ) : (
+                `${getVastuInfo(displayHeading).vastuTitle} • ${getVastuInfo(displayHeading).vastuDesc}`
+              )}
             </span>
           </div>
 
-          <div className="flex flex-col items-end">
-            <span className={cn(
-              "px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border",
-              isLevel 
-                ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.3)] animate-pulse")
-                : (theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-amber-500/15 text-amber-400 border-amber-500/30")
+          {/* Weather & Environmental Telemetry */}
+          <div className="w-full max-w-sm my-1.5 animate-in fade-in">
+            <div className={cn(
+              "w-full rounded-2xl p-2.5 border flex items-center justify-between text-xs backdrop-blur-md shadow-md",
+              theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-stone-950/70 border-white/10 text-stone-200"
             )}>
-              {isLevel ? "✓ समतल (0°)" : "झुकाव"}
-            </span>
-            <span className={cn(
-              "text-[10px] font-mono mt-1",
-              theme === 'light' ? "text-stone-700" : "text-stone-400"
-            )}>
-              पिच: {Math.round(pitch)}° | रोल: {Math.round(roll)}°
-            </span>
-          </div>
-        </div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg leading-none">{getWeatherIcon(weather?.code)}</span>
+                <div className="flex flex-col text-left leading-tight">
+                  <span className="text-[11px] font-bold">
+                    {weather ? `${weather.temp}°C • ${getWeatherDesc(weather.code)}` : `28°C • ${getWeatherDesc(0)}`}
+                  </span>
+                  <span className={cn("text-[9px]", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
+                    📍 {location?.city ? `${location.city}, ${location.state || ''}` : 'नई दिल्ली, भारत'}
+                  </span>
+                </div>
+              </div>
 
-        {/* Live Coordinates & Altitude Card */}
-        <div className={cn(
-          "w-full rounded-2xl p-3 border flex items-center justify-between gap-2 text-xs backdrop-blur-md shadow-lg",
-          theme === 'light' ? "bg-white border-stone-200 text-stone-900 shadow-stone-200/50" : "bg-stone-950/80 border-white/10 text-white"
-        )}>
-          <div className="flex flex-col text-left">
-            <span className={cn("text-[11px] font-bold flex items-center gap-1", theme === 'light' ? "text-amber-600" : "text-amber-400")}>
-              <span>📍</span> {location?.city ? `${location.city}, ${location.state || 'भारत'}` : 'वर्तमान स्थान'}
-            </span>
-            <span className={cn("font-mono text-[10px]", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
-              अक्षांश: {location?.latitude ? location.latitude.toFixed(4) : '28.6139'}° उ. • देशांतर: {location?.longitude ? location.longitude.toFixed(4) : '77.2090'}° पू.
-            </span>
+              <div className="flex items-center gap-2.5 text-[10px] font-mono font-bold text-stone-400">
+                <span className="flex items-center gap-1">
+                  <Wind className="w-3 h-3 text-sky-400" />
+                  {weather ? `${weather.windSpeed} km/h` : '12 km/h'}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Droplets className="w-3 h-3 text-emerald-400" />
+                  {weather ? `${weather.humidity}%` : '48%'}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className={cn(
-              "text-[10px] font-mono font-bold px-2.5 py-1 rounded-xl border",
-              theme === 'light' ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-white/5 border-white/5 text-amber-300"
+          {/* Sun Times & Altitude */}
+          <div className="w-full max-w-sm grid grid-cols-2 gap-2 my-1 animate-in fade-in">
+            <div className={cn(
+              "p-2 rounded-2xl border flex items-center justify-between text-xs backdrop-blur-md shadow-sm",
+              theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-stone-950/70 border-white/10 text-stone-200"
             )}>
-              ⛰️ {location?.altitude ? `${Math.round(location.altitude * 3.28084)} फीट` : '708 फीट'}
-            </span>
+              <div className="flex items-center gap-1.5">
+                <Sunrise className="w-3.5 h-3.5 text-amber-500" />
+                <div className="flex flex-col text-left leading-tight">
+                  <span className="text-[8px] text-stone-400 uppercase font-bold">सूर्योदय</span>
+                  <span className="font-mono font-bold text-[11px]">{formatTime(times.sunrise)}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Sunset className="w-3.5 h-3.5 text-red-500" />
+                <div className="flex flex-col text-left leading-tight">
+                  <span className="text-[8px] text-stone-400 uppercase font-bold">सूर्यास्त</span>
+                  <span className="font-mono font-bold text-[11px]">{formatTime(times.sunset)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={cn(
+              "p-2 rounded-2xl border flex items-center justify-between text-xs backdrop-blur-md shadow-sm",
+              theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-stone-950/70 border-white/10 text-stone-200"
+            )}>
+              <div className="flex flex-col text-left leading-tight">
+                <span className="text-[8px] text-stone-400 uppercase font-bold">ऊंचाई • झुकाव</span>
+                <span className="font-mono font-bold text-[11px] text-amber-400">
+                  ⛰️ {location?.altitude ? `${Math.round(location.altitude * 3.28084)} फीट` : `708 फीट`}
+                </span>
+              </div>
+              <span className={cn(
+                "px-2 py-0.5 rounded-lg text-[9px] font-black uppercase border",
+                isLevel ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "bg-amber-500/15 text-amber-400 border-amber-500/30"
+              )}>
+                {isLevel ? "0° समतल" : `${Math.round(pitch)}° झुकाव`}
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Action Dock */}
+          <div className="w-full max-w-sm flex items-center justify-between p-1.5 rounded-2xl bg-stone-900/90 border border-white/10 shadow-xl mt-2">
+            <button
+              onClick={toggleFlashlight}
+              className={cn(
+                "flex-1 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-[10px] font-bold",
+                isFlashlightOn 
+                  ? "bg-amber-400 text-stone-950 shadow-[0_0_15px_rgba(251,191,36,0.6)] font-black" 
+                  : "text-stone-300 hover:text-white"
+              )}
+            >
+              {isFlashlightOn ? <Flashlight className="w-4 h-4 text-stone-950 fill-stone-950" /> : <FlashlightOff className="w-4 h-4" />}
+              <span>टॉर्च</span>
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHapticFeedback(ImpactStyle.Medium);
+                const next = !isQiblaMode;
+                setIsQiblaMode(next);
+                if (next) {
+                  toast.success(`किबला: ${qiblaBearing}°`);
+                }
+              }}
+              className={cn(
+                "flex-1 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-[10px] font-bold",
+                isQiblaMode 
+                  ? "bg-emerald-500 text-stone-950 shadow-[0_0_15px_rgba(16,185,129,0.6)] font-black" 
+                  : "text-stone-300 hover:text-white"
+              )}
+            >
+              <span className="text-sm leading-none">🕋</span>
+              <span>किबला</span>
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHapticFeedback();
+                const next = !soundEnabled;
+                setSoundEnabled(next);
+                localStorage.setItem('com.hcompass.app_sound', next.toString());
+                if (next) playBellSound('chime');
+              }}
+              className={cn(
+                "flex-1 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-[10px] font-bold",
+                soundEnabled ? "text-amber-400 font-black" : "text-stone-500"
+              )}
+            >
+              {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              <span>ध्वनि</span>
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHapticFeedback();
+                const next = !useTrueNorth;
+                setUseTrueNorth(next);
+                localStorage.setItem('com.hcompass.app_true_north', next.toString());
+              }}
+              className={cn(
+                "flex-1 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-[10px] font-bold",
+                useTrueNorth ? "text-sky-400 font-black" : "text-stone-500"
+              )}
+            >
+              <Navigation className="w-4 h-4 rotate-45" />
+              <span>उत्तर</span>
+            </button>
+
             <button
               onClick={copyCoordinates}
-              className={cn(
-                "p-2 rounded-xl border active:scale-95 transition-transform",
-                theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-amber-500/20 text-amber-300 border-amber-500/40"
-              )}
-              title="अक्षांश एवं देशांतर साझा करें"
+              className="flex-1 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-[10px] font-bold text-stone-300 hover:text-white"
             >
-              <Share2 className="w-3.5 h-3.5" />
+              <Share2 className="w-4 h-4" />
+              <span>साझा</span>
+            </button>
+
+            <button
+              onClick={() => {
+                triggerHapticFeedback();
+                setShowSettings(true);
+              }}
+              className="flex-1 py-2 px-1 rounded-xl flex flex-col items-center justify-center gap-1 transition-all active:scale-95 text-[10px] font-bold text-stone-300 hover:text-white"
+            >
+              <Settings className="w-4 h-4" />
+              <span>सेटिंग्स</span>
             </button>
           </div>
-        </div>
 
-        {/* Sun Times Telemetry: Sunrise, Noon, Sunset */}
-        <div className={cn(
-          "w-full rounded-2xl p-2.5 border flex items-center justify-around text-xs shadow-md",
-          theme === 'light' ? "bg-white border-stone-200 shadow-stone-200/50" : "bg-stone-950/60 border-white/5 text-stone-300"
-        )}>
-          <div className="flex items-center gap-1.5">
-            <Sunrise className="w-3.5 h-3.5 text-amber-500" />
-            <div className="flex flex-col text-left leading-tight">
-              <span className={cn("text-[9px]", theme === 'light' ? "text-stone-600" : "text-stone-400")}>सूर्योदय</span>
-              <span className={cn("font-mono font-bold text-[11px]", theme === 'light' ? "text-stone-900" : "text-white")}>
-                {formatTime(times.sunrise)}
-              </span>
-            </div>
-          </div>
-          <div className={cn("h-5 w-[1px]", theme === 'light' ? "bg-stone-200" : "bg-white/10")} />
-          <div className="flex items-center gap-1.5">
-            <Sun className="w-3.5 h-3.5 text-orange-500" />
-            <div className="flex flex-col text-left leading-tight">
-              <span className={cn("text-[9px]", theme === 'light' ? "text-stone-600" : "text-stone-400")}>मध्याह्न</span>
-              <span className={cn("font-mono font-bold text-[11px]", theme === 'light' ? "text-stone-900" : "text-white")}>
-                {formatTime(times.solarNoon)}
-              </span>
-            </div>
-          </div>
-          <div className={cn("h-5 w-[1px]", theme === 'light' ? "bg-stone-200" : "bg-white/10")} />
-          <div className="flex items-center gap-1.5">
-            <Sunset className="w-3.5 h-3.5 text-fuchsia-500" />
-            <div className="flex flex-col text-left leading-tight">
-              <span className={cn("text-[9px]", theme === 'light' ? "text-stone-600" : "text-stone-400")}>सूर्यास्त</span>
-              <span className={cn("font-mono font-bold text-[11px]", theme === 'light' ? "text-stone-900" : "text-white")}>
-                {formatTime(times.sunset)}
-              </span>
-            </div>
-          </div>
-        </div>
+          {/* Settings Modal */}
+          {showSettings && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+              <div className={cn(
+                "w-full max-w-sm p-5 rounded-3xl border shadow-2xl flex flex-col gap-3.5 z-50 animate-in zoom-in-95",
+                theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-[#14120E] border-white/15 text-white"
+              )}>
+                <div className="flex items-center justify-between pb-2 border-b border-stone-200/40 dark:border-white/10">
+                  <span className="text-sm font-black tracking-wide text-amber-500">सेटिंग्स</span>
+                  <button 
+                    onClick={() => setShowSettings(false)}
+                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-stone-400" />
+                  </button>
+                </div>
 
-        {/* Desktop Web Testing Controls (Hidden on Native Mobile Devices) */}
-        {!Capacitor.isNativePlatform() && (
-          <div className="w-full mt-2 p-2 rounded-2xl bg-black/40 border border-white/10 flex items-center gap-2">
-            <span className="text-[10px] font-bold text-amber-400 shrink-0">घूर्णन परीक्षण:</span>
-            <input
-              type="range"
-              min="0"
-              max="359"
-              value={displayHeading !== null ? Math.round(displayHeading) : 0}
-              onChange={(e) => {
-                setIsSimulatedMode(true);
-                setHeading(parseInt(e.target.value, 10));
-              }}
-              className="w-full accent-amber-400 cursor-pointer h-1.5 bg-stone-700 rounded-lg"
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="flex items-center gap-2">
+                    <Grid className="w-4 h-4 text-amber-500" />
+                    वास्तु ग्रिड
+                  </span>
+                  <button
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      const next = !vastuGridEnabled;
+                      setVastuGridEnabled(next);
+                      localStorage.setItem('com.hcompass.app_vastu', next.toString());
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                      vastuGridEnabled ? "bg-amber-500 text-stone-950" : "bg-stone-800 text-stone-400"
+                    )}
+                  >
+                    {vastuGridEnabled ? "चालू" : "बंद"}
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+                  <span className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-emerald-400" />
+                    सेंसर परीक्षण
+                  </span>
+                  <button
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      setShowSettings(false);
+                      setShowSensorsModal(true);
+                    }}
+                    className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    जांचें
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    कैलिब्रेशन गाइड
+                  </span>
+                  <button
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      setShowSettings(false);
+                      setShowCalibrationModal(true);
+                    }}
+                    className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    देखें
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+                  <span>थीम मोड</span>
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showSensorsModal && (
+            <SensorsInspectorModal 
+              isOpen={showSensorsModal} 
+              onClose={() => setShowSensorsModal(false)}
+              theme={theme}
+              heading={heading}
+              pitch={pitch}
+              roll={roll}
             />
-            <span className="font-mono text-xs font-black text-amber-400 w-10 text-right shrink-0">
-              {Math.round(displayHeading)}°
-            </span>
-          </div>
-        )}
-      </div>
-      </>
-      )}
+          )}
 
-      {/* Modals */}
-      <CalibrationGuideModal
-        isOpen={showCalibrationModal}
-        onClose={() => setShowCalibrationModal(false)}
-        theme={theme}
-      />
-      <SensorsInspectorModal
-        isOpen={showSensorsModal}
-        onClose={() => setShowSensorsModal(false)}
-        theme={theme}
-        pitch={pitch}
-        roll={roll}
-        heading={displayHeading}
-      />
+          {showCalibrationModal && (
+            <CalibrationGuideModal
+              isOpen={showCalibrationModal}
+              onClose={() => setShowCalibrationModal(false)}
+              theme={theme}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };

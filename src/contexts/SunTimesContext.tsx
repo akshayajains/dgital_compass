@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import SunCalc from 'suncalc';
 import { Geolocation } from '@capacitor/geolocation';
 
-const LOCATION_STORAGE_KEY = 'hindi_compass_location';
+const LOCATION_STORAGE_KEY = 'com.hcompass.app_location';
 
 export interface Location {
   latitude: number;
@@ -40,18 +40,10 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {
       console.warn('Failed to parse saved location', e);
     }
-    // Default: New Delhi, India
-    return {
-      latitude: 28.6139,
-      longitude: 77.2090,
-      city: 'नई दिल्ली',
-      state: 'दिल्ली',
-      altitude: 216,
-      accuracy: 10
-    };
+    return null;
   });
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const setLocation = (newLoc: Location | null) => {
@@ -65,54 +57,100 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const reverseGeocode = async (lat: number, lng: number): Promise<{ city: string; state: string }> => {
+    try {
+      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=hi`);
+      if (res.ok) {
+        const data = await res.json();
+        const city = data.city || data.locality || data.principalSubdivision || '';
+        const state = data.principalSubdivision || '';
+        return { city, state };
+      }
+    } catch {
+      try {
+        const res2 = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=hi`);
+        if (res2.ok) {
+          const data2 = await res2.json();
+          const city = data2.address?.city || data2.address?.town || data2.address?.district || '';
+          const state = data2.address?.state || '';
+          return { city, state };
+        }
+      } catch {}
+    }
+    return { city: '', state: '' };
+  };
+
   const fetchCurrentLocation = async () => {
     setLoading(true);
     setError(null);
-    try {
-      const permission = await Geolocation.checkPermissions();
-      if (permission.location !== 'granted') {
-        const req = await Geolocation.requestPermissions();
-        if (req.location !== 'granted') {
+
+    if (typeof window !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const alt = pos.coords.altitude;
+          const acc = pos.coords.accuracy;
+          const { city, state } = await reverseGeocode(lat, lng);
+          setLocation({
+            latitude: lat,
+            longitude: lng,
+            city: city || 'नई दिल्ली',
+            state: state || ' भारत',
+            altitude: alt,
+            accuracy: acc
+          });
           setLoading(false);
-          return;
-        }
-      }
-
-      const pos = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 10000
-      });
-
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const alt = pos.coords.altitude;
-      const acc = pos.coords.accuracy;
-
-      let city = 'वर्तमान स्थान';
-      let state = '';
-
+        },
+        async (err) => {
+          try {
+            const ipRes = await fetch('https://get.geojs.io/v1/ip/geo.json');
+            if (ipRes.ok) {
+              const ipData = await ipRes.json();
+              const lat = parseFloat(ipData.latitude);
+              const lng = parseFloat(ipData.longitude);
+              if (!isNaN(lat) && !isNaN(lng)) {
+                const { city, state } = await reverseGeocode(lat, lng);
+                setLocation({
+                  latitude: lat,
+                  longitude: lng,
+                  city: city || ipData.city || 'नई दिल्ली',
+                  state: state || ipData.region || '',
+                  altitude: null,
+                  accuracy: 1000
+                });
+              }
+            }
+          } catch (ipErr) {
+            console.warn("IP Geolocation failed:", ipErr);
+          } finally {
+            setLoading(false);
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 10000 }
+      );
+    } else {
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=hi`);
-        if (res.ok) {
-          const data = await res.json();
-          city = data.address?.city || data.address?.town || data.address?.district || data.address?.suburb || 'वर्तमान स्थान';
-          state = data.address?.state || '';
-        }
-      } catch {}
-
-      setLocation({
-        latitude: lat,
-        longitude: lng,
-        city,
-        state,
-        altitude: alt,
-        accuracy: acc
-      });
-    } catch (err: any) {
-      console.warn('Geolocation lookup failed:', err);
-      setError(err?.message || 'स्थान प्राप्त नहीं हो सका');
-    } finally {
-      setLoading(false);
+        const pos = await Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 8000
+        });
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const { city, state } = await reverseGeocode(lat, lng);
+        setLocation({
+          latitude: lat,
+          longitude: lng,
+          city: city || 'नई दिल्ली',
+          state: state || '',
+          altitude: pos.coords.altitude,
+          accuracy: pos.coords.accuracy
+        });
+      } catch (err) {
+        console.warn('Capacitor geolocation fallback:', err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -121,8 +159,15 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const times = React.useMemo(() => {
-    const lat = location?.latitude || 28.6139;
-    const lng = location?.longitude || 77.2090;
+    if (!location) {
+      return {
+        sunrise: null,
+        sunset: null,
+        solarNoon: null
+      };
+    }
+    const lat = location.latitude;
+    const lng = location.longitude;
     const now = new Date();
     try {
       const calc = SunCalc.getTimes(now, lat, lng);
@@ -138,7 +183,7 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
         solarNoon: null
       };
     }
-  }, [location?.latitude, location?.longitude]);
+  }, [location]);
 
   return (
     <SunTimesContext.Provider
