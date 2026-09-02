@@ -10,7 +10,6 @@ import {
   Share2,
   Settings,
   Zap,
-  RotateCcw,
   Sparkles,
   Flashlight,
   FlashlightOff,
@@ -36,6 +35,9 @@ import { CompassDialRenderer } from '@/components/compass/CompassDialRenderer';
 import { COMPASS_STYLES } from '@/components/compass/CompassStyles';
 import { CompassStyleId, WeatherData } from '@/types/compass';
 import { getVastuDetails, getWeatherDescription, translations } from '@/lib/translations';
+import { AdvancedLevelView } from '@/components/level/AdvancedLevelView';
+import { VastuOthersView } from '@/components/vastu/VastuOthersView';
+import { CreatorBanner } from '@/components/CreatorBanner';
 
 const STYLE_STORAGE_KEY = 'com.hcompass.app_style';
 
@@ -52,7 +54,7 @@ export const CompassView = () => {
   const [showCalibrationModal, setShowCalibrationModal] = useState<boolean>(false);
   const [showSensorsModal, setShowSensorsModal] = useState<boolean>(false);
   const [showStyleModal, setShowStyleModal] = useState<boolean>(false);
-  const [mainTab, setMainTab] = useState<'compass' | 'level'>('compass');
+  const [mainTab, setMainTab] = useState<'compass' | 'level' | 'vastu'>('compass');
   const [tareOffset, setTareOffset] = useState<{ pitch: number; roll: number } | null>(null);
 
   // Weather state
@@ -462,21 +464,25 @@ export const CompassView = () => {
             />
           </div>
           <div className="flex flex-col text-left justify-center">
-            <h1 className="text-lg font-black tracking-tight leading-snug pt-0.5 pb-0 bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 dark:from-amber-400 dark:to-yellow-500 bg-clip-text text-transparent">
-              {t.appTitle}
+            <h1 className="text-base sm:text-lg font-black tracking-tight leading-snug pt-0.5 pb-0">
+              <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
+                DIGITAL{' '}
+              </span>
+              <span className="bg-gradient-to-r from-rose-500 to-red-500 bg-clip-text text-transparent">
+                COMPASS
+              </span>
             </h1>
             <span className={cn(
-              "text-[10px] font-bold leading-tight -mt-0.5",
-              theme === 'light' ? "text-stone-600" : "text-stone-400"
+              "text-[8.5px] sm:text-[9.5px] font-bold tracking-widest uppercase leading-tight -mt-0.5",
+              theme === 'light' ? "text-stone-600" : "text-amber-200/80"
             )}>
-              {t.appSubtitle}
+              {language === 'hi' ? 'सटीक 360° एवं सैटेलाइट सूट' : 'PRECISION 360° & SATELLITE SUITE'}
             </span>
           </div>
         </div>
 
-        {/* Quick Header Controls: Language Toggle & Theme Toggle */}
+        {/* Quick Header Controls: Language Toggle, Theme Toggle & Settings Cog */}
         <div className="flex items-center gap-1.5">
-          {/* Language Toggle Button */}
           <button
             onClick={() => {
               toggleLanguage();
@@ -495,18 +501,29 @@ export const CompassView = () => {
           </button>
 
           <ThemeToggle />
+
+          <button
+            onClick={() => {
+              setShowSettings(true);
+              triggerHapticFeedback();
+            }}
+            className="p-2 rounded-xl bg-stone-800/80 text-stone-200 hover:text-white border border-white/10 active:scale-95 transition-all shadow-sm"
+            title={t.settings}
+          >
+            <Settings className="w-4 h-4 text-amber-400" />
+          </button>
         </div>
       </header>
 
-      {/* Mode Switcher: Compass vs Spirit Level */}
-      <div className="w-full max-w-sm flex items-center justify-center p-1 rounded-2xl bg-stone-900/90 border border-white/10 mb-2 shadow-inner">
+      {/* 3 Mode Switcher: COMPASS | LEVEL | VASTU & OTHERS */}
+      <div className="w-full max-w-sm flex items-center justify-between p-1 rounded-2xl bg-stone-900/90 border border-white/10 mb-2 shadow-inner">
         <button
           onClick={() => {
             setMainTab('compass');
             triggerHapticFeedback();
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5",
+            "flex-1 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1",
             mainTab === 'compass'
               ? "bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 shadow-md scale-100"
               : "text-stone-400 hover:text-white"
@@ -515,13 +532,14 @@ export const CompassView = () => {
           <Compass className="w-3.5 h-3.5" />
           <span>{t.tabCompass}</span>
         </button>
+
         <button
           onClick={() => {
             setMainTab('level');
             triggerHapticFeedback();
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5",
+            "flex-1 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1",
             mainTab === 'level'
               ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-stone-950 shadow-md scale-100"
               : "text-stone-400 hover:text-white"
@@ -530,122 +548,56 @@ export const CompassView = () => {
           <CircleDot className="w-3.5 h-3.5" />
           <span>{t.tabLevel}</span>
         </button>
+
+        <button
+          onClick={() => {
+            setMainTab('vastu');
+            triggerHapticFeedback();
+          }}
+          className={cn(
+            "flex-1 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1 whitespace-nowrap",
+            mainTab === 'vastu'
+              ? "bg-gradient-to-r from-orange-500 to-amber-500 text-stone-950 shadow-md scale-100"
+              : "text-stone-400 hover:text-white"
+          )}
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>{t.tabVastu}</span>
+        </button>
       </div>
 
+      {/* Tab 1: COMPASS VIEW */}
       {mainTab === 'compass' && (
-        /* Horizontal Style Quick-Bar with Gallery Opener */
-        <div className="w-full max-w-sm flex items-center gap-1.5 mb-2 overflow-x-auto no-scrollbar py-0.5">
-          <button
-            onClick={() => {
-              setShowStyleModal(true);
-              triggerHapticFeedback();
-            }}
-            className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 text-amber-400 hover:text-amber-300 text-[11px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
-          >
-            <Palette className="w-3.5 h-3.5 text-amber-400" />
-            <span>{language === 'hi' ? '12+ शैलियां' : '12+ Styles'}</span>
-          </button>
-
-          {COMPASS_STYLES.map((st) => (
-            <button
-              key={st.id}
-              onClick={() => handleSelectStyle(st.id)}
-              className={cn(
-                "px-2.5 py-1 rounded-xl text-[10.5px] font-bold whitespace-nowrap transition-all duration-200 shrink-0 border",
-                selectedStyle === st.id
-                  ? "bg-amber-500 text-stone-950 border-amber-400 font-black shadow-md scale-100"
-                  : "bg-stone-900/80 text-stone-400 border-white/10 hover:text-white"
-              )}
-            >
-              {language === 'hi' ? st.nameHi : st.nameEn}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {mainTab === 'level' ? (
-        /* 3D Spirit Level View */
-        <div className="w-full max-w-sm flex flex-col items-center justify-center my-4 animate-in fade-in zoom-in-95">
-          <div className="w-full flex items-center justify-between mb-4 px-2">
-            <span className={cn(
-              "px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border",
-              isLevel 
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.4)] animate-pulse" 
-                : "bg-amber-500/15 text-amber-400 border-amber-500/30"
-            )}>
-              {isLevel ? t.perfectLevel : `${t.tilt}: ${Math.max(Math.abs(Math.round(pitch - (tareOffset?.pitch || 0))), Math.abs(Math.round(roll - (tareOffset?.roll || 0))))}°`}
-            </span>
-
+        <>
+          {/* Horizontal Style Quick-Bar with Gallery Opener */}
+          <div className="w-full max-w-sm flex items-center gap-1.5 mb-2 overflow-x-auto no-scrollbar py-0.5">
             <button
               onClick={() => {
-                triggerHapticFeedback(ImpactStyle.Medium);
-                if (tareOffset) setTareOffset(null);
-                else setTareOffset({ pitch, roll });
+                setShowStyleModal(true);
+                triggerHapticFeedback();
               }}
-              className={cn(
-                "px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border flex items-center gap-1 active:scale-95",
-                tareOffset 
-                  ? "bg-amber-500/20 text-amber-300 border-amber-500/40" 
-                  : "bg-white/5 text-stone-400 border-white/10 hover:text-white"
-              )}
+              className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/40 text-amber-400 hover:text-amber-300 text-[11px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all"
             >
-              <RotateCcw className="w-3 h-3" />
-              <span>{tareOffset ? t.resetTare : t.setTare}</span>
+              <Palette className="w-3.5 h-3.5 text-amber-400" />
+              <span>{language === 'hi' ? '12+ शैलियां' : '12+ Styles'}</span>
             </button>
+
+            {COMPASS_STYLES.map((st) => (
+              <button
+                key={st.id}
+                onClick={() => handleSelectStyle(st.id)}
+                className={cn(
+                  "px-2.5 py-1 rounded-xl text-[10.5px] font-bold whitespace-nowrap transition-all duration-200 shrink-0 border",
+                  selectedStyle === st.id
+                    ? "bg-amber-500 text-stone-950 border-amber-400 font-black shadow-md scale-100"
+                    : "bg-stone-900/80 text-stone-400 border-white/10 hover:text-white"
+                )}
+              >
+                {language === 'hi' ? st.nameHi : st.nameEn}
+              </button>
+            ))}
           </div>
 
-          <div className={cn(
-            "relative w-64 h-64 sm:w-72 sm:h-72 rounded-full flex items-center justify-center border-[14px] sm:border-[16px] shadow-2xl transition-all duration-300 overflow-hidden",
-            isLevel 
-              ? "border-emerald-500/70 bg-gradient-to-tr from-[#021A0F] via-[#042817] to-[#021A0F] shadow-[0_0_50px_rgba(16,185,129,0.4)]" 
-              : "border-stone-800 bg-gradient-to-tr from-[#12161C] via-[#090C10] to-[#050709] shadow-[0_0_40px_rgba(0,0,0,0.8)]"
-          )}>
-            <div className="absolute inset-8 rounded-full border border-white/15 pointer-events-none" />
-            <div className="absolute inset-16 rounded-full border border-dashed border-white/10 pointer-events-none" />
-            <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-white/20 pointer-events-none" />
-            <div className="absolute inset-y-0 left-1/2 w-[0.5px] bg-white/20 pointer-events-none" />
-
-            <div className={cn(
-              "w-12 h-12 rounded-full border flex items-center justify-center transition-colors pointer-events-none",
-              isLevel ? "border-emerald-400 bg-emerald-500/20 shadow-[0_0_20px_#10b981]" : "border-white/25 bg-white/5"
-            )}>
-              <div className={cn(
-                "w-2 h-2 rounded-full transition-colors",
-                isLevel ? "bg-emerald-400 shadow-[0_0_10px_#10b981]" : "bg-white/40"
-              )} />
-            </div>
-
-            <div
-              className={cn(
-                "absolute w-12 h-12 rounded-full transition-transform duration-75 ease-out liquid-shine shadow-xl border border-white/80",
-                isLevel 
-                  ? "bg-gradient-to-tr from-lime-400 to-emerald-300 shadow-[0_0_25px_#10b981] scale-105" 
-                  : "bg-gradient-to-tr from-amber-400 to-yellow-300 shadow-[0_0_15px_rgba(245,158,11,0.8)]"
-              )}
-              style={{
-                transform: `translate(${Math.max(-95, Math.min(95, -(roll - (tareOffset?.roll || 0)) * 4.5))}px, ${Math.max(-95, Math.min(95, -(pitch - (tareOffset?.pitch || 0)) * 4.5))}px)`
-              }}
-            />
-          </div>
-
-          <div className="w-full grid grid-cols-2 gap-3 mt-6">
-            <div className="p-3.5 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col items-center">
-              <span className="text-[10px] font-bold uppercase text-stone-400">{t.pitch}</span>
-              <span className="text-xl font-black font-mono text-sky-400 mt-0.5">
-                {Math.round(pitch - (tareOffset?.pitch || 0))}°
-              </span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col items-center">
-              <span className="text-[10px] font-bold uppercase text-stone-400">{t.roll}</span>
-              <span className="text-xl font-black font-mono text-emerald-400 mt-0.5">
-                {Math.round(roll - (tareOffset?.roll || 0))}°
-              </span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Dynamic Compass Dial View with Selected Style */
-        <>
           <CompassDialRenderer
             styleId={selectedStyle}
             language={language}
@@ -863,169 +815,195 @@ export const CompassView = () => {
               <span>{t.settings}</span>
             </button>
           </div>
+        </>
+      )}
 
-          {/* Settings Modal */}
-          {showSettings && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
-              <div className={cn(
-                "w-full max-w-sm p-5 rounded-3xl border shadow-2xl flex flex-col gap-3.5 z-50 animate-in zoom-in-95",
-                theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-[#14120E] border-white/15 text-white"
-              )}>
-                <div className="flex items-center justify-between pb-2 border-b border-stone-200/40 dark:border-white/10">
-                  <span className="text-sm font-black tracking-wide text-amber-500">{t.settings}</span>
-                  <button 
-                    onClick={() => setShowSettings(false)}
-                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
-                  >
-                    <X className="w-4 h-4 text-stone-400" />
-                  </button>
-                </div>
+      {/* Tab 2: LEVEL VIEW */}
+      {mainTab === 'level' && (
+        <AdvancedLevelView
+          pitch={pitch}
+          roll={roll}
+          tareOffset={tareOffset}
+          onToggleTare={() => {
+            if (tareOffset) setTareOffset(null);
+            else setTareOffset({ pitch, roll });
+          }}
+          theme={theme}
+          triggerHaptic={triggerHapticFeedback}
+        />
+      )}
 
-                {/* Language Switch */}
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="flex items-center gap-2">
-                    <Languages className="w-4 h-4 text-amber-500" />
-                    {t.language}
-                  </span>
-                  <div className="flex items-center p-0.5 rounded-xl bg-stone-800 border border-white/10">
-                    <button
-                      onClick={() => setLanguage('hi')}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                        language === 'hi' ? "bg-amber-500 text-stone-950" : "text-stone-400"
-                      )}
-                    >
-                      हिंदी
-                    </button>
-                    <button
-                      onClick={() => setLanguage('en')}
-                      className={cn(
-                        "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                        language === 'en' ? "bg-amber-500 text-stone-950" : "text-stone-400"
-                      )}
-                    >
-                      English
-                    </button>
-                  </div>
-                </div>
+      {/* Tab 3: VASTU & OTHERS VIEW */}
+      {mainTab === 'vastu' && (
+        <VastuOthersView
+          currentHeading={displayHeading}
+          triggerHaptic={triggerHapticFeedback}
+        />
+      )}
 
-                {/* 12 Styles Gallery Trigger */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-amber-500" />
-                    {t.styles}
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      setShowSettings(false);
-                      setShowStyleModal(true);
-                    }}
-                    className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30">
-                    {language === 'hi' ? '12+ शैलियां देखें' : 'View 12+ Styles'}
-                  </button>
-                </div>
+      {/* Creator Branding Card: ALWAYS VISIBLE AT BOTTOM */}
+      <CreatorBanner />
 
-                {/* Vastu Grid Toggle */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Grid className="w-4 h-4 text-amber-500" />
-                    {t.vastuGrid}
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      const next = !vastuGridEnabled;
-                      setVastuGridEnabled(next);
-                      localStorage.setItem('com.hcompass.app_vastu', next.toString());
-                    }}
-                    className={cn(
-                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                      vastuGridEnabled ? "bg-amber-500 text-stone-950" : "bg-stone-800 text-stone-400"
-                    )}
-                  >
-                    {vastuGridEnabled ? (language === 'hi' ? "चालू" : "ON") : (language === 'hi' ? "बंद" : "OFF")}
-                  </button>
-                </div>
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+          <div className={cn(
+            "w-full max-w-sm p-5 rounded-3xl border shadow-2xl flex flex-col gap-3.5 z-50 animate-in zoom-in-95",
+            theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-[#14120E] border-white/15 text-white"
+          )}>
+            <div className="flex items-center justify-between pb-2 border-b border-stone-200/40 dark:border-white/10">
+              <span className="text-sm font-black tracking-wide text-amber-500">{t.settings}</span>
+              <button 
+                onClick={() => setShowSettings(false)}
+                className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-stone-400" />
+              </button>
+            </div>
 
-                {/* Sensor Diagnostics */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-emerald-400" />
-                    {t.sensorDiagnostics}
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      setShowSettings(false);
-                      setShowSensorsModal(true);
-                    }}
-                    className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    {t.check}
-                  </button>
-                </div>
-
-                {/* Calibration Guide */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    {t.calibrationGuide}
-                  </span>
-                  <button
-                    onClick={() => {
-                      triggerHapticFeedback();
-                      setShowSettings(false);
-                      setShowCalibrationModal(true);
-                    }}
-                    className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                    {t.view}
-                  </button>
-                </div>
-
-                {/* Theme Switcher */}
-                <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
-                  <span>{t.themeMode}</span>
-                  <ThemeToggle />
-                </div>
+            {/* Language Switch */}
+            <div className="flex items-center justify-between text-xs font-bold">
+              <span className="flex items-center gap-2">
+                <Languages className="w-4 h-4 text-amber-500" />
+                {t.language}
+              </span>
+              <div className="flex items-center p-0.5 rounded-xl bg-stone-800 border border-white/10">
+                <button
+                  onClick={() => setLanguage('hi')}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
+                    language === 'hi' ? "bg-amber-500 text-stone-950" : "text-stone-400"
+                  )}
+                >
+                  हिंदी
+                </button>
+                <button
+                  onClick={() => setLanguage('en')}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
+                    language === 'en' ? "bg-amber-500 text-stone-950" : "text-stone-400"
+                  )}
+                >
+                  English
+                </button>
               </div>
             </div>
-          )}
 
-          {/* Sensors Inspector Modal */}
-          {showSensorsModal && (
-            <SensorsInspectorModal 
-              isOpen={showSensorsModal} 
-              onClose={() => setShowSensorsModal(false)}
-              theme={theme}
-              language={language}
-              heading={heading}
-              pitch={pitch}
-              roll={roll}
-            />
-          )}
+            {/* 12 Styles Gallery Trigger */}
+            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+              <span className="flex items-center gap-2">
+                <Palette className="w-4 h-4 text-amber-500" />
+                {t.styles}
+              </span>
+              <button
+                onClick={() => {
+                  triggerHapticFeedback();
+                  setShowSettings(false);
+                  setShowStyleModal(true);
+                }}
+                className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30">
+                {language === 'hi' ? '12+ शैलियां देखें' : 'View 12+ Styles'}
+              </button>
+            </div>
 
-          {/* Calibration Guide Modal */}
-          {showCalibrationModal && (
-            <CalibrationGuideModal
-              isOpen={showCalibrationModal}
-              onClose={() => setShowCalibrationModal(false)}
-              theme={theme}
-              language={language}
-            />
-          )}
+            {/* Vastu Grid Toggle */}
+            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+              <span className="flex items-center gap-2">
+                <Grid className="w-4 h-4 text-amber-500" />
+                {t.vastuGrid}
+              </span>
+              <button
+                onClick={() => {
+                  triggerHapticFeedback();
+                  const next = !vastuGridEnabled;
+                  setVastuGridEnabled(next);
+                  localStorage.setItem('com.hcompass.app_vastu', next.toString());
+                }}
+                className={cn(
+                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                  vastuGridEnabled ? "bg-amber-500 text-stone-950" : "bg-stone-800 text-stone-400"
+                )}
+              >
+                {vastuGridEnabled ? (language === 'hi' ? "चालू" : "ON") : (language === 'hi' ? "बंद" : "OFF")}
+              </button>
+            </div>
 
-          {/* Style Selector Modal */}
-          {showStyleModal && (
-            <StyleSelectorModal
-              isOpen={showStyleModal}
-              onClose={() => setShowStyleModal(false)}
-              selectedStyle={selectedStyle}
-              onSelectStyle={handleSelectStyle}
-              language={language}
-              theme={theme}
-            />
-          )}
-        </>
+            {/* Sensor Diagnostics */}
+            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+              <span className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-emerald-400" />
+                {t.sensorDiagnostics}
+              </span>
+              <button
+                onClick={() => {
+                  triggerHapticFeedback();
+                  setShowSettings(false);
+                  setShowSensorsModal(true);
+                }}
+                className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                {t.check}
+              </button>
+            </div>
+
+            {/* Calibration Guide */}
+            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                {t.calibrationGuide}
+              </span>
+              <button
+                onClick={() => {
+                  triggerHapticFeedback();
+                  setShowSettings(false);
+                  setShowCalibrationModal(true);
+                }}
+                className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                {t.view}
+              </button>
+            </div>
+
+            {/* Theme Switcher */}
+            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+              <span>{t.themeMode}</span>
+              <ThemeToggle />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sensors Inspector Modal */}
+      {showSensorsModal && (
+        <SensorsInspectorModal 
+          isOpen={showSensorsModal} 
+          onClose={() => setShowSensorsModal(false)}
+          theme={theme}
+          language={language}
+          heading={heading}
+          pitch={pitch}
+          roll={roll}
+        />
+      )}
+
+      {/* Calibration Guide Modal */}
+      {showCalibrationModal && (
+        <CalibrationGuideModal
+          isOpen={showCalibrationModal}
+          onClose={() => setShowCalibrationModal(false)}
+          theme={theme}
+          language={language}
+        />
+      )}
+
+      {/* Style Selector Modal */}
+      {showStyleModal && (
+        <StyleSelectorModal
+          isOpen={showStyleModal}
+          onClose={() => setShowStyleModal(false)}
+          selectedStyle={selectedStyle}
+          onSelectStyle={handleSelectStyle}
+          language={language}
+          theme={theme}
+        />
       )}
     </div>
   );
