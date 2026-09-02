@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Compass, 
   Sparkles, 
@@ -17,21 +17,27 @@ import {
   GraduationCap, 
   Utensils, 
   Bath, 
-  ChevronDown,
-  ChevronUp,
-  Camera,
-  Layers,
-  Zap,
-  Target,
-  Copy,
-  Lock,
-  Unlock,
-  Bookmark,
-  Calendar,
-  Eye,
-  Activity,
-  Save,
-  Trash2
+  ChevronDown, 
+  ChevronUp, 
+  Camera, 
+  Layers, 
+  Zap, 
+  Target, 
+  Copy, 
+  Lock, 
+  Unlock, 
+  Bookmark, 
+  Calendar, 
+  Eye, 
+  Activity, 
+  Save, 
+  Trash2,
+  Clock,
+  Star,
+  Sun,
+  Navigation,
+  Check,
+  RotateCcw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -39,6 +45,7 @@ import { CompassStyleId } from '@/types/compass';
 import { CompassDialRenderer } from '@/components/compass/CompassDialRenderer';
 import { VASTU_16_ZONES, ROOM_GUIDANCE_CATALOG } from '@/data/vastuKnowledgeBase';
 import { VASTU_32_PADAS, get32Pada } from '@/lib/vastu32Devta';
+import { getChoghadiyaData, VEDIC_RASHIS, RashiInfo } from '@/lib/choghadiya';
 
 interface Props {
   currentHeading: number | null;
@@ -54,7 +61,6 @@ interface Props {
   onPointerUp?: (e: React.PointerEvent) => void;
   weather?: any;
   location?: any;
-  sunTimes?: any;
   declination?: number;
   triggerHaptic: () => void;
   onCopyCoordinates?: () => void;
@@ -62,7 +68,7 @@ interface Props {
   isTorchOn?: boolean;
 }
 
-type VastuCategoryTab = 'vastu' | 'feng_shui' | 'numerology' | 'jyotish' | 'sadhana';
+export type VastuSubTab = 'vastu' | 'jyotish' | 'numerology' | 'sadhana' | 'feng_shui' | 'qibla';
 
 interface SavedRoomEntry {
   id: string;
@@ -87,7 +93,6 @@ export const VastuOthersView: React.FC<Props> = ({
   onPointerUp = () => {},
   weather,
   location,
-  sunTimes,
   declination = -0.2,
   triggerHaptic,
   onCopyCoordinates = () => {},
@@ -100,14 +105,14 @@ export const VastuOthersView: React.FC<Props> = ({
   const fallbackDialRef = React.useRef<HTMLDivElement>(null);
   const effectiveDialRef = dialRef || fallbackDialRef;
 
-  // 5 Main Disciplines
-  const [activeCategory, setActiveCategory] = useState<VastuCategoryTab>('vastu');
+  // Active Sub-tab (Vastu | Jyotish | Numerology | Sadhana | Feng Shui | Qibla)
+  const [activeTab, setActiveTab] = useState<VastuSubTab>('vastu');
 
-  // "What do you want to place?" Quick Reverse Finder
+  // Reverse Finder Activity
   const [targetActivity, setTargetActivity] = useState<string>('study');
 
   // Vastu Analyzer Accordion State
-  const [isAnalyzerOpen, setIsAnalyzerOpen] = useState<boolean>(true);
+  const [isVastuAnalyzerOpen, setIsVastuAnalyzerOpen] = useState<boolean>(true);
   const [analyzerRoomType, setAnalyzerRoomType] = useState<string>('entrance');
   const [analyzerDegrees, setAnalyzerDegrees] = useState<number>(() => {
     return currentHeading !== null ? Math.round(((currentHeading % 360) + 360) % 360) : 0;
@@ -116,7 +121,7 @@ export const VastuOthersView: React.FC<Props> = ({
   // Saved Rooms
   const [savedRooms, setSavedRooms] = useState<SavedRoomEntry[]>([]);
 
-  // 9-Grid Floorplan Mapper State
+  // 9-Grid Floorplan Mapper
   const [gridAssignments, setGridAssignments] = useState<Record<string, string>>({
     NW: 'bathroom',
     N: 'main_entrance',
@@ -129,8 +134,50 @@ export const VastuOthersView: React.FC<Props> = ({
     SE: 'kitchen'
   });
 
-  // Numerology Date of Birth State
+  // Feng Shui Bagua State
+  const [isFengShuiOpen, setIsFengShuiOpen] = useState<boolean>(true);
+  const [baguaDoorFacing, setBaguaDoorFacing] = useState<string>('NORTH DOOR');
+
+  // Jyotish State
+  const [selectedRashiId, setSelectedRashiId] = useState<string>('aries');
+  const [choghadiyaTimeSlot, setChoghadiyaTimeSlot] = useState<'day' | 'night'>('night');
+
+  // Numerology State
   const [birthDate, setBirthDate] = useState<string>('1995-08-15');
+
+  // Sadhana State
+  const [japaCount, setJapaCount] = useState<number>(0);
+  const [japaTarget] = useState<number>(108);
+
+  // Qibla Math
+  const qiblaData = useMemo(() => {
+    const userLat = location?.latitude || 18.5504;
+    const userLng = location?.longitude || 73.9201;
+    const makkahLat = 21.4225;
+    const makkahLng = 39.8262;
+
+    const phi1 = (userLat * Math.PI) / 180;
+    const phi2 = (makkahLat * Math.PI) / 180;
+    const deltaLambda = ((makkahLng - userLng) * Math.PI) / 180;
+
+    const y = Math.sin(deltaLambda);
+    const x = Math.cos(phi1) * Math.tan(phi2) - Math.sin(phi1) * Math.cos(deltaLambda);
+    let qiblaBearing = (Math.atan2(y, x) * 180) / Math.PI;
+    qiblaBearing = (qiblaBearing + 360) % 360;
+
+    // Haversine Distance
+    const R = 6371; // km
+    const dLat = ((makkahLat - userLat) * Math.PI) / 180;
+    const dLon = deltaLambda;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(phi1) * Math.cos(phi2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceKm = Math.round(R * c);
+
+    const headingDiff = Math.abs(((currentHeading || 0) - qiblaBearing + 540) % 360 - 180);
+    const isFacingQibla = headingDiff < 4;
+
+    return { qiblaBearing: Math.round(qiblaBearing), distanceKm, isFacingQibla };
+  }, [location, currentHeading]);
 
   // Display Heading & Tilts
   const displayDeg = currentHeading !== null ? Math.round(((currentHeading % 360) + 360) % 360) : 0;
@@ -149,233 +196,15 @@ export const VastuOthersView: React.FC<Props> = ({
   const livePada = useMemo(() => get32Pada(currentHeading), [currentHeading]);
   const analyzerPada = useMemo(() => get32Pada(analyzerDegrees), [analyzerDegrees]);
 
-  // Activity recommendations based on current live heading
-  const liveHeadingAdvice = useMemo(() => {
-    switch (liveZone.code) {
-      case 'N':
-        return {
-          idealFor: isHi ? 'धन संचय, व्यापारिक अवसर, कुबेर स्थान, तिजोरी' : 'Wealth Accumulation, Career Opportunities, Safe/Locker',
-          avoidFor: isHi ? 'रसोई, शौचालय, भारी गोदाम' : 'Kitchen Fire, Toilet, Heavy Clutter',
-          status: 'excellent'
-        };
-      case 'NNE':
-        return {
-          idealFor: isHi ? 'औषधि, स्वास्थ्य सुधार, योग, रोग मुक्ति' : 'Medicine Cabinet, Health Healing, Recovery',
-          avoidFor: isHi ? 'शौचालय (गंभीर रोग कारक), कबाड़' : 'Toilet (Chronic illnesses), Dustbin',
-          status: 'excellent'
-        };
-      case 'NE':
-        return {
-          idealFor: isHi ? 'पूजा मंदिर, ध्यान, आध्यात्मिक साधना, गहरा अध्ययन' : 'Pooja Mandir, Meditation, Spiritual Focus, Study',
-          avoidFor: isHi ? 'शौचालय, रसोई, भारी सीढ़ी, मास्टर बेडरूम' : 'Toilet (Major Dosha), Kitchen, Heavy Stairs',
-          status: 'excellent'
-        };
-      case 'ENE':
-        return {
-          idealFor: isHi ? 'मनोरंजन, ताजगी, पारिवारिक लाउंज' : 'Recreation, Family Lounge, Refreshment',
-          avoidFor: isHi ? 'शौचालय, कबाड़' : 'Toilet, Heavy Junk',
-          status: 'good'
-        };
-      case 'E':
-        return {
-          idealFor: isHi ? 'सामाजिक संपर्क, मुख्य द्वार, पूर्व मुखी अध्ययन' : 'Social Networking, Main Entrance, East-facing Study',
-          avoidFor: isHi ? 'शौचालय, अंधेरा, भारी दीवारें' : 'Toilet, Dark Clutter, Blocked Windows',
-          status: 'excellent'
-        };
-      case 'ESE':
-        return {
-          idealFor: isHi ? 'मंथन, मिक्सी, वाशिंग मशीन' : 'Churning, Mixer/Grinder, Washing Machine',
-          avoidFor: isHi ? 'शयनकक्ष (अनिद्रा व अत्यधिक चिंता), मंदिर' : 'Bedroom (Severe Anxiety & Insomnia), Mandir',
-          status: 'neutral'
-        };
-      case 'SE':
-        return {
-          idealFor: isHi ? 'रसोई (गैस चूल्हा), अग्नि तत्व, विद्युत उपकरण' : 'Kitchen Gas Stove, Fire Element, Electrical Inverter',
-          avoidFor: isHi ? 'भूमिगत पानी टैंक, बेडरूम, नीला/काला रंग' : 'Water Tank, Bedroom, Blue/Black Colors',
-          status: 'excellent'
-        };
-      case 'SSE':
-        return {
-          idealFor: isHi ? 'व्यायामशाला, शारीरिक शक्ति, अन्न भंडारण' : 'Gym, Workout, Physical Stamina, Grains',
-          avoidFor: isHi ? 'शौचालय, पानी का गड्ढा' : 'Toilet, Underground Pit',
-          status: 'good'
-        };
-      case 'S':
-        return {
-          idealFor: isHi ? 'गहरी शांत नींद, विश्राम, भारी अलमारी' : 'Deep Restful Sleep, Heavy Furniture, Rest',
-          avoidFor: isHi ? 'भूमिगत पानी, खुला स्थान' : 'Underground Tank, Water Fountains',
-          status: 'excellent'
-        };
-      case 'SSW':
-        return {
-          idealFor: isHi ? 'शौचालय, सेप्टिक टैंक, कचरा विसर्जन' : 'Toilet & Septic Tank (Ideal Zone of Disposal)',
-          avoidFor: isHi ? 'बेडरूम (स्वास्थ्य हानि), तिजोरी, मंदिर' : 'Bedroom, Cash Safe, Mandir',
-          status: 'neutral'
-        };
-      case 'SW':
-        return {
-          idealFor: isHi ? 'मास्टर बेडरूम, स्थायित्व, गृहस्वामी, भारी ओवरहेड टंकी' : 'Master Bedroom, Head of Family, Stability, Overhead Tank',
-          avoidFor: isHi ? 'शौचालय (पारिवारिक कलह), भूमिगत टैंक, मंदिर' : 'Toilet, Underground Tank, Mandir',
-          status: 'excellent'
-        };
-      case 'WSW':
-        return {
-          idealFor: isHi ? 'विद्या पद: अध्ययन कक्ष, स्टडी टेबल, पुस्तकें, बचत' : 'Vidya Pada: Study Desk, Books, Knowledge, Savings',
-          avoidFor: isHi ? 'शौचालय (विद्या का नाश), रसोई' : 'Toilet (Washes away education), Kitchen',
-          status: 'excellent'
-        };
-      case 'W':
-        return {
-          idealFor: isHi ? 'व्यापारिक लाभ, डाइनिंग टेबल, बच्चों का बेडरूम' : 'Business Profits, Gains, Dining Room, Kids Bedroom',
-          avoidFor: isHi ? 'भूमिगत जल टैंक' : 'Underground Water Tank',
-          status: 'good'
-        };
-      case 'WNW':
-        return {
-          idealFor: isHi ? 'डिटॉक्स, विरेचन, रद्दी कागज' : 'Emotional Detoxing, Releasing Grief, Waste Paper',
-          avoidFor: isHi ? 'बेडरूम (उदासी व अवसाद), स्टडी टेबल' : 'Bedroom (Depression), Study Desk',
-          status: 'neutral'
-        };
-      case 'NW':
-        return {
-          idealFor: isHi ? 'अतिथि कक्ष, बैंक दस्तावेज, सहयोग, तैयार माल' : 'Guest Room, Banking, Support, Ready Goods',
-          avoidFor: isHi ? 'मास्टर बेडरूम, भारी स्थायी सामान' : 'Master Bedroom, Heavy Fixed Vaults',
-          status: 'good'
-        };
-      case 'NNW':
-        return {
-          idealFor: isHi ? 'नवविवाहित युगल, आकर्षण, इत्र व सौंदर्य' : 'Newly Married Couple, Romance, Charm, Attire',
-          avoidFor: isHi ? 'बच्चों का अध्ययन कक्ष, शौचालय' : 'Children Study Desk, Toilet',
-          status: 'good'
-        };
-      default:
-        return {
-          idealFor: isHi ? 'सामान्य कार्य' : 'General Work',
-          avoidFor: isHi ? 'कबाड़' : 'Clutter',
-          status: 'good'
-        };
-    }
-  }, [liveZone.code, isHi]);
+  // Choghadiya Data
+  const choghadiya = useMemo(() => getChoghadiyaData(new Date()), []);
 
-  // Reverse query: "User asks what direction is good for X"
-  const activityDirections = useMemo(() => {
-    switch (targetActivity) {
-      case 'study':
-        return {
-          title: isHi ? 'अध्ययन एवं प्रतियोगी परीक्षा (Study / Exams)' : 'Study & Competitive Exams',
-          bestZones: ['WSW (236°-258°)', 'NE (34°-56°)', 'East (79°-101°)'],
-          facing: isHi ? 'पढ़ते समय मुख पूर्व (याददाश्त) या उत्तर (एकाग्रता) रखें।' : 'Face East (Retention) or North (Analytical focus).',
-          targetDeg: 247.5,
-          color: 'text-indigo-400'
-        };
-      case 'work':
-        return {
-          title: isHi ? 'वर्क फ्रॉम होम / व्यापार कार्य (Work / Office)' : 'Work From Home & Office',
-          bestZones: ['North (349°-11°)', 'West (259°-281°)', 'East (79°-101°)'],
-          facing: isHi ? 'बैठते समय मुख उत्तर या पूर्व की ओर रखें।' : 'Sit facing North (Career opportunities) or East.',
-          targetDeg: 0,
-          color: 'text-sky-400'
-        };
-      case 'sleep':
-        return {
-          title: isHi ? 'मास्टर बेडरूम व शयन (Master Bedroom)' : 'Master Bedroom & Sleep',
-          bestZones: ['SW (214°-236°)', 'South (169°-191°)', 'West (259°-281°)'],
-          facing: isHi ? 'सिर हमेशा दक्षिण (सर्वोत्तम) या पूर्व में रखें। उत्तर में सिर कभी न करें।' : 'Head towards South (Best) or East. Never North.',
-          targetDeg: 225,
-          color: 'text-amber-400'
-        };
-      case 'mandir':
-        return {
-          title: isHi ? 'पूजा मंदिर व ध्यान (Pooja Mandir)' : 'Pooja Mandir & Spiritual Space',
-          bestZones: ['NE (34°-56°)', 'East (79°-101°)', 'North (349°-11°)'],
-          facing: isHi ? 'पूजा करते समय उपासक का मुख पूर्व या उत्तर की ओर होना चाहिए।' : 'Devotee faces East or North during prayer.',
-          targetDeg: 45,
-          color: 'text-yellow-400'
-        };
-      case 'kitchen':
-        return {
-          title: isHi ? 'रसोईघर व गैस चूल्हा (Kitchen Stove)' : 'Kitchen & Gas Stove',
-          bestZones: ['SE (124°-146°)', 'SSE (146°-169°)', 'NW (304°-326°)'],
-          facing: isHi ? 'खाना बनाते समय मुख हमेशा पूर्व दिशा की ओर होना चाहिए।' : 'Cook must face East while cooking.',
-          targetDeg: 135,
-          color: 'text-orange-400'
-        };
-      case 'cash':
-        return {
-          title: isHi ? 'तिजोरी व धन स्थान (Cash Vault)' : 'Cash Vault & Wealth Safe',
-          bestZones: ['North (349°-11°)', 'SW (214°-236°)', 'West (259°-281°)'],
-          facing: isHi ? 'तिजोरी का द्वार हमेशा उत्तर की ओर खुलना चाहिए (कुबेर का वास)।' : 'Locker door must open towards North (Lord Kuber).',
-          targetDeg: 0,
-          color: 'text-emerald-400'
-        };
-      case 'toilet':
-        return {
-          title: isHi ? 'शौचालय व सेप्टिक टैंक (Toilet)' : 'Toilet & Septic Tank',
-          bestZones: ['SSW (191°-214°)', 'WNW (281°-304°)', 'ESE (101°-124°)'],
-          facing: isHi ? 'बैठते समय मुख उत्तर या दक्षिण की ओर होना चाहिए।' : 'Commode user should face North or South.',
-          targetDeg: 202.5,
-          color: 'text-purple-400'
-        };
-      default:
-        return {
-          title: isHi ? 'अध्ययन कक्ष' : 'Study Room',
-          bestZones: ['WSW', 'NE', 'East'],
-          facing: isHi ? 'मुख पूर्व या उत्तर रखें।' : 'Face East or North.',
-          targetDeg: 247.5,
-          color: 'text-indigo-400'
-        };
-    }
-  }, [targetActivity, isHi]);
+  // Selected Rashi Info
+  const selectedRashi = useMemo(() => {
+    return VEDIC_RASHIS.find(r => r.id === selectedRashiId) || VEDIC_RASHIS[0];
+  }, [selectedRashiId]);
 
-  // Calculate 9-Grid Floorplan Vastu Score
-  const floorplanScore = useMemo(() => {
-    let score = 0;
-    // NW: bathroom/guest is ideal (+11)
-    if (gridAssignments.NW === 'bathroom' || gridAssignments.NW === 'guest_room') score += 11;
-    else if (gridAssignments.NW === 'kitchen') score -= 5;
-    else score += 5;
-
-    // N: entrance/living/cash (+12)
-    if (gridAssignments.N === 'main_entrance' || gridAssignments.N === 'cash_locker' || gridAssignments.N === 'living_room') score += 12;
-    else if (gridAssignments.N === 'bathroom') score -= 10;
-    else score += 5;
-
-    // NE: pooja_mandir/meditation (+15)
-    if (gridAssignments.NE === 'pooja_mandir') score += 15;
-    else if (gridAssignments.NE === 'bathroom') score -= 15;
-    else if (gridAssignments.NE === 'kitchen') score -= 10;
-    else score += 5;
-
-    // W: study_room/dining (+11)
-    if (gridAssignments.W === 'study_room' || gridAssignments.W === 'dining') score += 11;
-    else score += 6;
-
-    // Center: open_space (+12)
-    if (gridAssignments.Center === 'open_space') score += 12;
-    else score -= 8;
-
-    // E: cash_locker/living/entrance (+11)
-    if (gridAssignments.E === 'cash_locker' || gridAssignments.E === 'living_room' || gridAssignments.E === 'main_entrance') score += 11;
-    else score += 6;
-
-    // SW: master_bedroom (+15)
-    if (gridAssignments.SW === 'master_bedroom') score += 15;
-    else if (gridAssignments.SW === 'bathroom') score -= 15;
-    else score += 4;
-
-    // S: open_space/bedroom (+8)
-    if (gridAssignments.S === 'open_space' || gridAssignments.S === 'bedroom') score += 8;
-    else score += 5;
-
-    // SE: kitchen (+15)
-    if (gridAssignments.SE === 'kitchen') score += 15;
-    else if (gridAssignments.SE === 'bathroom') score -= 10;
-    else score += 5;
-
-    return Math.max(20, Math.min(100, score));
-  }, [gridAssignments]);
-
-  // Numerology Driver & Conductor Calculation
+  // Numerology Details
   const numerologyDetails = useMemo(() => {
     try {
       const parts = birthDate.split('-');
@@ -386,39 +215,123 @@ export const VastuOthersView: React.FC<Props> = ({
       const reduce = (n: number): number => {
         let sum = n;
         while (sum > 9) {
-          sum = sum.toString().split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
+          sum = sum.toString().split('').reduce((acc, d) => acc + parseInt(d, 10), 0);
         }
         return sum;
       };
 
-      const mulank = reduce(day); // Driver
-      const totalSum = day + month + year;
-      const bhagyank = reduce(totalSum); // Conductor
+      const mulank = reduce(day);
+      const bhagyank = reduce(day + month + year);
 
-      // Lucky Directions based on Mulank
-      const luckyDirs: Record<number, { dir: string; deg: string; lord: string }> = {
-        1: { dir: 'East (पूर्व)', deg: '79°-101°', lord: 'Surya (Sun)' },
-        2: { dir: 'North-West (वायव्य)', deg: '304°-326°', lord: 'Chandra (Moon)' },
-        3: { dir: 'North-East (ईशान)', deg: '34°-56°', lord: 'Brihaspati (Jupiter)' },
-        4: { dir: 'South-West (नैऋत्य)', deg: '214°-236°', lord: 'Rahu' },
-        5: { dir: 'North (उत्तर)', deg: '349°-11°', lord: 'Budha (Mercury)' },
-        6: { dir: 'South-East (आग्नेय)', deg: '124°-146°', lord: 'Shukra (Venus)' },
-        7: { dir: 'North-East / South-West', deg: '34°-56°', lord: 'Ketu' },
-        8: { dir: 'West (पश्चिम)', deg: '259°-281°', lord: 'Shani (Saturn)' },
-        9: { dir: 'South (दक्षिण)', deg: '169°-191°', lord: 'Mangal (Mars)' }
+      // Lo Shu Magic Square Frequency Counter
+      const allDigits = `${day}${month}${year}`.replace(/0/g, '');
+      const loShuCounts: Record<number, number> = {};
+      for (let i = 1; i <= 9; i++) loShuCounts[i] = 0;
+      for (const char of allDigits) {
+        const d = parseInt(char, 10);
+        if (d >= 1 && d <= 9) loShuCounts[d] = (loShuCounts[d] || 0) + 1;
+      }
+
+      const luckyDirs: Record<number, { dir: string; deg: string; lord: string; color: string }> = {
+        1: { dir: 'East (पूर्व)', deg: '79°-101°', lord: 'Surya (Sun)', color: 'text-amber-400' },
+        2: { dir: 'North-West (वायव्य)', deg: '304°-326°', lord: 'Chandra (Moon)', color: 'text-cyan-400' },
+        3: { dir: 'North-East (ईशान)', deg: '34°-56°', lord: 'Brihaspati (Jupiter)', color: 'text-yellow-400' },
+        4: { dir: 'South-West (नैऋत्य)', deg: '214°-236°', lord: 'Rahu', color: 'text-purple-400' },
+        5: { dir: 'North (उत्तर)', deg: '349°-11°', lord: 'Budha (Mercury)', color: 'text-emerald-400' },
+        6: { dir: 'South-East (आग्नेय)', deg: '124°-146°', lord: 'Shukra (Venus)', color: 'text-rose-400' },
+        7: { dir: 'North-East / South-West', deg: '34°-56°', lord: 'Ketu', color: 'text-indigo-400' },
+        8: { dir: 'West (पश्चिम)', deg: '259°-281°', lord: 'Shani (Saturn)', color: 'text-blue-400' },
+        9: { dir: 'South (दक्षिण)', deg: '169°-191°', lord: 'Mangal (Mars)', color: 'text-red-400' }
       };
 
       return {
         mulank,
         bhagyank,
+        loShuCounts,
         lucky: luckyDirs[mulank] || luckyDirs[1]
       };
     } catch {
-      return { mulank: 1, bhagyank: 1, lucky: { dir: 'East', deg: '79°-101°', lord: 'Sun' } };
+      return { mulank: 1, bhagyank: 1, loShuCounts: {}, lucky: { dir: 'East', deg: '79°-101°', lord: 'Sun', color: 'text-amber-400' } };
     }
   }, [birthDate]);
 
-  // Save room handler
+  // Live heading advice
+  const liveHeadingAdvice = useMemo(() => {
+    switch (liveZone.code) {
+      case 'N':
+        return { idealFor: isHi ? 'धन संचय, व्यापारिक अवसर, कुबेर स्थान, तिजोरी' : 'Wealth Accumulation, Career Opportunities, Safe/Locker', avoidFor: isHi ? 'रसोई, शौचालय, भारी गोदाम' : 'Kitchen Fire, Toilet, Heavy Clutter' };
+      case 'NNE':
+        return { idealFor: isHi ? 'औषधि, स्वास्थ्य सुधार, योग, रोग मुक्ति' : 'Medicine Cabinet, Health Healing, Recovery', avoidFor: isHi ? 'शौचालय (गंभीर रोग कारक), कबाड़' : 'Toilet, Dustbin' };
+      case 'NE':
+        return { idealFor: isHi ? 'पूजा मंदिर, ध्यान, आध्यात्मिक साधना, गहरा अध्ययन' : 'Pooja Mandir, Meditation, Spiritual Focus, Study', avoidFor: isHi ? 'शौचालय, रसोई, भारी सीढ़ी, मास्टर बेडरूम' : 'Toilet (Major Dosha), Kitchen, Heavy Stairs' };
+      case 'ENE':
+        return { idealFor: isHi ? 'मनोरंजन, ताजगी, पारिवारिक लाउंज' : 'Recreation, Family Lounge, Refreshment', avoidFor: isHi ? 'शौचालय, कबाड़' : 'Toilet, Heavy Junk' };
+      case 'E':
+        return { idealFor: isHi ? 'सामाजिक संपर्क, मुख्य द्वार, पूर्व मुखी अध्ययन' : 'Social Networking, Main Entrance, East-facing Study', avoidFor: isHi ? 'शौचालय, अंधेरा, भारी दीवारें' : 'Toilet, Dark Clutter, Blocked Windows' };
+      case 'ESE':
+        return { idealFor: isHi ? 'मंथन, मिक्सी, वाशिंग मशीन' : 'Churning, Mixer/Grinder, Washing Machine', avoidFor: isHi ? 'शयनकक्ष (अनिद्रा व अत्यधिक चिंता), मंदिर' : 'Bedroom (Severe Anxiety & Insomnia), Mandir' };
+      case 'SE':
+        return { idealFor: isHi ? 'रसोई (गैस चूल्हा), अग्नि तत्व, विद्युत उपकरण' : 'Kitchen Gas Stove, Fire Element, Electrical Inverter', avoidFor: isHi ? 'भूमिगत पानी टैंक, बेडरूम, नीला/काला रंग' : 'Water Tank, Bedroom, Blue/Black Colors' };
+      case 'SSE':
+        return { idealFor: isHi ? 'व्यायामशाला, शारीरिक शक्ति, अन्न भंडारण' : 'Gym, Workout, Physical Stamina, Grains', avoidFor: isHi ? 'शौचालय, पानी का गड्ढा' : 'Toilet, Underground Pit' };
+      case 'S':
+        return { idealFor: isHi ? 'गहरी शांत नींद, विश्राम, भारी अलमारी' : 'Deep Restful Sleep, Heavy Furniture, Rest', avoidFor: isHi ? 'भूमिगत पानी, खुला स्थान' : 'Underground Tank, Water Fountains' };
+      case 'SSW':
+        return { idealFor: isHi ? 'शौचालय, सेप्टिक टैंक, कचरा विसर्जन' : 'Toilet & Septic Tank (Ideal Zone of Disposal)', avoidFor: isHi ? 'बेडरूम (स्वास्थ्य हानि), तिजोरी, मंदिर' : 'Bedroom, Cash Safe, Mandir' };
+      case 'SW':
+        return { idealFor: isHi ? 'मास्टर बेडरूम, स्थायित्व, गृहस्वामी, भारी ओवरहेड टंकी' : 'Master Bedroom, Head of Family, Stability, Overhead Tank', avoidFor: isHi ? 'शौचालय (पारिवारिक कलह), भूमिगत टैंक, मंदिर' : 'Toilet, Underground Tank, Mandir' };
+      case 'WSW':
+        return { idealFor: isHi ? 'विद्या पद: अध्ययन कक्ष, स्टडी टेबल, पुस्तकें, बचत' : 'Vidya Pada: Study Desk, Books, Knowledge, Savings', avoidFor: isHi ? 'शौचालय (विद्या का नाश), रसोई' : 'Toilet (Washes away education), Kitchen' };
+      case 'W':
+        return { idealFor: isHi ? 'व्यापारिक लाभ, डाइनिंग टेबल, बच्चों का बेडरूम' : 'Business Profits, Gains, Dining Room, Kids Bedroom', avoidFor: isHi ? 'भूमिगत जल टैंक' : 'Underground Water Tank' };
+      case 'WNW':
+        return { idealFor: isHi ? 'डिटॉक्स, विरेचन, रद्दी कागज' : 'Emotional Detoxing, Releasing Grief, Waste Paper', avoidFor: isHi ? 'बेडरूम (उदासी व अवसाद), स्टडी टेबल' : 'Bedroom (Depression), Study Desk' };
+      case 'NW':
+        return { idealFor: isHi ? 'अतिथि कक्ष, बैंक दस्तावेज, सहयोग, तैयार माल' : 'Guest Room, Banking, Support, Ready Goods', avoidFor: isHi ? 'मास्टर बेडरूम, भारी स्थायी सामान' : 'Master Bedroom, Heavy Fixed Vaults' };
+      case 'NNW':
+        return { idealFor: isHi ? 'नवविवाहित युगल, आकर्षण, इत्र व सौंदर्य' : 'Newly Married Couple, Romance, Charm, Attire', avoidFor: isHi ? 'बच्चों का अध्ययन कक्ष, शौचालय' : 'Children Study Desk, Toilet' };
+      default:
+        return { idealFor: isHi ? 'सामान्य कार्य' : 'General Work', avoidFor: isHi ? 'कबाड़' : 'Clutter' };
+    }
+  }, [liveZone.code, isHi]);
+
+  // Reverse activity finder
+  const activityDirections = useMemo(() => {
+    switch (targetActivity) {
+      case 'study':
+        return { title: isHi ? 'अध्ययन एवं परीक्षा (Study / Exams)' : 'Study & Competitive Exams', bestZones: ['WSW (236°-258°)', 'NE (34°-56°)', 'East (79°-101°)'], facing: isHi ? 'पढ़ते समय मुख पूर्व (याददाश्त) या उत्तर (एकाग्रता) रखें।' : 'Face East (Retention) or North (Analytical focus).', targetDeg: 247.5, color: 'text-indigo-400' };
+      case 'work':
+        return { title: isHi ? 'वर्क फ्रॉम होम / ऑफिस (Work / Office)' : 'Work From Home & Office', bestZones: ['North (349°-11°)', 'West (259°-281°)', 'East (79°-101°)'], facing: isHi ? 'बैठते समय मुख उत्तर या पूर्व की ओर रखें।' : 'Sit facing North (Career opportunities) or East.', targetDeg: 0, color: 'text-sky-400' };
+      case 'sleep':
+        return { title: isHi ? 'मास्टर बेडरूम व शयन (Master Bedroom)' : 'Master Bedroom & Sleep', bestZones: ['SW (214°-236°)', 'South (169°-191°)', 'West (259°-281°)'], facing: isHi ? 'सिर हमेशा दक्षिण (सर्वोत्तम) या पूर्व में रखें। उत्तर में सिर कभी न करें।' : 'Head towards South (Best) or East. Never North.', targetDeg: 225, color: 'text-amber-400' };
+      case 'mandir':
+        return { title: isHi ? 'पूजा मंदिर व ध्यान (Pooja Mandir)' : 'Pooja Mandir & Spiritual Space', bestZones: ['NE (34°-56°)', 'East (79°-101°)', 'North (349°-11°)'], facing: isHi ? 'पूजा करते समय उपासक का मुख पूर्व या उत्तर की ओर होना चाहिए।' : 'Devotee faces East or North during prayer.', targetDeg: 45, color: 'text-yellow-400' };
+      case 'kitchen':
+        return { title: isHi ? 'रसोईघर व गैस चूल्हा (Kitchen Stove)' : 'Kitchen & Gas Stove', bestZones: ['SE (124°-146°)', 'SSE (146°-169°)', 'NW (304°-326°)'], facing: isHi ? 'खाना बनाते समय मुख हमेशा पूर्व दिशा की ओर होना चाहिए।' : 'Cook must face East while cooking.', targetDeg: 135, color: 'text-orange-400' };
+      case 'cash':
+        return { title: isHi ? 'तिजोरी व धन स्थान (Cash Vault)' : 'Cash Vault & Wealth Safe', bestZones: ['North (349°-11°)', 'SW (214°-236°)', 'West (259°-281°)'], facing: isHi ? 'तिजोरी का द्वार हमेशा उत्तर की ओर खुलना चाहिए (कुबेर का वास)।' : 'Locker door must open towards North (Lord Kuber).', targetDeg: 0, color: 'text-emerald-400' };
+      case 'toilet':
+        return { title: isHi ? 'शौचालय व सेप्टिक टैंक (Toilet)' : 'Toilet & Septic Tank', bestZones: ['SSW (191°-214°)', 'WNW (281°-304°)', 'ESE (101°-124°)'], facing: isHi ? 'बैठते समय मुख उत्तर या दक्षिण की ओर होना चाहिए।' : 'Commode user should face North or South.', targetDeg: 202.5, color: 'text-purple-400' };
+      default:
+        return { title: isHi ? 'अध्ययन कक्ष' : 'Study Room', bestZones: ['WSW', 'NE', 'East'], facing: isHi ? 'मुख पूर्व या उत्तर रखें।' : 'Face East or North.', targetDeg: 247.5, color: 'text-indigo-400' };
+    }
+  }, [targetActivity, isHi]);
+
+  // 9-grid score
+  const floorplanScore = useMemo(() => {
+    let score = 0;
+    if (gridAssignments.NW === 'bathroom' || gridAssignments.NW === 'guest_room') score += 11;
+    if (gridAssignments.N === 'main_entrance' || gridAssignments.N === 'cash_locker') score += 12;
+    if (gridAssignments.NE === 'pooja_mandir') score += 15;
+    if (gridAssignments.W === 'study_room') score += 11;
+    if (gridAssignments.Center === 'open_space') score += 12;
+    if (gridAssignments.E === 'cash_locker' || gridAssignments.E === 'living_room') score += 11;
+    if (gridAssignments.SW === 'master_bedroom') score += 15;
+    if (gridAssignments.S === 'open_space') score += 8;
+    if (gridAssignments.SE === 'kitchen') score += 15;
+    return Math.max(30, Math.min(100, score));
+  }, [gridAssignments]);
+
   const handleSaveRoom = () => {
     const newEntry: SavedRoomEntry = {
       id: Date.now().toString(),
@@ -436,7 +349,7 @@ export const VastuOthersView: React.FC<Props> = ({
     <div className="w-full max-w-sm flex flex-col items-center select-none text-white pb-14 animate-in fade-in">
 
       {/* ========================================================================= */}
-      {/* 1. COMPASS DIAL IN VASTU VIEW (AS REQUESTED) */}
+      {/* 1. COMPASS DIAL (MOUNTED AT TOP OF VASTU VIEW) */}
       {/* ========================================================================= */}
       <div className="w-full flex flex-col items-center relative my-1">
         <CompassDialRenderer
@@ -446,10 +359,10 @@ export const VastuOthersView: React.FC<Props> = ({
           pitch={pitch}
           roll={roll}
           sunPos={sunPos}
-          isQiblaMode={false}
-          qiblaBearing={0}
-          qiblaDistanceKm={0}
-          isFacingQibla={false}
+          isQiblaMode={activeTab === 'qibla'}
+          qiblaBearing={qiblaData.qiblaBearing}
+          qiblaDistanceKm={qiblaData.distanceKm}
+          isFacingQibla={qiblaData.isFacingQibla}
           vastuGridEnabled={true}
           isLevel={isLevel}
           dialRef={effectiveDialRef}
@@ -510,7 +423,7 @@ export const VastuOthersView: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Big Heading Readout Box: 88° पूर्व (E) True North */}
+        {/* Big Heading Readout Box: 91° पूर्व (E) True North */}
         <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#FBF3E8] via-[#EFE2CE] to-[#DCBF9E] text-stone-950 flex items-center justify-between shadow-lg">
           <span className="text-xl font-black font-serif tracking-tight">
             {displayDeg}° {liveZone.nameHi.split(' ')[0]} ({liveZone.code})
@@ -529,13 +442,47 @@ export const VastuOthersView: React.FC<Props> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. REAL-TIME COMPASS VASTU ADVICE BANNER */}
+      {/* 2. THE 6 SUB-TABS (EXACTLY AS IN USER SCREENSHOTS) */}
+      {/* ========================================================================= */}
+      <div className="w-full max-w-sm flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 my-1">
+        {[
+          { id: 'vastu', label: 'Vastu', icon: '✨' },
+          { id: 'jyotish', label: 'Jyotish', icon: '⭐' },
+          { id: 'numerology', label: 'Numerology', icon: '#' },
+          { id: 'sadhana', label: 'Sadhana', icon: '⊙' },
+          { id: 'feng_shui', label: 'Feng Shui', icon: '🧭' },
+          { id: 'qibla', label: 'Qibla', icon: '↗' }
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as VastuSubTab);
+                triggerHaptic();
+              }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-[11px] font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 shadow-sm active:scale-95",
+                isActive
+                  ? "bg-stone-800 text-white border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.25)] scale-[1.03]"
+                  : "bg-stone-950/80 text-stone-400 border-white/10 hover:text-white hover:border-white/25"
+              )}
+            >
+              <span className="text-xs">{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 3. LIVE DIRECTION ADVICE & REVERSE FINDER (PRESENT IN VASTU SUITE) */}
       {/* ========================================================================= */}
       <div className="w-full rounded-2xl p-3 border border-amber-500/40 bg-gradient-to-r from-[#1E140C] via-[#2A180E] to-[#140A04] shadow-xl my-1.5 flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-amber-400 text-[10px] font-black uppercase tracking-wider">
             <Compass className="w-3.5 h-3.5 text-amber-400 animate-spin-slow" />
-            <span>{isHi ? 'वर्तमान दिशा सुझाव (Live Advice)' : 'Live Direction Recommendation'}</span>
+            <span>{isHi ? 'लाइव दिशा सुझाव (Live Advice)' : 'Live Direction Recommendation'}</span>
           </div>
           <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
             {liveZone.code} • {isHi ? liveZone.elementHi : liveZone.element}
@@ -552,9 +499,7 @@ export const VastuOthersView: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 3. REVERSE FINDER: "What do you want to place?" (Study, Work, Sleep, etc.) */}
-      {/* ========================================================================= */}
+      {/* Reverse Finder: "What do you want to place?" */}
       <div className="w-full rounded-2xl p-3 bg-black/60 border border-white/10 my-1 flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <span className="text-[10.5px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
@@ -579,7 +524,6 @@ export const VastuOthersView: React.FC<Props> = ({
           </select>
         </div>
 
-        {/* Solution Card */}
         <div className="p-2.5 rounded-xl bg-stone-900/90 border border-amber-500/30 flex flex-col gap-1 text-xs">
           <div className="flex items-center justify-between">
             <span className={cn("font-black text-sm", activityDirections.color)}>
@@ -589,12 +533,10 @@ export const VastuOthersView: React.FC<Props> = ({
               {isHi ? 'लक्ष्य कोण:' : 'Target Angle:'} <strong className="text-white font-mono">{activityDirections.targetDeg}°</strong>
             </span>
           </div>
-
           <div className="flex items-center gap-1 text-[11px] text-stone-200">
             <strong className="text-emerald-400">{isHi ? 'सर्वोत्तम दिशाएं:' : 'Best Zones:'}</strong>
             <span>{activityDirections.bestZones.join(', ')}</span>
           </div>
-
           <p className="text-[11px] text-amber-200/90 font-bold leading-snug">
             {activityDirections.facing}
           </p>
@@ -602,45 +544,15 @@ export const VastuOthersView: React.FC<Props> = ({
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. THE 5 DISCIPLINE SUB-TABS (VASTU, FENG SHUI, NUMEROLOGY, JYOTISH, SADHANA) */}
+      {/* 4. TAB CONTENT: 1. VASTU */}
       {/* ========================================================================= */}
-      <div className="w-full flex items-center p-1 rounded-2xl bg-black/80 border border-white/15 my-2 gap-1 overflow-x-auto no-scrollbar shadow-inner">
-        {[
-          { id: 'vastu', labelEn: 'Vastu', labelHi: 'वास्तु', icon: '🏛️' },
-          { id: 'feng_shui', labelEn: 'Feng Shui', labelHi: 'फेंग शुई', icon: '☯️' },
-          { id: 'numerology', labelEn: 'Numerology', labelHi: 'अंक शास्त्र', icon: '🔢' },
-          { id: 'jyotish', labelEn: 'Jyotish', labelHi: 'ज्योतिष', icon: '🔮' },
-          { id: 'sadhana', labelEn: 'Sadhana', labelHi: 'साधना', icon: '🕉️' }
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => {
-              setActiveCategory(tab.id as VastuCategoryTab);
-              triggerHaptic();
-            }}
-            className={cn(
-              "flex-1 py-1.5 px-2 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all flex items-center justify-center gap-1",
-              activeCategory === tab.id
-                ? "bg-amber-500 text-stone-950 shadow-md scale-[1.02]"
-                : "text-stone-400 hover:text-white"
-            )}
-          >
-            <span>{tab.icon}</span>
-            <span>{isHi ? tab.labelHi : tab.labelEn}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ========================================================================= */}
-      {/* DISCIPLINE 1: VASTU (ANALYZER & 9-GRID MAPPER FROM USER SCREENSHOT) */}
-      {/* ========================================================================= */}
-      {activeCategory === 'vastu' && (
+      {activeTab === 'vastu' && (
         <div className="w-full flex flex-col gap-3">
-          {/* Collapsible Accordion: VASTU ANALYZER */}
+          {/* VASTU ANALYZER (COLLAPSIBLE ACCORDION) */}
           <div className="w-full rounded-3xl border border-amber-500/40 bg-gradient-to-b from-[#1E140C] via-[#140D07] to-[#0D0704] shadow-2xl overflow-hidden">
             <button
               onClick={() => {
-                setIsAnalyzerOpen(!isAnalyzerOpen);
+                setIsVastuAnalyzerOpen(!isVastuAnalyzerOpen);
                 triggerHaptic();
               }}
               className="w-full p-3.5 flex items-center justify-between bg-[#19110B] border-b border-white/10 text-left"
@@ -655,11 +567,11 @@ export const VastuOthersView: React.FC<Props> = ({
                 <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
                   Score: 100%
                 </span>
-                {isAnalyzerOpen ? <ChevronUp className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
+                {isVastuAnalyzerOpen ? <ChevronUp className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
               </div>
             </button>
 
-            {isAnalyzerOpen && (
+            {isVastuAnalyzerOpen && (
               <div className="p-4 flex flex-col gap-3 text-xs">
                 {/* 1. Select Room Type */}
                 <div className="flex flex-col gap-1">
@@ -716,7 +628,7 @@ export const VastuOthersView: React.FC<Props> = ({
                   </button>
                 </div>
 
-                {/* Saved Rooms List */}
+                {/* Saved Rooms */}
                 {savedRooms.length > 0 && (
                   <div className="flex flex-col gap-1 p-2 rounded-xl bg-black/40 border border-white/10">
                     <span className="text-[9.5px] font-black text-stone-400 uppercase">
@@ -733,7 +645,7 @@ export const VastuOthersView: React.FC<Props> = ({
                   </div>
                 )}
 
-                {/* Gate Pada Result Card (Exactly as in screenshot) */}
+                {/* Gate Pada Result Card */}
                 <div className={cn(
                   "w-full rounded-2xl p-3 border flex flex-col gap-1",
                   analyzerPada.isAuspicious ? "bg-emerald-950/40 border-emerald-500/50" : "bg-rose-950/40 border-rose-500/50"
@@ -756,31 +668,26 @@ export const VastuOthersView: React.FC<Props> = ({
                   </p>
                 </div>
 
-                {/* Vastu Tips */}
+                {/* Vastu Tips & Brahmasthan */}
                 <div className="flex flex-col gap-1 mt-1">
                   <span className="text-amber-400 font-black text-[10px] uppercase tracking-wider">
                     {isHi ? 'वास्तु परामर्श (VASTU TIPS):' : 'VASTU TIPS'}
                   </span>
                   <p className="text-[11px] text-stone-300 leading-snug">
-                    {isHi 
-                      ? 'कंपास डायल पर हरे रंग से चिह्नित सर्वोत्तम दिशाओं में ही मुख्य कक्षों का निर्माण करें।'
-                      : 'Look for the favorable BEST directions highlighted on the compass dial for optimal room placement.'}
+                    Look for the favorable BEST directions highlighted on the compass dial for optimal room placement.
                   </p>
                 </div>
 
-                {/* Brahmasthan Guidance */}
                 <div className="flex flex-col gap-1">
                   <span className="text-amber-400 font-black text-[10px] uppercase tracking-wider">
                     {isHi ? 'ब्रह्मस्थान (केंद्र बिंदु):' : 'BRAHMASTHAN (CENTER POINT)'}
                   </span>
                   <p className="text-[11px] text-stone-300 leading-snug">
-                    {isHi
-                      ? 'घर का बिल्कुल मध्य भाग ब्रह्मस्थान होता है। इसे सदा स्वच्छ, खाली, हल्का और भारी खंभों या शौचालय से मुक्त रखें।'
-                      : 'The exact center of your home is the Brahmasthan. Keep it clean, empty, light, and free from heavy pillars, walls, toilets, or kitchens.'}
+                    The exact center of your home is the Brahmasthan. Keep it clean, empty, light, and free from heavy pillars, walls, toilets, or kitchens.
                   </p>
                 </div>
 
-                {/* Easy Vastu Remedies (from screenshot) */}
+                {/* Easy Vastu Remedies */}
                 <div className="flex flex-col gap-1.5 mt-1 pt-2 border-t border-white/10">
                   <span className="text-amber-400 font-black text-[10px] uppercase tracking-wider">
                     {isHi ? 'सरल वास्तु उपाय (EASY VASTU REMEDIES):' : 'EASY VASTU REMEDIES'}
@@ -804,9 +711,7 @@ export const VastuOthersView: React.FC<Props> = ({
             )}
           </div>
 
-          {/* ========================================================================= */}
-          {/* INTERACTIVE 9-GRID FLOORPLAN MAPPER (EXACTLY AS IN USER SCREENSHOT) */}
-          {/* ========================================================================= */}
+          {/* INTERACTIVE 9-GRID FLOORPLAN MAPPER */}
           <div className="w-full rounded-3xl p-4 border border-amber-500/40 bg-gradient-to-b from-[#1C140E] to-[#0A0503] shadow-2xl flex flex-col gap-3">
             <div className="flex items-center justify-between pb-2 border-b border-white/10">
               <div className="flex items-center gap-2">
@@ -825,7 +730,6 @@ export const VastuOthersView: React.FC<Props> = ({
 
             {/* 3x3 Grid */}
             <div className="grid grid-cols-3 gap-2 text-center text-xs">
-              {/* Row 1: NW, N, NE */}
               <div className="p-2 rounded-2xl bg-stone-900 border border-white/15 flex flex-col gap-1">
                 <span className="text-[10px] font-black text-stone-400">वायव्य (NW)</span>
                 <select
@@ -862,11 +766,9 @@ export const VastuOthersView: React.FC<Props> = ({
                   <option value="pooja_mandir">Pooja Mand ⌵</option>
                   <option value="study_room">Study Room ⌵</option>
                   <option value="kitchen">Kitchen ⌵</option>
-                  <option value="bathroom">Bathroom ⌵</option>
                 </select>
               </div>
 
-              {/* Row 2: W, Brahmasthan, E */}
               <div className="p-2 rounded-2xl bg-stone-900 border border-white/15 flex flex-col gap-1">
                 <span className="text-[10px] font-black text-stone-400">पश्चिम (W)</span>
                 <select
@@ -906,7 +808,6 @@ export const VastuOthersView: React.FC<Props> = ({
                 </select>
               </div>
 
-              {/* Row 3: SW, S, SE */}
               <div className="p-2 rounded-2xl bg-stone-900 border border-white/15 flex flex-col gap-1">
                 <span className="text-[10px] font-black text-stone-400">नैऋत्य (SW)</span>
                 <select
@@ -951,172 +852,457 @@ export const VastuOthersView: React.FC<Props> = ({
       )}
 
       {/* ========================================================================= */}
-      {/* DISCIPLINE 2: FENG SHUI (8 BAGUA DIRECTIONS & CHI FLOW) */}
+      {/* 5. TAB CONTENT: 2. JYOTISH (VEDIC ASTROLOGY & CHOGHADIYA) */}
       {/* ========================================================================= */}
-      {activeCategory === 'feng_shui' && (
-        <div className="w-full rounded-3xl p-4 border border-teal-500/40 bg-gradient-to-b from-[#08181C] to-[#040C0E] shadow-2xl flex flex-col gap-3 text-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <span className="font-black text-sm text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-              <span>☯️</span>
-              <span>{isHi ? 'फेंग शुई बागुआ ऊर्जा संरेखण' : 'Feng Shui Bagua Compass'}</span>
+      {activeTab === 'jyotish' && (
+        <div className="w-full flex flex-col gap-3">
+          {/* Card 1: Today's Best Muhurat */}
+          <div className="w-full rounded-3xl p-4 border border-fuchsia-900/40 bg-gradient-to-b from-[#1E0B24] to-[#0D0410] shadow-2xl flex flex-col gap-2">
+            <span className="text-sm font-black text-fuchsia-300 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-fuchsia-400" />
+              <span>Today's Best Muhurat</span>
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-teal-500/20 text-teal-300 border border-teal-400/40">
-              Chi Flow
-            </span>
+            <div className="flex items-center justify-between text-xs font-bold pt-1">
+              <div>
+                <span className="text-stone-400 block text-[10px] uppercase">Now:</span>
+                <span className="text-amber-400 font-mono font-black text-sm">
+                  {choghadiya.currentSlot.name.toUpperCase()} • {choghadiya.currentSlot.startTime}–{choghadiya.currentSlot.endTime}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-stone-400 block text-[10px] uppercase">Next good:</span>
+                <span className="text-emerald-400 font-mono font-black text-sm">
+                  {choghadiya.nextGoodSlot ? `${choghadiya.nextGoodSlot.name} • ${choghadiya.nextGoodSlot.startTime}` : 'Amrit • Morning'}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-teal-950/40 border border-teal-500/40 flex flex-col gap-1">
-            <span className="text-teal-300 font-black text-xs uppercase">
-              {isHi ? 'वर्तमान दिशा बागुआ क्षेत्र:' : 'Current Heading Bagua Sector:'} {liveZone.code} ({liveZone.nameEn})
+          {/* Card 2: Vedic Astrology (Rashi & Direction) */}
+          <div className="w-full rounded-3xl p-4 border border-fuchsia-900/40 bg-gradient-to-b from-[#1C0A20] to-[#0A030C] shadow-2xl flex flex-col gap-3">
+            <span className="text-sm font-black text-fuchsia-300">
+              Vedic Astrology
             </span>
-            <p className="text-[11px] text-stone-200 leading-snug">
-              {liveZone.code === 'N' ? 'Career & Life Path (Water Element) — Place water fountain or blue/black decor.' :
-               liveZone.code === 'NE' ? 'Knowledge & Self-Cultivation (Earth Element) — Ideal for books and meditation.' :
-               liveZone.code === 'E' ? 'Family & Ancestors, Health (Wood Element) — Ideal for live plants and green tones.' :
-               liveZone.code === 'SE' ? 'Wealth & Abundance (Wood Element) — Place money tree, amethyst crystal.' :
-               liveZone.code === 'S' ? 'Fame & Reputation (Fire Element) — Light candles, red art, awards.' :
-               liveZone.code === 'SW' ? 'Love, Relationships & Marriage (Earth Element) — Pair of rose quartz or mandarin ducks.' :
-               liveZone.code === 'W' ? 'Creativity & Children (Metal Element) — Place metallic frames, joyful art.' :
-               'Helpful People & Travel (Metal Element) — Place metal singing bowl, silver decor.'}
-            </p>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black text-stone-400 uppercase tracking-wider">
+                SELECT YOUR ZODIAC (RASHI):
+              </label>
+              <select
+                value={selectedRashiId}
+                onChange={(e) => {
+                  setSelectedRashiId(e.target.value);
+                  triggerHaptic();
+                }}
+                className="w-full p-3 rounded-2xl bg-stone-900 border border-white/20 text-white font-black text-sm focus:outline-none"
+              >
+                {VEDIC_RASHIS.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.symbol} {r.nameHi} - {r.direction}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Astrology Tips */}
+            <div className="p-3 rounded-2xl bg-black/40 border border-white/10 flex flex-col gap-1 text-xs">
+              <span className="text-[10px] font-black text-stone-400 uppercase tracking-wider">
+                ASTROLOGY TIPS
+              </span>
+              <p className="text-stone-300 leading-snug">
+                Your auspicious direction based on your Rashi is highlighted on the compass: <strong className="text-amber-300">{selectedRashi.direction} ({selectedRashi.degSpan})</strong>.
+              </p>
+              <p className="text-[11px] text-emerald-300 mt-0.5">
+                {selectedRashi.auspiciousTip}
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <strong className="text-teal-400 uppercase text-[10px]">
-              {isHi ? 'ऊर्जा संतुलन के ५ सरल उपाय:' : '5 Golden Feng Shui Principles:'}
-            </strong>
-            <p className="text-stone-300 text-[11px]">1. Never sit with your back to an entrance door (Commanding Position).</p>
-            <p className="text-stone-300 text-[11px]">2. Declutter North-East and South-East to unblock wealth Chi.</p>
-            <p className="text-stone-300 text-[11px]">3. Fix leaking taps immediately (symbolizes wealth leaking out).</p>
-            <p className="text-stone-300 text-[11px]">4. Keep bedroom free from TV and active mirrors facing bed.</p>
+          {/* Card 3: Choghadiya Full Schedule */}
+          <div className="w-full rounded-3xl p-4 border border-amber-900/40 bg-gradient-to-b from-[#1C120A] to-[#0A0602] shadow-2xl flex flex-col gap-3">
+            <div className="flex items-center justify-between pb-1 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <div>
+                  <h3 className="text-sm font-black text-white">Choghadiya</h3>
+                  <span className="text-[9.5px] font-bold text-stone-400 uppercase">{choghadiya.dateStr.toUpperCase()}</span>
+                </div>
+              </div>
+              <button className="px-2.5 py-1 rounded-xl bg-stone-800 border border-white/15 text-[10px] font-black uppercase text-amber-300 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-amber-400" />
+                <span>Weekly</span>
+              </button>
+            </div>
+
+            {/* Now vs Next Good Prominent Blocks */}
+            <div className="grid grid-cols-2 gap-2 text-left">
+              <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex flex-col">
+                <span className="text-[9px] font-black uppercase text-stone-400">NOW</span>
+                <span className="text-xl font-serif font-black text-emerald-400 leading-tight mt-0.5">
+                  {choghadiya.currentSlot.name}
+                </span>
+                <span className="text-[10px] font-mono text-stone-300 font-bold mt-1">
+                  {choghadiya.currentSlot.startTime} - {choghadiya.currentSlot.endTime}
+                </span>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex flex-col">
+                <span className="text-[9px] font-black uppercase text-stone-400">NEXT GOOD</span>
+                <span className="text-xl font-serif font-black text-emerald-400 leading-tight mt-0.5">
+                  {choghadiya.nextGoodSlot?.name || 'Amrit'}
+                </span>
+                <span className="text-[10px] font-mono text-stone-300 font-bold mt-1">
+                  {choghadiya.nextGoodSlot ? `${choghadiya.nextGoodSlot.startTime} - ${choghadiya.nextGoodSlot.endTime}` : 'Morning Slot'}
+                </span>
+              </div>
+            </div>
+
+            {/* Summary Row */}
+            <div className="grid grid-cols-3 gap-2 text-center text-xs font-black">
+              <div className="p-2 rounded-xl bg-black/40 border border-white/10 flex flex-col items-center">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400 mb-0.5" />
+                <span className="text-base text-white">{choghadiya.goodCount}</span>
+                <span className="text-[8px] uppercase text-stone-400">GOOD</span>
+              </div>
+              <div className="p-2 rounded-xl bg-black/40 border border-white/10 flex flex-col items-center">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 mb-0.5" />
+                <span className="text-base text-white">{choghadiya.avoidCount}</span>
+                <span className="text-[8px] uppercase text-stone-400">AVOID</span>
+              </div>
+              <div className="p-2 rounded-xl bg-black/40 border border-white/10 flex flex-col items-center">
+                <Activity className="w-3.5 h-3.5 text-sky-400 mb-0.5" />
+                <span className="text-base text-white">8</span>
+                <span className="text-[8px] uppercase text-stone-400">SLOTS</span>
+              </div>
+            </div>
+
+            {/* Day / Night Toggle */}
+            <div className="flex items-center p-1 rounded-2xl bg-black/60 border border-white/10">
+              <button
+                onClick={() => setChoghadiyaTimeSlot('day')}
+                className={cn(
+                  "flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all",
+                  choghadiyaTimeSlot === 'day' ? "bg-amber-500 text-stone-950 font-black shadow-sm" : "text-stone-400"
+                )}
+              >
+                <Sun className="w-3.5 h-3.5" />
+                <span>Daily Day</span>
+              </button>
+              <button
+                onClick={() => setChoghadiyaTimeSlot('night')}
+                className={cn(
+                  "flex-1 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 transition-all",
+                  choghadiyaTimeSlot === 'night' ? "bg-stone-800 text-white font-black shadow-sm" : "text-stone-400"
+                )}
+              >
+                <Moon className="w-3.5 h-3.5" />
+                <span>Night</span>
+              </button>
+            </div>
+
+            {/* Slot List */}
+            <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto no-scrollbar text-xs">
+              {(choghadiyaTimeSlot === 'day' ? choghadiya.daySlots : choghadiya.nightSlots).map((slot, idx) => (
+                <div 
+                  key={idx}
+                  className="p-2.5 rounded-2xl bg-stone-900/80 border border-white/10 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-xl font-bold text-[10.5px] uppercase border",
+                      slot.type === 'good' ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50" :
+                      slot.type === 'avoid' ? "bg-rose-950/60 text-rose-300 border-rose-500/40" :
+                      "bg-sky-950/60 text-sky-300 border-sky-500/40"
+                    )}>
+                      {slot.name}
+                    </span>
+                    <div className="flex flex-col text-left">
+                      <span className="font-mono font-bold text-white text-xs">{slot.startTime} - {slot.endTime}</span>
+                      <span className="text-[9.5px] text-stone-400">{slot.effect}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* DISCIPLINE 3: NUMEROLOGY (LO SHU GRID & LUCKY DIRECTIONS) */}
+      {/* 6. TAB CONTENT: 3. NUMEROLOGY (LO SHU GRID & LUCKY DIRECTIONS) */}
       {/* ========================================================================= */}
-      {activeCategory === 'numerology' && (
-        <div className="w-full rounded-3xl p-4 border border-purple-500/40 bg-gradient-to-b from-[#180A24] to-[#0B0412] shadow-2xl flex flex-col gap-3 text-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+      {activeTab === 'numerology' && (
+        <div className="w-full flex flex-col gap-3">
+          <div className="w-full rounded-3xl p-4 border border-purple-900/40 bg-gradient-to-b from-[#180A24] to-[#0B0412] shadow-2xl flex flex-col gap-3 text-xs">
             <span className="font-black text-sm text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🔢</span>
-              <span>{isHi ? 'अंक ज्योतिष एवं लो शू ग्रिड' : 'Numerology & Lo Shu Grid'}</span>
+              <span>#</span>
+              <span>Numerology & Lo Shu Grid</span>
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-purple-500/20 text-purple-300 border border-purple-400/40">
-              Driver {numerologyDetails.mulank}
-            </span>
-          </div>
 
-          {/* Date of birth picker */}
-          <div className="flex items-center justify-between p-2 rounded-xl bg-stone-900 border border-white/10">
-            <span className="text-[10.5px] font-black text-stone-300 uppercase">
-              {isHi ? 'जन्म तिथि चुनें:' : 'Select Birth Date:'}
-            </span>
-            <input
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              className="bg-black text-white p-1 px-2 rounded-lg border border-white/20 text-xs font-mono font-bold focus:outline-none"
-            />
-          </div>
-
-          {/* Mulank & Bhagyank Results */}
-          <div className="grid grid-cols-2 gap-2 text-center">
-            <div className="p-2.5 rounded-2xl bg-purple-950/40 border border-purple-500/40">
-              <span className="text-[9.5px] font-black text-purple-300 uppercase block">
-                {isHi ? 'मूलांक (Driver):' : 'Driver Number:'}
+            {/* Birth Date Picker */}
+            <div className="flex items-center justify-between p-2.5 rounded-2xl bg-stone-900 border border-white/10">
+              <span className="text-[10.5px] font-black text-stone-300 uppercase">
+                {isHi ? 'जन्म तिथि दर्ज करें:' : 'Birth Date:'}
               </span>
-              <span className="text-2xl font-black text-white font-mono">{numerologyDetails.mulank}</span>
-              <span className="text-[9px] text-stone-400 block mt-0.5">{numerologyDetails.lucky.lord}</span>
+              <input
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                className="bg-black text-white p-1.5 px-2 rounded-xl border border-white/20 text-xs font-mono font-bold focus:outline-none"
+              />
             </div>
 
-            <div className="p-2.5 rounded-2xl bg-purple-950/40 border border-purple-500/40">
-              <span className="text-[9.5px] font-black text-purple-300 uppercase block">
-                {isHi ? 'भाग्यांक (Conductor):' : 'Conductor Number:'}
-              </span>
-              <span className="text-2xl font-black text-white font-mono">{numerologyDetails.bhagyank}</span>
-              <span className="text-[9px] text-stone-400 block mt-0.5">Destiny Power</span>
-            </div>
-          </div>
+            {/* Driver & Conductor */}
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="p-3 rounded-2xl bg-purple-950/40 border border-purple-500/40">
+                <span className="text-[9.5px] font-black text-purple-300 uppercase block">
+                  {isHi ? 'मूलांक (Driver):' : 'Driver (Mulank):'}
+                </span>
+                <span className="text-3xl font-black text-white font-mono">{numerologyDetails.mulank}</span>
+                <span className="text-[9px] text-stone-400 block mt-0.5">{numerologyDetails.lucky.lord}</span>
+              </div>
 
-          {/* Lucky Compass Alignment */}
-          <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/50 flex flex-col gap-1">
-            <span className="text-purple-300 font-black text-[11px] uppercase">
-              🎯 {isHi ? 'आपके मूलांक की शुभ दिशा:' : 'Your Personal Lucky Direction:'}
-            </span>
-            <span className="text-base font-black text-white">
-              {numerologyDetails.lucky.dir} ({numerologyDetails.lucky.deg})
-            </span>
-            <p className="text-[11px] text-stone-300 leading-snug">
-              {isHi 
-                ? `अध्ययन, व्यापारिक निर्णय अथवा महत्वपूर्ण कार्य करते समय अपने कंपास को ${numerologyDetails.lucky.dir} में संरेखित करके बैठें।`
-                : `Align your desk or study posture to face ${numerologyDetails.lucky.dir} to unlock maximum focus and luck.`}
-            </p>
+              <div className="p-3 rounded-2xl bg-purple-950/40 border border-purple-500/40">
+                <span className="text-[9.5px] font-black text-purple-300 uppercase block">
+                  {isHi ? 'भाग्यांक (Conductor):' : 'Conductor (Bhagyank):'}
+                </span>
+                <span className="text-3xl font-black text-white font-mono">{numerologyDetails.bhagyank}</span>
+                <span className="text-[9px] text-stone-400 block mt-0.5">Destiny Path</span>
+              </div>
+            </div>
+
+            {/* Lo Shu 3x3 Magic Grid */}
+            <div className="p-3 rounded-2xl bg-black/50 border border-white/10 flex flex-col gap-2">
+              <span className="text-[10px] font-black text-purple-300 uppercase">
+                Lo Shu 3x3 Magic Grid Mapping:
+              </span>
+              <div className="grid grid-cols-3 gap-2 text-center font-mono font-black text-base">
+                {[4, 9, 2, 3, 5, 7, 8, 1, 6].map((num) => {
+                  const count = numerologyDetails.loShuCounts[num] || 0;
+                  const isPresent = count > 0;
+                  return (
+                    <div 
+                      key={num}
+                      className={cn(
+                        "p-2.5 rounded-xl border flex flex-col items-center justify-center transition-all",
+                        isPresent ? "bg-purple-600/30 border-purple-400/60 text-white shadow-sm" : "bg-stone-900/60 border-white/10 text-stone-600"
+                      )}
+                    >
+                      <span>{num}</span>
+                      <span className="text-[8px] font-sans font-bold text-stone-400">
+                        {isPresent ? `${count}x` : '—'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Lucky Direction Card */}
+            <div className="p-3 rounded-2xl bg-gradient-to-r from-purple-950/60 to-indigo-950/60 border border-purple-500/50 flex flex-col gap-1">
+              <span className="text-purple-300 font-black text-[11px] uppercase">
+                🎯 {isHi ? 'आपके मूलांक की शुभ दिशा:' : 'Personal Lucky Compass Direction:'}
+              </span>
+              <span className="text-base font-black text-white">
+                {numerologyDetails.lucky.dir} ({numerologyDetails.lucky.deg})
+              </span>
+              <p className="text-[11px] text-stone-300 leading-snug">
+                Align your study desk or work chair to face <strong className="text-white">{numerologyDetails.lucky.dir}</strong> to activate positive cosmic vibrations.
+              </p>
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* DISCIPLINE 4: JYOTISH (DIGBALA & PLANETARY DIRECTIONS) */}
+      {/* 7. TAB CONTENT: 4. SADHANA (MEDITATION POSTURE & SACRED ALIGNMENT) */}
       {/* ========================================================================= */}
-      {activeCategory === 'jyotish' && (
-        <div className="w-full rounded-3xl p-4 border border-rose-500/40 bg-gradient-to-b from-[#200A10] to-[#0E0306] shadow-2xl flex flex-col gap-3 text-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <span className="font-black text-sm text-rose-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🔮</span>
-              <span>{isHi ? 'वैदिक ज्योतिष दिग्बल दिशाएं' : 'Vedic Jyotish & Digbala'}</span>
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-500/20 text-rose-300 border border-rose-400/40">
-              Navagraha
-            </span>
-          </div>
-
-          <div className="p-3 rounded-2xl bg-rose-950/40 border border-rose-500/40 text-[11px] text-stone-200 leading-snug">
-            <strong className="text-rose-300 block mb-1">
-              {isHi ? 'ग्रहों का दिशा बल (Planetary Directional Strength):' : 'Planetary Digbala (Directional Strength):'}
-            </strong>
-            <p>• <strong>Sun & Mars:</strong> Digbala in <strong>South (दक्षिण)</strong> — Supreme authority & courage.</p>
-            <p>• <strong>Jupiter & Mercury:</strong> Digbala in <strong>East & North-East (पूर्व/ईशान)</strong> — Wisdom, memory & speech.</p>
-            <p>• <strong>Saturn:</strong> Digbala in <strong>West (पश्चिम)</strong> — Longevity, hard work, discipline.</p>
-            <p>• <strong>Moon & Venus:</strong> Digbala in <strong>North (उत्तर)</strong> — Peace, beauty, cash flow & domestic bliss.</p>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* DISCIPLINE 5: SADHANA (MEDITATION & SACRED ALIGNMENT) */}
-      {/* ========================================================================= */}
-      {activeCategory === 'sadhana' && (
-        <div className="w-full rounded-3xl p-4 border border-amber-500/40 bg-gradient-to-b from-[#241A08] to-[#0E0A02] shadow-2xl flex flex-col gap-3 text-xs">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
+      {activeTab === 'sadhana' && (
+        <div className="w-full flex flex-col gap-3">
+          <div className="w-full rounded-3xl p-4 border border-amber-900/40 bg-gradient-to-b from-[#241A08] to-[#0E0A02] shadow-2xl flex flex-col gap-3 text-xs">
             <span className="font-black text-sm text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span>🕉️</span>
-              <span>{isHi ? 'साधना, ध्यान एवं उपासना' : 'Sadhana & Meditation Posture'}</span>
+              <span>⊙</span>
+              <span>Sadhana & Meditation Direction</span>
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-400/40">
-              Dhyana
-            </span>
-          </div>
 
-          <div className="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex flex-col gap-1.5 text-[11px] text-stone-200">
-            <strong className="text-amber-300">
-              {isHi ? 'साधना के पवित्र दिशा नियम:' : 'Sacred Facing Rules for Sadhana:'}
-            </strong>
-            <p>• <strong>Face East (पूर्व मुखी):</strong> Ideal for Gayatri Japa, Surya Sadhana, and intellectual illumination.</p>
-            <p>• <strong>Face North (उत्तर मुखी):</strong> Ideal for Lakshmi, Kuber, and mental stillness.</p>
-            <p>• <strong>Face North-East (ईशान मुखी):</strong> Supreme for Mahadev, Guru Mantra, Kundalini, and Moksha.</p>
-            <p className="text-amber-400 font-bold mt-1">
-              {isHi 
-                ? 'कदापि दक्षिण मुख करके नित्य सात्विक ध्यान न करें।' 
-                : 'Never face South for routine daily peaceful meditation.'}
-            </p>
+            {/* Sacred Directions Rules */}
+            <div className="p-3 rounded-2xl bg-amber-950/40 border border-amber-500/40 flex flex-col gap-1.5 text-[11px] text-stone-200">
+              <strong className="text-amber-300">Sacred Facing Rules for Sadhana:</strong>
+              <p>• <strong>Face East (पूर्व मुखी):</strong> Ideal for Gayatri Japa, Surya Sadhana, mental clarity, and intellectual light.</p>
+              <p>• <strong>Face North (उत्तर मुखी):</strong> Ideal for Lakshmi, Kuber, and mental stillness.</p>
+              <p>• <strong>Face North-East (ईशान मुखी):</strong> Supreme for Mahadev, Guru Mantra, Kundalini, and Moksha.</p>
+              <p className="text-rose-400 font-bold mt-0.5">• Never face South for routine daily peaceful meditation.</p>
+            </div>
+
+            {/* Interactive Japa Mala Counter */}
+            <div className="p-4 rounded-2xl bg-stone-900/90 border border-amber-500/40 flex flex-col items-center text-center gap-2">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-400">
+                108 MALA JAPA COUNTER
+              </span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-4xl font-black font-mono text-amber-300">{japaCount}</span>
+                <span className="text-stone-400 text-sm">/ {japaTarget}</span>
+              </div>
+
+              <div className="flex items-center gap-3 mt-1">
+                <button
+                  onClick={() => {
+                    setJapaCount(prev => (prev + 1) % 109);
+                    triggerHaptic();
+                  }}
+                  className="px-6 py-2 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all"
+                >
+                  COUNT JAPA 📿
+                </button>
+                <button
+                  onClick={() => {
+                    setJapaCount(0);
+                    triggerHaptic();
+                  }}
+                  className="p-2 rounded-full bg-stone-800 text-stone-400 hover:text-white"
+                  title="Reset"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* 5. CREATOR BRANDING FOOTER CARD (EXACTLY AS IN SCREENSHOT) */}
+      {/* 8. TAB CONTENT: 5. FENG SHUI (BAGUA MAP FROM SCREENSHOT) */}
+      {/* ========================================================================= */}
+      {activeTab === 'feng_shui' && (
+        <div className="w-full flex flex-col gap-3">
+          {/* FENG SHUI ACCORDION (EXACTLY AS IN SCREENSHOT) */}
+          <div className="w-full rounded-3xl border border-sky-900/40 bg-gradient-to-b from-[#081524] via-[#040C16] to-[#02060C] shadow-2xl overflow-hidden">
+            <button
+              onClick={() => {
+                setIsFengShuiOpen(!isFengShuiOpen);
+                triggerHaptic();
+              }}
+              className="w-full p-3.5 flex items-center justify-between bg-[#06121E] border-b border-white/10 text-left"
+            >
+              <div className="flex items-center gap-2">
+                <Compass className="w-4 h-4 text-sky-400" />
+                <span className="font-black text-sm text-sky-400 uppercase tracking-wider">
+                  FENG SHUI
+                </span>
+              </div>
+              {isFengShuiOpen ? <ChevronUp className="w-4 h-4 text-stone-400" /> : <ChevronDown className="w-4 h-4 text-stone-400" />}
+            </button>
+
+            {isFengShuiOpen && (
+              <div className="p-4 flex flex-col gap-3 text-xs">
+                {/* Bagua Map Header with Door Dropdown */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-sky-300 font-serif">
+                    Bagua Map
+                  </h3>
+                  <select
+                    value={baguaDoorFacing}
+                    onChange={(e) => {
+                      setBaguaDoorFacing(e.target.value);
+                      triggerHaptic();
+                    }}
+                    className="p-1.5 px-3 rounded-xl bg-stone-900 border border-white/20 text-white font-black text-[10px] uppercase focus:outline-none"
+                  >
+                    <option value="NORTH DOOR">NORTH DOOR ⌵</option>
+                    <option value="EAST DOOR">EAST DOOR ⌵</option>
+                    <option value="SOUTH DOOR">SOUTH DOOR ⌵</option>
+                    <option value="WEST DOOR">WEST DOOR ⌵</option>
+                    <option value="NE DOOR">NE DOOR ⌵</option>
+                    <option value="SE DOOR">SE DOOR ⌵</option>
+                    <option value="SW DOOR">SW DOOR ⌵</option>
+                    <option value="NW DOOR">NW DOOR ⌵</option>
+                  </select>
+                </div>
+
+                <p className="text-[11px] text-stone-300 leading-snug">
+                  Select your front door facing direction to align the Bagua map dynamically.
+                </p>
+
+                {/* 4/8 Bagua Quadrant Cards (Matching User Screenshot) */}
+                <div className="grid grid-cols-2 gap-2 text-left">
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">WEALTH</span>
+                    <span className="text-sm font-black text-sky-400 mt-0.5">South-East</span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">LOVE</span>
+                    <span className="text-sm font-black text-pink-400 mt-0.5">South-West</span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">CAREER</span>
+                    <span className="text-sm font-black text-cyan-400 mt-0.5">North</span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">FAMILY</span>
+                    <span className="text-sm font-black text-emerald-400 mt-0.5">East</span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">FAME</span>
+                    <span className="text-sm font-black text-rose-400 mt-0.5">South</span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">CHILDREN</span>
+                    <span className="text-sm font-black text-slate-300 mt-0.5">West</span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">KNOWLEDGE</span>
+                    <span className="text-sm font-black text-yellow-400 mt-0.5">North-East</span>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-stone-900/80 border border-white/10 flex flex-col">
+                    <span className="text-[9.5px] font-black uppercase text-stone-400">HELPFUL PEOPLE</span>
+                    <span className="text-sm font-black text-indigo-400 mt-0.5">North-West</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 9. TAB CONTENT: 6. QIBLA (LIVE KAABA BEARING) */}
+      {/* ========================================================================= */}
+      {activeTab === 'qibla' && (
+        <div className="w-full flex flex-col gap-3">
+          <div className="w-full rounded-3xl p-4 border border-emerald-900/40 bg-gradient-to-b from-[#0A1E14] to-[#040E0A] shadow-2xl flex flex-col gap-3 text-xs text-center">
+            <span className="font-black text-sm text-emerald-300 uppercase tracking-wider flex items-center justify-center gap-1.5">
+              <span>↗</span>
+              <span>Qibla Direction (Makkah Al-Mukarramah)</span>
+            </span>
+
+            <div className="p-3 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center gap-1">
+              <span className="text-[10px] uppercase text-stone-400 font-bold">Kaaba Bearing from Your GPS:</span>
+              <span className="text-3xl font-black font-mono text-emerald-400">{qiblaData.qiblaBearing}°</span>
+              <span className="text-[10.5px] text-stone-300 font-bold">
+                Distance: {qiblaData.distanceKm} km
+              </span>
+            </div>
+
+            <div className={cn(
+              "p-3 rounded-2xl border flex items-center justify-center gap-2 font-black transition-all",
+              qiblaData.isFacingQibla ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]" : "bg-stone-900 text-stone-400 border-white/10"
+            )}>
+              <Navigation className="w-4 h-4" />
+              <span>{qiblaData.isFacingQibla ? "ALIGNED WITH KAABA ✓" : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 10. CREATOR BRANDING FOOTER CARD (EXACTLY AS IN ALL SCREENSHOTS) */}
       {/* ========================================================================= */}
       <div className="w-full max-w-sm rounded-[24px] p-4 bg-gradient-to-r from-[#181109] via-[#2A180B] to-[#140C04] border border-amber-500/40 shadow-2xl flex flex-col items-center justify-center text-center mt-4">
         <div className="flex items-center gap-2 mb-1">
