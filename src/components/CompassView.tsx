@@ -1208,12 +1208,28 @@ export const CompassView = () => {
       {mainTab === 'vastu' && (
         <VastuOthersView
           currentHeading={displayHeading}
-          triggerHaptic={triggerHapticFeedback}
+          pitch={pitch}
+          roll={roll}
+          sunPos={sunPos}
+          isLevel={isLevel}
+          selectedStyle={selectedStyle}
+          customAccentColor={selectedAccentColor}
+          dialRef={dialRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          weather={weather}
+          location={location}
+          declination={declination}
+          triggerHaptic={() => triggerHapticFeedback(ImpactStyle.Light)}
+          onCopyCoordinates={copyCoordinates}
+          onToggleTorch={toggleFlashlight}
+          isTorchOn={isFlashlightOn}
         />
       )}
 
-      {/* Creator Branding Card: Always at the bottom */}
-      <CreatorBanner />
+      {/* Creator Branding Card: Shown for compass & level tabs */}
+      {mainTab !== 'vastu' && <CreatorBanner />}
 
       {/* Settings Modal */}
       {showSettings && (
