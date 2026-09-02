@@ -2,6 +2,30 @@ import { CompassStyleInfo, CompassStyleId } from '@/types/compass';
 
 export const COMPASS_STYLES: CompassStyleInfo[] = [
   {
+    id: 'daylight',
+    nameHi: 'डेलाइट (Daylight)',
+    nameEn: 'Daylight',
+    tagHi: 'स्वच्छ पोर्सिलेन श्वेत डायल, लाल सुई एवं १० रंग पैलेट',
+    tagEn: 'Crisp porcelain white dial, precision red needle & 10-color palette',
+    category: 'modern',
+    primaryColor: '#FFFFFF',
+    accentColor: '#EF4444',
+    previewBg: 'linear-gradient(135deg, #FFFFFF 0%, #E2E8F0 100%)',
+    needleType: 'delta_bicolor'
+  },
+  {
+    id: 'pitch_black',
+    nameHi: 'पिच ब्लैक',
+    nameEn: 'Pitch Black',
+    tagHi: 'अंधेरे में दृश्यता हेतु गहरा ओएलईडी ब्लैक',
+    tagEn: 'Deep true OLED pitch black tactical precision',
+    category: 'modern',
+    primaryColor: '#000000',
+    accentColor: '#EF4444',
+    previewBg: 'linear-gradient(135deg, #000000 0%, #111111 100%)',
+    needleType: 'delta_bicolor'
+  },
+  {
     id: 'satellite_earth',
     nameHi: 'सैटेलाइट अर्थ',
     nameEn: 'Satellite Earth',

@@ -18,6 +18,7 @@ interface Props {
   vastuGridEnabled: boolean;
   isLevel: boolean;
   dialRef: React.RefObject<HTMLDivElement>;
+  customAccentColor?: string;
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerMove: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
@@ -44,6 +45,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
   vastuGridEnabled,
   isLevel,
   dialRef,
+  customAccentColor,
   onPointerDown,
   onPointerMove,
   onPointerUp
@@ -51,6 +53,18 @@ export const CompassDialRenderer: React.FC<Props> = ({
   const isHi = language === 'hi';
 
   const cardinalPoints = useMemo(() => {
+    if (styleId === 'daylight') {
+      return [
+        { label: 'N', deg: 0, isNorth: true, code: 'N' },
+        { label: 'NE', deg: 45, isNorth: false, code: 'NE' },
+        { label: 'E', deg: 90, isNorth: false, code: 'E' },
+        { label: 'SE', deg: 135, isNorth: false, code: 'SE' },
+        { label: 'S', deg: 180, isNorth: false, code: 'S' },
+        { label: 'SW', deg: 225, isNorth: false, code: 'SW' },
+        { label: 'W', deg: 270, isNorth: false, code: 'W' },
+        { label: 'NW', deg: 315, isNorth: false, code: 'NW' }
+      ];
+    }
     if (styleId === 'vedic_mandala') {
       return [
         { label: 'N', deg: 0, isNorth: true, code: 'N' },
@@ -98,6 +112,10 @@ export const CompassDialRenderer: React.FC<Props> = ({
   // Outer bezel styling classes
   const getBezelClass = () => {
     switch (styleId) {
+      case 'daylight':
+        return 'border-[16px] sm:border-[20px] border-[#CBD5E1] shadow-[0_20px_50px_rgba(0,0,0,0.85),inset_0_2px_6px_rgba(255,255,255,0.95),inset_0_-6px_12px_rgba(148,163,184,0.6)] bg-gradient-to-b from-[#FFFFFF] via-[#F8FAFC] to-[#E2E8F0]';
+      case 'pitch_black':
+        return 'border-[16px] sm:border-[20px] border-[#1E1E24] shadow-[0_25px_60px_rgba(0,0,0,0.98),inset_0_2px_4px_rgba(255,255,255,0.05),inset_0_-5px_12px_rgba(0,0,0,0.95)] bg-[#000000]';
       case 'satellite_earth':
         return 'border-[16px] sm:border-[20px] border-[#1E293B] shadow-[0_25px_60px_rgba(0,0,0,0.95),inset_0_2px_6px_rgba(0,240,255,0.4),inset_0_-8px_16px_rgba(0,0,0,0.9)] bg-gradient-to-b from-[#2E3C4E] via-[#1E293B] to-[#0F172A]';
       case 'sandalwood':
@@ -134,6 +152,10 @@ export const CompassDialRenderer: React.FC<Props> = ({
   // Dial face background
   const getDialFaceBg = () => {
     switch (styleId) {
+      case 'daylight':
+        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FFFFFF] via-[#F8FAFC] to-[#F1F5F9]';
+      case 'pitch_black':
+        return 'bg-[#000000]';
       case 'satellite_earth':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1E2C3D] via-[#101824] to-[#080D14]';
       case 'sandalwood':
@@ -299,6 +321,22 @@ export const CompassDialRenderer: React.FC<Props> = ({
                 {/* Coordinate Crosshairs */}
                 <line x1="100" y1="12" x2="100" y2="188" stroke="#D4AF37" strokeWidth="0.5" strokeDasharray="4 3" />
                 <line x1="12" y1="100" x2="188" y2="100" stroke="#D4AF37" strokeWidth="0.5" strokeDasharray="4 3" />
+              </svg>
+            </>
+          )}
+
+          {styleId === 'daylight' && (
+            <>
+              {/* Subtle Concentric Circular Tracks */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="88" fill="none" stroke="#E2E8F0" strokeWidth="0.8" />
+                <circle cx="100" cy="100" r="76" fill="none" stroke="#CBD5E1" strokeWidth="0.6" strokeDasharray="3 2" />
+                <circle cx="100" cy="100" r="54" fill="none" stroke="#FBBF24" strokeWidth="0.6" opacity="0.6" />
+                <circle cx="100" cy="100" r="32" fill="none" stroke="#CBD5E1" strokeWidth="0.6" />
+
+                {/* Cardinal Red Tick & Inward Triangle at North */}
+                <polygon points="100,14 96,21 104,21" fill={customAccentColor || "#EF4444"} />
+                <line x1="100" y1="6" x2="100" y2="13" stroke={customAccentColor || "#EF4444"} strokeWidth="1.5" />
               </svg>
             </>
           )}
@@ -492,18 +530,21 @@ export const CompassDialRenderer: React.FC<Props> = ({
                 <div className={cn(
                   "rounded-full mt-2",
                   isMajor
-                    ? (styleId === 'cyberpunk' ? "w-[2.5px] h-3.5 bg-cyan-400 shadow-[0_0_6px_#00F0FF]" :
+                    ? (styleId === 'daylight' ? (deg % 90 === 0 ? "w-[2.5px] h-3.5 bg-[#EF4444]" : "w-[2px] h-3 bg-[#1E293B]") :
+                       styleId === 'cyberpunk' ? "w-[2.5px] h-3.5 bg-cyan-400 shadow-[0_0_6px_#00F0FF]" :
                        styleId === 'emerald_aurora' ? "w-[2.5px] h-3.5 bg-emerald-400 shadow-[0_0_6px_#10B981]" :
                        styleId === 'tactical_ops' ? "w-[2.5px] h-3.5 bg-orange-500 shadow-[0_0_6px_#F97316]" :
                        styleId === 'nautical' ? "w-[2.5px] h-3.5 bg-[#8C5824]" :
                        "w-[2.5px] h-3.5 bg-[#EF4444] shadow-sm")
                     : isMid
-                    ? (styleId === 'cyberpunk' ? "w-[1.8px] h-3 bg-magenta-400/80" :
+                    ? (styleId === 'daylight' ? "w-[1.8px] h-2.5 bg-[#64748B]" :
+                       styleId === 'cyberpunk' ? "w-[1.8px] h-3 bg-magenta-400/80" :
                        styleId === 'royal_gold' ? "w-[1.8px] h-3 bg-amber-400/90 shadow-[0_0_4px_rgba(245,158,11,0.5)]" :
                        styleId === 'nautical' ? "w-[1.5px] h-2.5 bg-[#8C5824]" :
                        styleId === 'emerald_aurora' ? "w-[1.8px] h-3 bg-emerald-400/70" :
                        "w-[1.8px] h-2.5 bg-white/60")
-                    : (styleId === 'cyberpunk' ? "w-[1px] h-1.5 bg-cyan-400/30" :
+                    : (styleId === 'daylight' ? "w-[1px] h-1.5 bg-[#CBD5E1]" :
+                       styleId === 'cyberpunk' ? "w-[1px] h-1.5 bg-cyan-400/30" :
                        styleId === 'nautical' ? "w-[1px] h-1.5 bg-[#8C5824]/40" :
                        styleId === 'royal_gold' ? "w-[1px] h-1.5 bg-amber-400/35" :
                        "w-[1px] h-1.5 bg-white/25")
@@ -518,6 +559,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
               <div className="flex flex-col items-center select-none mt-1">
                 <span className={cn(
                   "font-mono font-bold text-[0.52rem] drop-shadow-md",
+                  styleId === 'daylight' ? (deg % 90 === 0 ? "text-[#EF4444] font-black text-[0.62rem]" : "text-[#1E293B] font-black text-[0.55rem]") :
                   styleId === 'royal_gold' ? "text-amber-200/90" :
                   styleId === 'cyberpunk' ? "text-cyan-300 font-mono" :
                   styleId === 'nautical' ? "text-[#5C3818] font-serif" :
@@ -583,6 +625,8 @@ export const CompassDialRenderer: React.FC<Props> = ({
                     "font-black tracking-tight",
                     pt.isNorth
                       ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444]"
+                      : styleId === 'daylight'
+                      ? (['E', 'S', 'W'].includes(pt.code) ? "text-[#0F172A] text-base font-black" : "text-[#475569] text-xs font-bold")
                       : styleId === 'vedic_mandala'
                       ? "text-white text-base font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                       : styleId === 'satellite_earth'
@@ -599,6 +643,11 @@ export const CompassDialRenderer: React.FC<Props> = ({
                   )}>
                     {pt.label}
                   </span>
+                  {styleId === 'daylight' && ['NE', 'SE', 'SW', 'NW'].includes(pt.code) && (
+                    <span className="text-[7.5px] font-mono font-bold text-[#64748B] leading-none mt-0.5">
+                      {pt.deg}°
+                    </span>
+                  )}
                 </div>
               </div>
             ))
@@ -760,7 +809,26 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 10. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
+          {/* 10. Daylight Precision Needle */}
+          {styleId === 'daylight' && (
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]" viewBox="0 0 200 200">
+              {/* South Slate Spear */}
+              <polygon points="100,188 92,100 100,112" fill="#94A3B8" />
+              <polygon points="100,188 108,100 100,112" fill="#64748B" />
+              <line x1="100" y1="112" x2="100" y2="186" stroke="#CBD5E1" strokeWidth="1" />
+
+              {/* North Custom/Red Spear */}
+              <polygon points="100,12 88,100 100,88" fill={customAccentColor || "#EF4444"} className="drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]" />
+              <polygon points="100,12 112,100 100,88" fill="#B91C1C" />
+              <line x1="100" y1="12" x2="100" y2="88" stroke="#FFFFFF" strokeWidth="1.4" />
+              <polygon points="100,10 97,22 103,22" fill="#FFFFFF" />
+
+              {/* Center Pivot Ring */}
+              <circle cx="100" cy="100" r="14" fill="none" stroke="#0F172A" strokeWidth="1.5" />
+            </svg>
+          )}
+
+          {/* 11. Signature Orange/Gold Astrolabe Pointer (Royal Gold as in screenshot) */}
           {styleId === 'royal_gold' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_0_16px_rgba(249,115,22,0.8)]" viewBox="0 0 200 200">
               <line x1="100" y1="16" x2="100" y2="80" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round" />
@@ -769,7 +837,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 11. Other Styles 3D Bicolor Delta Arrow */}
+          {/* 12. Other Styles 3D Bicolor Delta Arrow */}
           {(styleId === 'emerald_aurora' || styleId === 'rose_gold' || styleId === 'steampunk' || styleId === 'crystal_glass' || styleId === 'sunset_aura') && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
               <defs>
@@ -809,7 +877,26 @@ export const CompassDialRenderer: React.FC<Props> = ({
 
         {/* Center Precision Liquid Spirit Bubble Hub */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-          {styleId === 'vedic_mandala' || styleId === 'sandalwood' ? (
+          {styleId === 'daylight' ? (
+            <div className="flex items-center justify-center pointer-events-none">
+              {/* Outer Cyan Halo Ring */}
+              <div className="w-13 h-13 rounded-full border-2 border-teal-400/80 shadow-[0_0_14px_rgba(45,212,191,0.6)] flex items-center justify-center">
+                {/* Dark Circular Body */}
+                <div className="w-9 h-9 rounded-full border border-white/60 bg-[#1E293B] shadow-md flex items-center justify-center">
+                  {/* Red Target Ring */}
+                  <div className="w-5 h-5 rounded-full border-2 border-red-500 bg-red-950/90 flex items-center justify-center">
+                    {/* Floating White Liquid Bubble */}
+                    <div 
+                      className="w-2.5 h-2.5 rounded-full bg-white shadow-sm"
+                      style={{
+                        transform: `translate(${Math.max(-4, Math.min(4, -roll * 0.3))}px, ${Math.max(-4, Math.min(4, -pitch * 0.3))}px)`
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : styleId === 'vedic_mandala' || styleId === 'sandalwood' ? (
             /* Golden Ring + Turquoise Middle + Crimson Core + Lime Pip */
             <div className="w-13 h-13 rounded-full relative overflow-hidden flex items-center justify-center border-2 border-[#D4AF37] bg-gradient-to-tr from-[#3D2512] via-[#5C3818] to-[#2E1B0D] shadow-[0_4px_16px_rgba(78,53,36,0.85)]">
               {/* Turquoise Ring */}

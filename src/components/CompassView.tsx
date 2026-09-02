@@ -84,6 +84,35 @@ export const CompassView = () => {
     return 'royal_gold';
   });
 
+  const PALETTE_COLORS = [
+    { name: 'Crimson Red', value: '#EF4444' },
+    { name: 'Sky Blue', value: '#3B82F6' },
+    { name: 'Emerald Green', value: '#10B981' },
+    { name: 'Amber Gold', value: '#F59E0B' },
+    { name: 'Royal Purple', value: '#8B5CF6' },
+    { name: 'Vibrant Orange', value: '#F97316' },
+    { name: 'Teal Cyan', value: '#06B6D4' },
+    { name: 'Slate Dark', value: '#334155' },
+    { name: 'Pure White', value: '#F8FAFC' },
+    { name: 'Steel Grey', value: '#64748B' }
+  ];
+
+  const [selectedAccentColor, setSelectedAccentColor] = useState<string>(() => {
+    try {
+      return localStorage.getItem('com.hcompass.accent_color') || '#EF4444';
+    } catch {
+      return '#EF4444';
+    }
+  });
+
+  const handleSelectAccentColor = (color: string) => {
+    setSelectedAccentColor(color);
+    try {
+      localStorage.setItem('com.hcompass.accent_color', color);
+    } catch {}
+    triggerHapticFeedback(ImpactStyle.Light);
+  };
+
   const handleSelectStyle = (id: CompassStyleId) => {
     setSelectedStyle(id);
     try {
@@ -618,7 +647,9 @@ export const CompassView = () => {
                 className={cn(
                   "px-3.5 py-1.5 rounded-xl text-[10.5px] uppercase font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5",
                   selectedStyle === st.id
-                    ? st.id === 'satellite_earth'
+                    ? st.id === 'daylight'
+                      ? "bg-white text-black font-black border-white shadow-[0_0_18px_rgba(255,255,255,0.85)] scale-[1.03]"
+                      : st.id === 'satellite_earth'
                       ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.8)] scale-[1.02]"
                       : st.id === 'vedic_mandala'
                       ? "bg-[#00F0FF]/30 text-teal-200 border-teal-400 shadow-[0_0_15px_rgba(0,240,255,0.6)] scale-[1.02]"
@@ -627,7 +658,9 @@ export const CompassView = () => {
                 )}
               >
                 <span>
-                  {st.id === 'satellite_earth' ? 'SATELLITE EARTH' :
+                  {st.id === 'daylight' ? 'DAYLIGHT' :
+                   st.id === 'pitch_black' ? 'PITCH BLACK' :
+                   st.id === 'satellite_earth' ? 'SATELLITE EARTH' :
                    st.id === 'vedic_mandala' ? '32 DEVTA CHAKRA' :
                    st.id === 'royal_gold' ? 'HINDI GOLD' :
                    st.id === 'sandalwood' ? 'SANDALWOOD' :
@@ -647,6 +680,31 @@ export const CompassView = () => {
               <Palette className="w-3 h-3 text-amber-400" />
               <span>+ MORE</span>
             </button>
+          </div>
+
+          {/* 10 Circular Color Swatches Bar */}
+          <div className="w-full max-w-sm flex items-center justify-center my-1.5">
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-3.5 py-1.5 rounded-full bg-[#12161F]/90 border border-white/10 backdrop-blur-md shadow-lg w-full max-w-[340px]">
+              {PALETTE_COLORS.map((col) => {
+                const isSelected = selectedAccentColor === col.value;
+                return (
+                  <button
+                    key={col.value}
+                    onClick={() => handleSelectAccentColor(col.value)}
+                    className={cn(
+                      "w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-all flex items-center justify-center shadow-sm active:scale-90",
+                      isSelected ? "ring-2 ring-white scale-110 shadow-md" : "hover:scale-105 opacity-90"
+                    )}
+                    style={{ backgroundColor: col.value }}
+                    title={col.name}
+                  >
+                    {isSelected && (
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white shadow-sm" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Satellite Earth Suite Container */}
@@ -839,6 +897,7 @@ export const CompassView = () => {
               vastuGridEnabled={vastuGridEnabled}
               isLevel={isLevel}
               dialRef={dialRef}
+              customAccentColor={selectedAccentColor}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
