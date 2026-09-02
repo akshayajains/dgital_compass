@@ -30,56 +30,56 @@ const CHOGHADIYA_INFO: Record<string, { name: string; nameHi: string; type: 'goo
     name: 'Amrit',
     nameHi: 'अमृत',
     type: 'good',
-    effect: 'All auspicious work, spiritual peace, prosperity',
-    effectHi: 'सर्व कार्य सिद्धि, शांति एवं समृद्धि',
+    effect: 'Best for auspicious work',
+    effectHi: 'सर्व कार्य सिद्धि एवं सर्वोत्तम मुहूर्त',
     color: 'text-emerald-400'
   },
   shubh: {
     name: 'Shubh',
     nameHi: 'शुभ',
     type: 'good',
-    effect: 'New beginnings, ceremonies, investments',
-    effectHi: 'नवीन कार्य आरंभ, मांगलिक कार्य, निवेश',
+    effect: 'New beginnings',
+    effectHi: 'नवीन कार्य आरंभ एवं मांगलिक कार्य',
     color: 'text-emerald-400'
   },
   labh: {
     name: 'Labh',
     nameHi: 'लाभ',
     type: 'good',
-    effect: 'Business profits, commerce, financial gains',
-    effectHi: 'व्यापारिक लाभ, धन वृद्धि, क्रय-विक्रय',
+    effect: 'Business, gains',
+    effectHi: 'व्यापारिक लाभ एवं धन वृद्धि',
     color: 'text-emerald-400'
   },
   chal: {
-    name: 'Char',
+    name: 'Chal',
     nameHi: 'चल',
     type: 'neutral',
-    effect: 'Travel, movement, vehicles, shifting',
-    effectHi: 'यात्रा, गतिशीलता, वाहन, स्थानांतरण',
+    effect: 'Travel, routine tasks',
+    effectHi: 'यात्रा एवं नित्य सामान्य कार्य',
     color: 'text-sky-400'
   },
   udveg: {
     name: 'Udveg',
     nameHi: 'उद्वेग',
     type: 'avoid',
-    effect: 'Avoid new work, government disputes, stress',
-    effectHi: 'मानसिक तनाव, सरकारी बाधा, कार्य टालें',
+    effect: 'Avoid new work',
+    effectHi: 'नया कार्य आरंभ न करें',
     color: 'text-rose-400'
   },
   rog: {
     name: 'Rog',
     nameHi: 'रोग',
     type: 'avoid',
-    effect: 'Health risks, quarrels, loss of energy',
-    effectHi: 'स्वास्थ्य हानि, विवाद, शारीरिक कष्ट',
+    effect: 'Avoid health decisions',
+    effectHi: 'स्वास्थ्य संबंधी निर्णय न लें',
     color: 'text-rose-400'
   },
   kaal: {
     name: 'Kaal',
     nameHi: 'काल',
     type: 'avoid',
-    effect: 'Accident hazard, grave losses, inauspicious',
-    effectHi: 'दुर्घटना भय, आर्थिक हानि, पूर्ण वर्जित',
+    effect: 'Avoid auspicious work',
+    effectHi: 'शुभ कार्य वर्जित',
     color: 'text-rose-400'
   }
 };

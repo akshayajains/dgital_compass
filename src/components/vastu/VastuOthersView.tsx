@@ -993,28 +993,42 @@ export const VastuOthersView: React.FC<Props> = ({
             </div>
 
             {/* Slot List */}
-            <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto no-scrollbar text-xs">
-              {(choghadiyaTimeSlot === 'day' ? choghadiya.daySlots : choghadiya.nightSlots).map((slot, idx) => (
-                <div 
-                  key={idx}
-                  className="p-2.5 rounded-2xl bg-stone-900/80 border border-white/10 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "px-2.5 py-1 rounded-xl font-bold text-[10.5px] uppercase border",
-                      slot.type === 'good' ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50" :
-                      slot.type === 'avoid' ? "bg-rose-950/60 text-rose-300 border-rose-500/40" :
-                      "bg-sky-950/60 text-sky-300 border-sky-500/40"
-                    )}>
-                      {slot.name}
-                    </span>
-                    <div className="flex flex-col text-left">
-                      <span className="font-mono font-bold text-white text-xs">{slot.startTime} - {slot.endTime}</span>
-                      <span className="text-[9.5px] text-stone-400">{slot.effect}</span>
+            <div className="flex flex-col gap-2 text-xs">
+              {(choghadiyaTimeSlot === 'day' ? choghadiya.daySlots : choghadiya.nightSlots).map((slot, idx) => {
+                const isCurrent = choghadiya.currentSlot.name === slot.name && choghadiya.currentSlot.startTime === slot.startTime;
+                return (
+                  <div 
+                    key={idx}
+                    className={cn(
+                      "p-3 rounded-2xl border flex items-center justify-between transition-all",
+                      isCurrent 
+                        ? "bg-[#1B140E] border-amber-500/80 shadow-[0_0_15px_rgba(245,158,11,0.25)] ring-1 ring-amber-500/50" 
+                        : "bg-stone-900/80 border-white/10"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className={cn(
+                        "w-16 py-1 rounded-xl font-bold text-[11px] text-center uppercase tracking-wide border",
+                        slot.type === 'good' ? "bg-[#123624] text-emerald-300 border-emerald-700/50" :
+                        slot.type === 'avoid' ? "bg-[#3D1418] text-rose-300 border-rose-800/50" :
+                        "bg-[#0F2840] text-sky-300 border-sky-700/50"
+                      )}>
+                        {slot.name}
+                      </span>
+                      <div className="flex flex-col text-left">
+                        <span className="font-bold text-white text-xs">{slot.startTime} - {slot.endTime}</span>
+                        <span className="text-[10px] text-stone-400 font-medium">{slot.effect}</span>
+                      </div>
                     </div>
+
+                    {isCurrent && (
+                      <span className="px-2 py-0.5 rounded-full bg-orange-500 text-stone-950 text-[9px] font-black uppercase tracking-wider shadow-sm animate-pulse">
+                        LIVE
+                      </span>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
