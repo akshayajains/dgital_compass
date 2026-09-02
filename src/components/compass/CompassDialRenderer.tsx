@@ -572,22 +572,30 @@ export const CompassDialRenderer: React.FC<Props> = ({
           ) : (
             cardinalPoints.map((pt) => (
               <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
-                <div className="flex flex-col items-center select-none mt-5">
+                <div className={cn(
+                  "flex flex-col items-center select-none",
+                  styleId === 'vedic_mandala' ? "mt-2" : "mt-5"
+                )}>
+                  {styleId === 'vedic_mandala' && pt.isNorth && (
+                    <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-red-600 drop-shadow-[0_0_8px_#ef4444] mb-0.5" />
+                  )}
                   <span className={cn(
-                    "font-black text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] tracking-tight",
+                    "font-black tracking-tight",
                     pt.isNorth
                       ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444]"
+                      : styleId === 'vedic_mandala'
+                      ? "text-white text-base font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                       : styleId === 'satellite_earth'
                       ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
                       : styleId === 'nautical'
-                      ? "text-[#3E2718]"
+                      ? "text-[#3E2718] text-sm"
                       : styleId === 'cyberpunk'
-                      ? "text-cyan-300"
+                      ? "text-cyan-300 text-sm"
                       : styleId === 'emerald_aurora'
-                      ? "text-emerald-300"
+                      ? "text-emerald-300 text-sm"
                       : styleId === 'tactical_ops'
-                      ? "text-green-400"
-                      : "text-amber-100"
+                      ? "text-green-400 text-sm"
+                      : "text-amber-100 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                   )}>
                     {pt.label}
                   </span>
@@ -682,19 +690,7 @@ export const CompassDialRenderer: React.FC<Props> = ({
             </svg>
           )}
 
-          {/* 4. Vedic Chakra Arrow Needle */}
-          {styleId === 'vedic_mandala' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_6px_20px_rgba(245,158,11,0.6)]" viewBox="0 0 200 200">
-              <polygon points="100,18 84,80 100,66" fill="#F59E0B" />
-              <polygon points="100,18 100,66 116,80" fill="#EF4444" />
-              <polygon points="100,182 90,120 100,134" fill="#78350F" />
-              <polygon points="100,182 100,134 110,120" fill="#451A03" />
-              <circle cx="100" cy="100" r="16" fill="none" stroke="#F59E0B" strokeWidth="2" />
-              <circle cx="100" cy="100" r="10" fill="none" stroke="#EF4444" strokeWidth="1" strokeDasharray="2 2" />
-            </svg>
-          )}
-
-          {/* 5. Minimal Stealth Pointer */}
+          {/* 4. Minimal Stealth Pointer */}
           {styleId === 'minimal_onyx' && (
             <div className="absolute top-2 flex flex-col items-center z-30">
               <div className="w-[4px] h-10 bg-gradient-to-b from-red-500 to-orange-500 rounded-full shadow-[0_0_14px_#ef4444]" />

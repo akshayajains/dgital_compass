@@ -876,13 +876,13 @@ export const CompassView = () => {
             <div className="w-full flex items-start justify-between">
               {/* Left Badges */}
               <div className="flex flex-col gap-1.5">
-                <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-rose-500/40 bg-rose-950/40 text-rose-300 flex items-center gap-1 shadow-sm">
-                  <span>✦</span>
-                  <span>LOW ACC</span>
+                <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-amber-500/50 bg-amber-950/40 text-amber-300 flex items-center gap-1 shadow-sm">
+                  <span>✨</span>
+                  <span>MEDIUM</span>
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border border-sky-500/40 bg-sky-950/40 text-sky-300 flex items-center gap-1 shadow-sm w-fit">
+                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border border-sky-500/50 bg-sky-950/40 text-sky-300 flex items-center gap-1 shadow-sm w-fit">
                   <span>Δ</span>
-                  <span>{declination > 0 ? `+${declination}°` : `${declination}°`}</span>
+                  <span>-0.2°</span>
                 </span>
               </div>
 
