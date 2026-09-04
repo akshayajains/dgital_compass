@@ -1,5 +1,5 @@
 {
-  "name": "hindi-compass",
+  "name": "digital-compass",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -19,6 +19,7 @@
     "@capacitor/haptics": "^8.0.2",
     "@capacitor/share": "^8.0.0",
     "clsx": "^2.1.1",
+    "framer-motion": "^13.2.0",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
     "puppeteer-core": "^25.9.0",

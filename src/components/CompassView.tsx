@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { 
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import {
   Compass, 
   CircleDot,
   Settings,
   Zap,
+  Flashlight as FlashlightIcon,
   Sparkles,
   Camera,
-  Layers,
   Target,
   Copy,
   Lock,
@@ -14,18 +14,22 @@ import {
   Bookmark,
   Globe,
   Mountain,
-  ArrowRight,
+  ChevronRight,
+  MapPin,
+  Navigation,
   Sun,
   Sunset,
   Sunrise,
   Droplets,
   Wind,
   Gauge,
+  Crosshair,
   X,
   Languages,
   Grid,
   Palette,
-  SlidersHorizontal
+  Pin,
+  Check,
 } from 'lucide-react';
 import { useSunTimes } from '@/hooks/useSunTimes';
 import SunCalc from 'suncalc';
@@ -35,19 +39,22 @@ import { toast } from 'sonner';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { CalibrationGuideModal } from '@/components/compass/CalibrationGuideModal';
-import { SensorsInspectorModal } from '@/components/compass/SensorsInspectorModal';
-import { StyleSelectorModal } from '@/components/compass/StyleSelectorModal';
 import { CompassDialRenderer } from '@/components/compass/CompassDialRenderer';
-import { COMPASS_STYLES } from '@/components/compass/CompassStyles';
+import { COMPASS_STYLES, getDefaultVariantId } from '@/components/compass/CompassStyles';
 import { CompassStyleId, WeatherData } from '@/types/compass';
 import { getVastuDetails, getWeatherDescription, translations } from '@/lib/translations';
 import { AdvancedLevelView } from '@/components/level/AdvancedLevelView';
 import { VastuOthersView } from '@/components/vastu/VastuOthersView';
 import { CreatorBanner } from '@/components/CreatorBanner';
-import { TelescopeCameraCompass } from '@/components/compass/TelescopeCameraCompass';
-import { MapCompassView } from '@/components/compass/MapCompassView';
+import { SatelliteCompassView } from '@/components/compass/SatelliteCompassView';
+import { TelescopeCameraCompass } from '@/components/compass/TelescopeCameraCompass1';
 import { get32Pada } from '@/lib/vastu32Devta';
+
+// Lazy-loaded heavy modals (only fetched when first opened)
+const CalibrationGuideModal = React.lazy(() => import('@/components/compass/CalibrationGuideModal').then(m => ({ default: m.CalibrationGuideModal })));
+const SensorsInspectorModal = React.lazy(() => import('@/components/compass/SensorsInspectorModal').then(m => ({ default: m.SensorsInspectorModal })));
+const StyleSelectorModal = React.lazy(() => import('@/components/compass/StyleSelectorModal').then(m => ({ default: m.StyleSelectorModal })));
+const WeatherModal = React.lazy(() => import('@/components/compass/WeatherModal').then(m => ({ default: m.WeatherModal })));
 
 const STYLE_STORAGE_KEY = 'com.hcompass.app_style';
 
@@ -67,10 +74,11 @@ export const CompassView = () => {
   const [mainTab, setMainTab] = useState<'compass' | 'level' | 'vastu'>('compass');
   const [tareOffset, setTareOffset] = useState<{ pitch: number; roll: number } | null>(null);
   const [isHeadingLocked, setIsHeadingLocked] = useState<boolean>(false);
+  const [targetHeading, setTargetHeading] = useState<number | null>(null);
 
   // Satellite Earth Mode States
-  const [satelliteSubMode, setSatelliteSubMode] = useState<'telescope' | 'satellite' | 'map'>('satellite');
-  const [satelliteHeadingMode, setSatelliteHeadingMode] = useState<'magnetic' | 'true' | 'axis'>('true');
+  // New SatelliteCompassView mode state
+  const [satelliteMode, setSatelliteMode] = useState<'standard' | 'telescope' | 'satellite' | 'map'>('satellite');
 
   // Weather state
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -81,42 +89,42 @@ export const CompassView = () => {
       const saved = localStorage.getItem(STYLE_STORAGE_KEY) as CompassStyleId;
       if (saved && COMPASS_STYLES.some(s => s.id === saved)) return saved;
     } catch {}
-    return 'royal_gold';
+    return 'ios_compass';
   });
 
-  const PALETTE_COLORS = [
-    { name: 'Crimson Red', value: '#EF4444' },
-    { name: 'Sky Blue', value: '#3B82F6' },
-    { name: 'Emerald Green', value: '#10B981' },
-    { name: 'Amber Gold', value: '#F59E0B' },
-    { name: 'Royal Purple', value: '#8B5CF6' },
-    { name: 'Vibrant Orange', value: '#F97316' },
-    { name: 'Teal Cyan', value: '#06B6D4' },
-    { name: 'Slate Dark', value: '#334155' },
-    { name: 'Pure White', value: '#F8FAFC' },
-    { name: 'Steel Grey', value: '#64748B' }
-  ];
-
-  const [selectedAccentColor, setSelectedAccentColor] = useState<string>(() => {
+  // Variant state for grouped themes (ios_compass → ios_white, color_palette → cp_rose)
+  const VARIANT_STORAGE_KEY = 'com.hcompass.app_variant';
+  const [selectedVariant, setSelectedVariant] = useState<string | null>(() => {
     try {
-      return localStorage.getItem('com.hcompass.accent_color') || '#EF4444';
-    } catch {
-      return '#EF4444';
-    }
-  });
-
-  const handleSelectAccentColor = (color: string) => {
-    setSelectedAccentColor(color);
-    try {
-      localStorage.setItem('com.hcompass.accent_color', color);
+      const saved = localStorage.getItem(VARIANT_STORAGE_KEY);
+      if (saved) return saved;
     } catch {}
-    triggerHapticFeedback(ImpactStyle.Light);
-  };
+    return getDefaultVariantId(selectedStyle) || null;
+  });
 
   const handleSelectStyle = (id: CompassStyleId) => {
     setSelectedStyle(id);
     try {
       localStorage.setItem(STYLE_STORAGE_KEY, id);
+    } catch {}
+    // Auto-select default variant for grouped themes
+    const defaultVar = getDefaultVariantId(id);
+    if (defaultVar) {
+      setSelectedVariant(defaultVar);
+      try { localStorage.setItem(VARIANT_STORAGE_KEY, defaultVar); } catch {}
+    } else {
+      setSelectedVariant(null);
+      try { localStorage.removeItem(VARIANT_STORAGE_KEY); } catch {}
+    }
+    triggerHapticFeedback(ImpactStyle.Light);
+  };
+
+  const handleSelectVariant = (styleId: CompassStyleId, variantId: string) => {
+    setSelectedStyle(styleId);
+    setSelectedVariant(variantId);
+    try {
+      localStorage.setItem(STYLE_STORAGE_KEY, styleId);
+      localStorage.setItem(VARIANT_STORAGE_KEY, variantId);
     } catch {}
     triggerHapticFeedback(ImpactStyle.Light);
   };
@@ -134,6 +142,11 @@ export const CompassView = () => {
     try { return localStorage.getItem('com.hcompass.app_haptic') !== 'false'; } catch { return true; }
   });
 
+  // Always-visible (pin compass) preference
+  const [alwaysVisible, setAlwaysVisible] = useState<boolean>(() => {
+    try { return localStorage.getItem('com.hcompass.always_visible') === 'true'; } catch { return false; }
+  });
+
   // Vastu Grid Overlay State
   const [vastuGridEnabled, setVastuGridEnabled] = useState<boolean>(() => {
     try { return localStorage.getItem('com.hcompass.app_vastu') !== 'false'; } catch { return true; }
@@ -145,6 +158,12 @@ export const CompassView = () => {
 
   // Qibla (Kaaba) Direction Mode State
   const [isQiblaMode, setIsQiblaMode] = useState<boolean>(false);
+
+  // Inline Vastu Suggestions Panel State
+  const [showVastuPanel, setShowVastuPanel] = useState<boolean>(false);
+
+  // Weather detail modal
+  const [showWeatherModal, setShowWeatherModal] = useState<boolean>(false);
 
   // Geodesic Qibla Angle Calculation to Makkah (21.4225° N, 39.8262° E)
   const qiblaBearing = useMemo(() => {
@@ -178,24 +197,28 @@ export const CompassView = () => {
   // Fetch real-time Weather
   useEffect(() => {
     if (!location) return;
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m`);
-        const data = await res.json();
-        if (data && data.current) {
-          setWeather({
-            temp: Math.round(data.current.temperature_2m),
-            humidity: data.current.relative_humidity_2m,
-            pressure: Math.round(data.current.surface_pressure),
-            windSpeed: Math.round(data.current.wind_speed_10m),
-            code: data.current.weather_code
-          });
+    // Debounce weather fetch so rapid location changes don't spam the API
+    const timer = window.setTimeout(() => {
+      const fetchWeather = async () => {
+        try {
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m`);
+          const data = await res.json();
+          if (data && data.current) {
+            setWeather({
+              temp: Math.round(data.current.temperature_2m),
+              humidity: data.current.relative_humidity_2m,
+              pressure: Math.round(data.current.surface_pressure),
+              windSpeed: Math.round(data.current.wind_speed_10m),
+              code: data.current.weather_code
+            });
+          }
+        } catch (e) {
+          console.warn("Weather fetch fallback", e);
         }
-      } catch (e) {
-        console.warn("Weather fetch fallback", e);
-      }
-    };
-    fetchWeather();
+      };
+      fetchWeather();
+    }, 400);
+    return () => clearTimeout(timer);
   }, [location?.latitude, location?.longitude]);
 
   const getWeatherIcon = (code?: number) => {
@@ -265,6 +288,8 @@ export const CompassView = () => {
 
   const dialRef = useRef<HTMLDivElement>(null);
   const isDraggingDialRef = useRef<boolean>(false);
+  const longPressRef = useRef<{ x: number; y: number; fired: boolean } | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
   const smoothedVectorRef = useRef<{ x: number; y: number } | null>(null);
   const smoothedPitchRef = useRef<number>(3);
   const smoothedRollRef = useRef<number>(0);
@@ -416,7 +441,7 @@ export const CompassView = () => {
     };
   }, [isHeadingLocked]);
 
-  const updateHeadingFromPointer = (clientX: number, clientY: number) => {
+  const updateHeadingFromPointer = useCallback((clientX: number, clientY: number) => {
     if (isHeadingLocked || !dialRef.current) return;
     const rect = dialRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -426,30 +451,99 @@ export const CompassView = () => {
     let angle = (Math.atan2(dy, dx) * 180 / Math.PI) + 90;
     if (angle < 0) angle += 360;
     setHeading(Math.round(angle));
-  };
+  }, [isHeadingLocked]);
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
     if (isHeadingLocked) return;
     isDraggingDialRef.current = true;
     try { (e.target as HTMLElement).setPointerCapture(e.pointerId); } catch {}
     updateHeadingFromPointer(e.clientX, e.clientY);
-  };
+    // Long-press to lock heading
+    longPressRef.current = { x: e.clientX, y: e.clientY, fired: false };
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressTimerRef.current = window.setTimeout(() => {
+      if (longPressRef.current && !longPressRef.current.fired) {
+        longPressRef.current.fired = true;
+        setIsHeadingLocked(true);
+        triggerHapticFeedback(ImpactStyle.Medium);
+        toast.success(language === 'hi' ? 'दिशा लॉक हो गई' : 'Heading Locked');
+      }
+    }, 600);
+  }, [isHeadingLocked, updateHeadingFromPointer, language]);
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (!isDraggingDialRef.current || isHeadingLocked) return;
+    // Cancel long-press if moved significantly
+    if (longPressRef.current && !longPressRef.current.fired) {
+      const dx = e.clientX - longPressRef.current.x;
+      const dy = e.clientY - longPressRef.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 12) {
+        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+        longPressRef.current.fired = true;
+      }
+    }
     updateHeadingFromPointer(e.clientX, e.clientY);
-  };
+  }, [isHeadingLocked, updateHeadingFromPointer]);
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
     isDraggingDialRef.current = false;
+    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
+    longPressRef.current = null;
     try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
-  };
+  }, []);
 
   const displayHeading = useMemo(() => {
+    if (targetHeading !== null) return targetHeading;
     if (heading === null) return 76;
     if (!useTrueNorth) return heading;
     return ((heading + declination) % 360 + 360) % 360;
-  }, [heading, useTrueNorth, declination]);
+  }, [heading, useTrueNorth, declination, targetHeading]);
+
+  // ── Smooth dial rotation: ease the rendered heading toward the live heading ──
+  const [smoothHeading, setSmoothHeading] = useState<number>(displayHeading);
+  const smoothHeadingRef = useRef<number>(displayHeading);
+  const targetHeadingRef = useRef<number>(displayHeading);
+  const rafRef = useRef<number | null>(null);
+  const lastCardinalRef = useRef<number>(-1);
+
+  useEffect(() => {
+    targetHeadingRef.current = displayHeading;
+    if (rafRef.current !== null) return; // animation already running
+    const step = () => {
+      const current = smoothHeadingRef.current;
+      const target = targetHeadingRef.current;
+      // Shortest angular path
+      let diff = (target - current) % 360;
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+      const next = current + diff * 0.18; // ease factor
+      smoothHeadingRef.current = next;
+      setSmoothHeading(next);
+
+      // Haptic tick on cardinal crossing (every 45°)
+      const norm = ((next % 360) + 360) % 360;
+      const cardinal = Math.round(norm / 45);
+      if (cardinal !== lastCardinalRef.current && Math.abs(diff) > 0.5) {
+        lastCardinalRef.current = cardinal;
+        triggerHapticFeedback(ImpactStyle.Light);
+      }
+
+      if (Math.abs(diff) > 0.05) {
+        rafRef.current = requestAnimationFrame(step);
+      } else {
+        smoothHeadingRef.current = target;
+        setSmoothHeading(target);
+        rafRef.current = null;
+      }
+    };
+    rafRef.current = requestAnimationFrame(step);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    };
+  }, [displayHeading]);
+
+  const renderedHeading = targetHeading !== null ? targetHeading : smoothHeading;
 
   const isFacingQibla = useMemo(() => {
     if (displayHeading === null) return false;
@@ -496,11 +590,13 @@ export const CompassView = () => {
     <div className={cn(
       "w-full min-h-screen flex flex-col items-center pt-3 pb-8 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
       theme === 'light' 
-        ? "bg-gradient-to-b from-amber-50/70 via-stone-100 to-stone-200 text-stone-900" 
-        : "bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#180A0C] via-[#0D0406] to-[#040102] text-white"
+        ? "bg-[radial-gradient(circle_at_50%_-10%,#fff7df_0%,#f6ead2_35%,#e8edf0_100%)] text-stone-900" 
+        : "bg-[radial-gradient(circle_at_50%_-10%,#3a1420_0%,#180a10_36%,#07090e_100%)] text-white"
     )}>
-      {/* Top Ambient Glow */}
-      <div className="absolute top-12 w-80 h-80 rounded-full bg-red-600/10 blur-3xl pointer-events-none" />
+      {/* Layered ambient color keeps the home surface premium without hurting contrast. */}
+      <div className="absolute -top-16 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-amber-300/30 dark:bg-red-600/14 blur-3xl pointer-events-none" />
+      <div className="absolute top-[32rem] -left-24 h-64 w-64 rounded-full bg-cyan-300/20 dark:bg-cyan-500/10 blur-3xl pointer-events-none" />
+      <div className="absolute top-[48rem] -right-24 h-64 w-64 rounded-full bg-rose-300/20 dark:bg-amber-500/10 blur-3xl pointer-events-none" />
 
       {/* Top Header */}
       <header className="w-full max-w-md flex items-center justify-between py-1 px-1 mb-2 relative z-50">
@@ -514,10 +610,10 @@ export const CompassView = () => {
           </div>
           <div className="flex flex-col text-left justify-center">
             <h1 className="text-base sm:text-lg font-black tracking-tight leading-snug pt-0.5 pb-0">
-              <span className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_1px_2px_rgba(217,119,6,0.3)]">
                 DIGITAL{' '}
               </span>
-              <span className="bg-gradient-to-r from-rose-500 via-red-500 to-red-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-rose-400 via-red-500 to-rose-600 bg-clip-text text-transparent drop-shadow-[0_1px_2px_rgba(220,38,38,0.3)]">
                 COMPASS
               </span>
             </h1>
@@ -530,27 +626,8 @@ export const CompassView = () => {
           </div>
         </div>
 
-        {/* Quick Header Controls: Language Toggle, Theme Toggle & Settings Cog */}
+        {/* Header Controls: Settings Cog */}
         <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => {
-              toggleLanguage();
-              triggerHapticFeedback();
-            }}
-            className={cn(
-              "px-2.5 py-1.5 rounded-xl border text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-1 active:scale-95 shadow-sm",
-              theme === 'light'
-                ? "bg-white border-stone-200 text-stone-800 hover:bg-stone-50"
-                : "bg-stone-900/90 border-white/10 text-amber-400 hover:text-white"
-            )}
-            title={language === 'hi' ? 'Switch to English' : 'हिंदी में बदलें'}
-          >
-            <Languages className="w-3.5 h-3.5 text-amber-500" />
-            <span>{language === 'hi' ? 'EN' : 'हिं'}</span>
-          </button>
-
-          <ThemeToggle />
-
           <button
             onClick={() => {
               setShowSettings(true);
@@ -572,7 +649,7 @@ export const CompassView = () => {
             triggerHapticFeedback();
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1",
+            "flex-1 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-0.5",
             mainTab === 'compass'
               ? "bg-gradient-to-r from-[#1C2433] via-[#2A3447] to-[#1C2433] text-white border border-white/20 shadow-md scale-100"
               : "text-stone-400 hover:text-white"
@@ -588,7 +665,7 @@ export const CompassView = () => {
             triggerHapticFeedback();
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1",
+            "flex-1 py-1.5 rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-0.5",
             mainTab === 'level'
               ? "bg-gradient-to-r from-[#1C2433] via-[#2A3447] to-[#1C2433] text-white border border-white/20 shadow-md scale-100"
               : "text-stone-400 hover:text-white"
@@ -604,7 +681,7 @@ export const CompassView = () => {
             triggerHapticFeedback();
           }}
           className={cn(
-            "flex-1 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1 whitespace-nowrap",
+            "flex-1 py-1.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-0.5 whitespace-nowrap",
             mainTab === 'vastu'
               ? "bg-gradient-to-r from-[#1C2433] via-[#2A3447] to-[#1C2433] text-white border border-white/20 shadow-md scale-100"
               : "text-stone-400 hover:text-white"
@@ -618,24 +695,13 @@ export const CompassView = () => {
       {/* Tab 1: COMPASS VIEW */}
       {mainTab === 'compass' && (
         <>
-          {/* Quick Settings Pill Button */}
-          <div className="flex justify-center mb-1">
-            <button
-              onClick={() => {
-                setShowSettings(true);
-                triggerHapticFeedback();
-              }}
-              className="px-4 py-1 rounded-full bg-stone-900/90 hover:bg-stone-800 border border-white/15 text-stone-200 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md active:scale-95 transition-all"
-            >
-              <SlidersHorizontal className="w-3 h-3 text-amber-400" />
-              <span>{language === 'hi' ? 'सेटिंग्स ⌵' : 'SETTINGS ⌵'}</span>
-            </button>
-          </div>
-
           {/* Theme Header Strip */}
-          <div className="w-full max-w-sm flex items-center justify-between text-[9.5px] font-black uppercase tracking-widest text-stone-400 px-1 mb-1">
+          <div className={cn(
+            "w-full max-w-sm flex items-center justify-between text-[9.5px] font-black uppercase tracking-widest px-1 mb-1",
+            theme === 'light' ? 'text-stone-700' : 'text-stone-300'
+          )}>
             <span>{language === 'hi' ? 'कंपास थीम शैली' : 'COMPASS THEME STYLE'}</span>
-            <span className="text-stone-500">{language === 'hi' ? 'अधिक के लिए स्क्रॉल करें' : 'SCROLL FOR MORE'}</span>
+            <span className={theme === 'light' ? 'text-stone-600' : 'text-stone-400'}>{language === 'hi' ? 'अधिक के लिए स्क्रॉल करें' : 'SCROLL FOR MORE'}</span>
           </div>
 
           {/* Horizontal Theme Pill Chips */}
@@ -650,246 +716,125 @@ export const CompassView = () => {
                 className={cn(
                   "px-3.5 py-1.5 rounded-xl text-[10.5px] uppercase font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5",
                   selectedStyle === st.id
-                    ? st.id === 'daylight'
+                    ? st.id === 'ios_compass'
                       ? "bg-white text-black font-black border-white shadow-[0_0_18px_rgba(255,255,255,0.85)] scale-[1.03]"
                       : st.id === 'satellite_earth'
                       ? "bg-gradient-to-r from-rose-500 to-red-600 text-white border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.8)] scale-[1.02]"
                       : st.id === 'vedic_mandala'
-                      ? "bg-[#00F0FF]/30 text-teal-200 border-teal-400 shadow-[0_0_15px_rgba(0,240,255,0.6)] scale-[1.02]"
-                      : "bg-[#C9A67E]/30 text-amber-300 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.35)] scale-[1.02]"
-                    : "bg-stone-900/90 text-stone-300 border-white/10 hover:text-white hover:border-white/25"
+                      ? theme === 'light'
+                        ? "bg-[#00F0FF]/40 text-teal-900 border-teal-500 shadow-[0_0_15px_rgba(0,240,255,0.5)] scale-[1.02]"
+                        : "bg-[#00F0FF]/30 text-teal-200 border-teal-400 shadow-[0_0_15px_rgba(0,240,255,0.6)] scale-[1.02]"
+                      : st.id === 'royal_gold'
+                      ? "bg-gradient-to-r from-[#8C5F1A] via-[#D4AF37] to-[#E8C547] text-[#1A1008] border-[#E8C547] shadow-[0_0_18px_rgba(212,175,55,0.7)] scale-[1.03] font-black"
+                      : st.id === 'color_palette'
+                      ? "bg-gradient-to-r from-[#9F1239] via-[#FB7185] to-[#FDA4AF] text-white border-[#FB7185] shadow-[0_0_15px_rgba(251,113,133,0.6)] scale-[1.02]"
+                      : "bg-gradient-to-r from-amber-300 to-yellow-400 text-stone-950 border-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.45)] scale-[1.02]"
+                    : theme === 'light'
+                      ? "bg-white/80 text-stone-700 border-stone-300 hover:text-stone-950 hover:border-stone-400"
+                      : "bg-stone-900/90 text-stone-300 border-white/10 hover:text-white hover:border-white/25"
                 )}
               >
                 <span>
-                  {st.id === 'daylight' ? 'DAYLIGHT' :
-                   st.id === 'pitch_black' ? 'PITCH BLACK' :
-                   st.id === 'satellite_earth' ? 'SATELLITE EARTH' :
-                   st.id === 'vedic_mandala' ? '32 DEVTA CHAKRA' :
-                   st.id === 'royal_gold' ? 'HINDI GOLD' :
-                   st.id === 'sandalwood' ? 'SANDALWOOD' :
-                   st.id === 'minimal_onyx' ? 'STEEL' :
-                   (language === 'hi' ? st.nameHi : st.nameEn).toUpperCase()}
+                  {(language === 'hi' ? st.nameHi : st.nameEn).toUpperCase()}
                 </span>
               </button>
             ))}
-
-            <button
-              onClick={() => {
-                setShowStyleModal(true);
-                triggerHapticFeedback();
-              }}
-              className="px-3 py-1.5 rounded-xl bg-stone-800/80 border border-white/10 text-stone-300 hover:text-white text-[10px] font-black uppercase tracking-wider shrink-0 flex items-center gap-1 active:scale-95 transition-all"
-            >
-              <Palette className="w-3 h-3 text-amber-400" />
-              <span>+ MORE</span>
-            </button>
           </div>
 
-          {/* 10 Circular Color Swatches Bar */}
-          <div className="w-full max-w-sm flex items-center justify-center my-1.5">
-            <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-3.5 py-1.5 rounded-full bg-[#12161F]/90 border border-white/10 backdrop-blur-md shadow-lg w-full max-w-[340px]">
-              {PALETTE_COLORS.map((col) => {
-                const isSelected = selectedAccentColor === col.value;
-                return (
-                  <button
-                    key={col.value}
-                    onClick={() => handleSelectAccentColor(col.value)}
-                    className={cn(
-                      "w-5 h-5 sm:w-6 sm:h-6 rounded-full transition-all flex items-center justify-center shadow-sm active:scale-90",
-                      isSelected ? "ring-2 ring-white scale-110 shadow-md" : "hover:scale-105 opacity-90"
-                    )}
-                    style={{ backgroundColor: col.value }}
-                    title={col.name}
-                  >
-                    {isSelected && (
-                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-white shadow-sm" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          {/* Variant Color Swatches — shown below grouped themes (iOS Compass / Color Palette) */}
+          {(() => {
+            const activeStyle = COMPASS_STYLES.find(s => s.id === selectedStyle);
+            if (!activeStyle?.variants || activeStyle.variants.length === 0) return null;
+            return (
+              <div className="w-full max-w-sm flex items-center justify-center mb-1.5">
+                <div className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-lg",
+                  theme === 'light'
+                    ? "bg-white/85 border-stone-300"
+                    : "bg-[#12161F]/90 border-white/10"
+                )}>
+                  <span className={cn(
+                    "text-[8px] font-black uppercase tracking-widest shrink-0",
+                    theme === 'light' ? "text-stone-500" : "text-stone-400"
+                  )}>
+                    {language === 'hi' ? 'रंग' : 'COLOR'}
+                  </span>
+                  {activeStyle.variants.map((v) => {
+                    const isActive = selectedVariant === v.id;
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => handleSelectVariant(activeStyle.id, v.id)}
+                        className={cn(
+                          "w-6 h-6 rounded-full border-2 transition-all duration-200 flex items-center justify-center shrink-0 active:scale-90",
+                          isActive
+                            ? "border-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)] scale-110"
+                            : theme === 'light'
+                              ? "border-stone-400 hover:border-stone-600 hover:scale-105"
+                              : "border-white/20 hover:border-white/50 hover:scale-105"
+                        )}
+                        style={{ backgroundColor: v.colorSwatch }}
+                        title={language === 'hi' ? v.nameHi : v.nameEn}
+                      >
+                        {isActive && (
+                          <Check className="w-3 h-3 text-stone-950 stroke-[3]" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
-          {/* Satellite Earth Suite Container */}
+          {/* Satellite Earth Suite Container (NEW SatelliteCompassView) */}
+          <div className={cn(alwaysVisible ? 'fixed bottom-6 left-1/2 transform -translate-x-1/2 z-60' : 'relative w-full') }>
           {selectedStyle === 'satellite_earth' ? (
-            <div className="w-full max-w-sm rounded-[32px] overflow-hidden border border-slate-700/60 relative p-3.5 flex flex-col items-center bg-gradient-to-b from-[#1C2A3A] via-[#101A26] to-[#080D14] shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_30px_rgba(0,240,255,0.15)] my-2">
-              {/* Satellite Terrain Backdrop Overlay */}
-              <div 
-                className="absolute inset-0 opacity-40 bg-cover bg-center mix-blend-overlay pointer-events-none"
-                style={{
-                  backgroundImage: `url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80')`
+            satelliteMode === 'telescope' ? (
+              <div className="w-full flex flex-col items-center">
+                <TelescopeCameraCompass
+                  heading={displayHeading}
+                  pitch={pitch}
+                  roll={roll}
+                  location={location}
+                  language={language}
+                  onClose={() => {
+                    setSatelliteMode('satellite');
+                    triggerHapticFeedback();
+                  }}
+                />
+              </div>
+            ) : (
+              <SatelliteCompassView
+                heading={displayHeading}
+                pitch={pitch}
+                roll={roll}
+                location={location}
+                language={language}
+                theme={theme}
+                magneticField={66}
+                mode={satelliteMode}
+                onModeChange={(m) => setSatelliteMode(m)}
+                onOpenLevel={() => {
+                  setMainTab('level');
+                  triggerHapticFeedback();
+                }}
+                onOpenAR={() => {
+                  setSatelliteMode('telescope');
+                  triggerHapticFeedback();
+                }}
+                onOpenMap={() => {
+                  setSatelliteMode('map');
+                  triggerHapticFeedback();
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#080D14] via-transparent to-[#101A26]/80 pointer-events-none" />
-
-              {/* 1. Sub-mode pills: TELESCOPE | SATELLITE | MAP */}
-              <div className="w-full max-w-[270px] flex items-center justify-between p-1 rounded-2xl bg-black/60 backdrop-blur-md border border-white/15 relative z-10 mb-2 shadow-inner">
-                <button
-                  onClick={() => {
-                    setSatelliteSubMode('telescope');
-                    triggerHapticFeedback();
-                  }}
-                  className={cn(
-                    "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                    satelliteSubMode === 'telescope' ? "bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.8)]" : "text-stone-400 hover:text-white"
-                  )}
-                >
-                  TELESCOPE
-                </button>
-                <button
-                  onClick={() => {
-                    setSatelliteSubMode('satellite');
-                    triggerHapticFeedback();
-                  }}
-                  className={cn(
-                    "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                    satelliteSubMode === 'satellite' ? "bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.8)]" : "text-stone-400 hover:text-white"
-                  )}
-                >
-                  SATELLITE
-                </button>
-                <button
-                  onClick={() => {
-                    setSatelliteSubMode('map');
-                    triggerHapticFeedback();
-                  }}
-                  className={cn(
-                    "flex-1 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all",
-                    satelliteSubMode === 'map' ? "bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-[0_0_12px_rgba(239,68,68,0.8)]" : "text-stone-400 hover:text-white"
-                  )}
-                >
-                  MAP
-                </button>
-              </div>
-
-              {/* 2. Location & Compass Icon Row */}
-              <div className="w-full flex items-center justify-between relative z-10 px-1 mb-1">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-xs font-bold shadow-sm">
-                  <span className="text-red-500">📍</span>
-                  <span>{location ? `Pune, Maharashtra` : 'Pune, Maharashtra'}</span>
-                </div>
-
-                <button
-                  onClick={() => triggerHapticFeedback()}
-                  className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white flex items-center justify-center shadow-md active:scale-95 transition-all"
-                  title="Compass Navigation"
-                >
-                  <Compass className="w-4 h-4 text-cyan-400" />
-                </button>
-              </div>
-
-              {/* 3. Sub-Mode Views: Real Camera TELESCOPE | SATELLITE Dial | Interactive MAP Compass */}
-              <div className="w-full relative z-10 my-1">
-                {satelliteSubMode === 'telescope' ? (
-                  <TelescopeCameraCompass
-                    heading={displayHeading}
-                    pitch={pitch}
-                    roll={roll}
-                    location={location}
-                  />
-                ) : satelliteSubMode === 'map' ? (
-                  <MapCompassView
-                    heading={displayHeading}
-                    location={location}
-                  />
-                ) : (
-                  <CompassDialRenderer
-                    styleId="satellite_earth"
-                    language={language}
-                    displayHeading={displayHeading}
-                    pitch={pitch}
-                    roll={roll}
-                    sunPos={sunPos}
-                    isQiblaMode={isQiblaMode}
-                    qiblaBearing={qiblaBearing}
-                    qiblaDistanceKm={qiblaDistanceKm}
-                    isFacingQibla={isFacingQibla}
-                    vastuGridEnabled={vastuGridEnabled}
-                    isLevel={isLevel}
-                    dialRef={dialRef}
-                    onPointerDown={handlePointerDown}
-                    onPointerMove={handlePointerMove}
-                    onPointerUp={handlePointerUp}
-                  />
-                )}
-              </div>
-
-              {/* 4. Bottom Row: Mini Bubble Inclinometer Gauge & Bottom Mode Pills */}
-              <div className="w-full flex items-end justify-between relative z-10 pt-1">
-                {/* Mini Bubble Inclinometer Gauge */}
-                <div className="w-16 h-16 rounded-full border-2 border-white/40 bg-black/80 backdrop-blur-md relative overflow-hidden flex items-center justify-center shadow-lg">
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-full h-[0.5px] bg-white/30" />
-                    <div className="h-full w-[0.5px] bg-white/30" />
-                    <div className="w-7 h-7 rounded-full border border-white/30" />
-                  </div>
-                  {/* Gauge Degree Labels */}
-                  <span className="absolute top-1 text-[7.5px] font-mono font-bold text-white leading-none">0°</span>
-                  <span className="absolute right-1 text-[7.5px] font-mono font-bold text-white leading-none">90°</span>
-                  <span className="absolute bottom-1 text-[7.5px] font-mono font-bold text-white leading-none">180°</span>
-                  <span className="absolute left-1 text-[7.5px] font-mono font-bold text-white leading-none">270°</span>
-                  {/* Glowing Red Spirit Bubble */}
-                  <div 
-                    className="w-3.5 h-3.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444] border border-red-300 transition-transform duration-75 ease-out"
-                    style={{
-                      transform: `translate(${Math.max(-12, Math.min(12, -roll * 0.6))}px, ${Math.max(-12, Math.min(12, -pitch * 0.6))}px)`
-                    }}
-                  />
-                </div>
-
-                {/* Bottom Heading Selection Pills */}
-                <div className="flex items-center gap-1.5 pb-1">
-                  <button
-                    onClick={() => {
-                      setSatelliteHeadingMode('magnetic');
-                      triggerHapticFeedback();
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all",
-                      satelliteHeadingMode === 'magnetic'
-                        ? "bg-red-950/80 border-red-500 text-red-300 shadow-[0_0_10px_rgba(239,68,68,0.4)]"
-                        : "bg-black/50 border-white/10 text-stone-400"
-                    )}
-                  >
-                    MAGNETIC FIELD
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSatelliteHeadingMode('true');
-                      triggerHapticFeedback();
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all",
-                      satelliteHeadingMode === 'true'
-                        ? "bg-emerald-950/80 border-emerald-500 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
-                        : "bg-black/50 border-white/10 text-stone-400"
-                    )}
-                  >
-                    TRUE HEADING
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSatelliteHeadingMode('axis');
-                      triggerHapticFeedback();
-                    }}
-                    className={cn(
-                      "px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all",
-                      satelliteHeadingMode === 'axis'
-                        ? "bg-cyan-950/80 border-cyan-500 text-cyan-300 shadow-[0_0_10px_rgba(0,240,255,0.4)]"
-                        : "bg-black/50 border-white/10 text-stone-400"
-                    )}
-                  >
-                    AXIS
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
+            )
+            ) : (
             /* Regular Dial for Other Styles */
             <CompassDialRenderer
               styleId={selectedStyle}
               language={language}
-              displayHeading={displayHeading}
+              displayHeading={renderedHeading}
               pitch={pitch}
               roll={roll}
               sunPos={sunPos}
@@ -900,144 +845,178 @@ export const CompassView = () => {
               vastuGridEnabled={vastuGridEnabled}
               isLevel={isLevel}
               dialRef={dialRef}
-              customAccentColor={selectedAccentColor}
+              customAccentColor="#EF4444"
+              variantId={selectedVariant}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
             />
           )}
-
-          {/* Sub-Dial Intermediate Status Strip: PITCH: 3° | ROLL: 0° | [LEVEL] | TILT: 3° */}
-          <div className="w-full max-w-sm flex items-center justify-between px-4 py-2 rounded-2xl bg-stone-900/90 border border-white/10 my-1 text-xs font-bold shadow-md">
-            <div className="flex items-center gap-1">
-              <span className="text-stone-400 text-[10.5px] uppercase font-black tracking-wider">PITCH:</span>
-              <span className="text-amber-400 font-mono font-black text-sm">{Math.round(pitch)}°</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-stone-400 text-[10.5px] uppercase font-black tracking-wider">ROLL:</span>
-              <span className="text-amber-400 font-mono font-black text-sm">{Math.round(roll)}°</span>
-            </div>
-            <span className={cn(
-              "px-2.5 py-0.5 rounded-full text-[9.5px] font-black uppercase border tracking-wider",
-              isLevel 
-                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.4)]" 
-                : "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-            )}>
-              LEVEL
-            </span>
-            <div className="flex items-center gap-1">
-              <span className="text-stone-400 text-[10.5px] uppercase font-black tracking-wider">TILT:</span>
-              <span className="text-amber-400 font-mono font-black text-sm">{Math.round(totalTilt)}°</span>
-            </div>
           </div>
+
+          {/* Inline Calibration Nudge — shown when no sensor heading is available */}
+          {heading === null && (
+            <button
+              onClick={() => {
+                triggerHapticFeedback();
+                setShowCalibrationModal(true);
+              }}
+              className={cn(
+                "w-full max-w-sm flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border text-[10px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] my-1",
+                theme === 'light'
+                  ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
+                  : "bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                {language === 'hi' ? 'कैलिब्रेट करने के लिए टैप करें' : 'TAP TO CALIBRATE'}
+              </span>
+              <span className="text-[9px] opacity-70">{language === 'hi' ? 'सेंसर नहीं मिला' : 'NO SENSOR FIX'}</span>
+            </button>
+          )}
 
           {/* Main Crimson Obsidian Dashboard Card */}
           <div className="w-full max-w-sm rounded-[28px] p-4 border border-red-900/60 bg-gradient-to-b from-[#18090C] via-[#120608] to-[#0A0304] shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_30px_rgba(220,38,38,0.18)] flex flex-col gap-3 my-2 text-white">
             
             {/* Top Quick Actions Row */}
-            <div className="w-full flex items-start justify-between">
-              {/* Left Badges */}
-              <div className="flex flex-col gap-1.5">
-                <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border border-amber-500/50 bg-amber-950/40 text-amber-300 flex items-center gap-1 shadow-sm">
-                  <span>✨</span>
-                  <span>MEDIUM</span>
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border border-sky-500/50 bg-sky-950/40 text-sky-300 flex items-center gap-1 shadow-sm w-fit">
-                  <span>Δ</span>
-                  <span>-0.2°</span>
-                </span>
+            <div className="w-full flex items-center justify-between">
+              {/* Primary Tools: Torch, Vastu, Copy, Qibla */}
+              <div className="flex items-center gap-1.5">
+                {/* Flashlight Torch */}
+                <button
+                  onClick={toggleFlashlight}
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    isFlashlightOn 
+                      ? "bg-emerald-500 text-white border-emerald-400 shadow-[0_0_14px_#10b981]" 
+                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title={t.torch}
+                >
+                  <FlashlightIcon className="w-4 h-4" />
+                </button>
+
+                {/* Vastu Inline Toggle */}
+                <button
+                  onClick={() => {
+                    setShowVastuPanel(!showVastuPanel);
+                    triggerHapticFeedback(ImpactStyle.Light);
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center active:scale-95 transition-all duration-200 border",
+                    showVastuPanel
+                      ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.6)]"
+                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title={language === 'hi' ? 'वास्तु मार्गदर्शन' : 'Vastu Guidance'}
+                >
+                  <Sparkles className="w-4 h-4" />
+                </button>
+
+                {/* Copy Coordinates */}
+                <button
+                  onClick={copyCoordinates}
+                  className="w-9 h-9 rounded-xl bg-stone-800/80 border border-white/12 text-stone-300 hover:text-white hover:border-white/25 flex items-center justify-center active:scale-95 transition-all duration-200"
+                  title={language === 'hi' ? 'कॉपी करें' : 'Copy Coordinates'}
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+
+                {/* Qibla Toggle */}
+                <button
+                  onClick={() => {
+                    setIsQiblaMode(!isQiblaMode);
+                    triggerHapticFeedback(ImpactStyle.Light);
+                    toast.info(isQiblaMode ? (language === 'hi' ? 'किबला मोड बंद' : 'Qibla Off') : (language === 'hi' ? `किबला ${qiblaBearing}° पर सक्रिय` : `Qibla at ${qiblaBearing}°`));
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center active:scale-95 transition-all duration-200 border",
+                    isQiblaMode
+                      ? "bg-emerald-500 text-white border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.6)]"
+                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title={language === 'hi' ? 'किबला दिशा' : 'Qibla Direction'}
+                >
+                  <Navigation className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Right Quick Circular Buttons Grid */}
-              <div className="flex flex-col items-end gap-2">
-                <div className="flex items-center gap-1.5">
-                  {/* Camera / Snapshot */}
-                  <button
-                    onClick={copyCoordinates}
-                    className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:text-white flex items-center justify-center active:scale-95 transition-all shadow-sm"
-                    title="Snapshot / Share"
-                  >
-                    <Camera className="w-4 h-4 text-amber-400" />
-                  </button>
+              {/* Secondary Tools: Lock, Styles */}
+              <div className="flex items-center gap-1.5">
+                {/* Lock/Unlock Heading */}
+                <button
+                  onClick={() => {
+                    setIsHeadingLocked(!isHeadingLocked);
+                    triggerHapticFeedback(ImpactStyle.Medium);
+                    toast.info(isHeadingLocked ? "Heading Unlocked" : "Heading Locked");
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    isHeadingLocked 
+                      ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]" 
+                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title="Lock Heading"
+                >
+                  {isHeadingLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                </button>
 
-                  {/* Layers / Styles */}
-                  <button
-                    onClick={() => {
-                      setShowStyleModal(true);
-                      triggerHapticFeedback();
-                    }}
-                    className="w-8 h-8 rounded-full bg-stone-800/80 border border-white/15 text-stone-300 hover:text-white flex items-center justify-center active:scale-95 transition-all shadow-sm"
-                    title={t.styleGallery}
-                  >
-                    <Layers className="w-4 h-4 text-stone-300" />
-                  </button>
+                {/* Set Target + Lock */}
+                <button
+                  onClick={() => {
+                    if (targetHeading !== null) {
+                      setTargetHeading(null);
+                      setIsHeadingLocked(false);
+                      toast.info(language === 'hi' ? 'लक्ष्य हटाया गया' : 'Target Cleared');
+                    } else {
+                      setTargetHeading(displayHeading);
+                      setIsHeadingLocked(true);
+                      toast.success(language === 'hi' ? `लक्ष्य ${Math.round(displayHeading)}° पर सेट` : `Target set at ${Math.round(displayHeading)}°`);
+                    }
+                    triggerHapticFeedback(ImpactStyle.Medium);
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    targetHeading !== null
+                      ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]"
+                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title={language === 'hi' ? 'लक्ष्य सेट करें' : 'Set Target'}
+                >
+                  <Target className="w-4 h-4" />
+                </button>
 
-                  {/* Flashlight Torch */}
-                  <button
-                    onClick={toggleFlashlight}
-                    className={cn(
-                      "w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm",
-                      isFlashlightOn 
-                        ? "bg-emerald-500 text-stone-950 border-emerald-400 shadow-[0_0_12px_#10b981]" 
-                        : "bg-emerald-950/60 text-emerald-400 border-emerald-500/40 hover:bg-emerald-900/60"
-                    )}
-                    title={t.torch}
-                  >
-                    <Zap className="w-4 h-4" />
-                  </button>
+                {/* Pin / Always Visible */}
+                <button
+                  onClick={() => {
+                    const next = !alwaysVisible;
+                    setAlwaysVisible(next);
+                    try { localStorage.setItem('com.hcompass.always_visible', next.toString()); } catch {}
+                    triggerHapticFeedback();
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    alwaysVisible
+                      ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]"
+                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title={language === 'hi' ? 'हमेशा दिखाएं' : 'Pin (Always Visible)'}
+                >
+                  <Pin className="w-4 h-4" />
+                </button>
 
-                  {/* Target Calibration */}
-                  <button
-                    onClick={() => {
-                      setShowCalibrationModal(true);
-                      triggerHapticFeedback();
-                    }}
-                    className="w-8 h-8 rounded-full bg-stone-800/80 border border-white/15 text-stone-300 hover:text-white flex items-center justify-center active:scale-95 transition-all shadow-sm"
-                    title={t.calibrationGuide}
-                  >
-                    <Target className="w-4 h-4 text-stone-300" />
-                  </button>
-
-                  {/* Copy / Clipboard */}
-                  <button
-                    onClick={copyCoordinates}
-                    className="w-8 h-8 rounded-full bg-stone-800/80 border border-white/15 text-stone-300 hover:text-white flex items-center justify-center active:scale-95 transition-all shadow-sm"
-                    title="Copy Coordinates"
-                  >
-                    <Copy className="w-4 h-4 text-stone-300" />
-                  </button>
-                </div>
-
-                {/* Sub-row: Lock Heading & Bookmark */}
-                <div className="flex items-center gap-1.5">
-                  <button
-                    onClick={() => {
-                      setIsHeadingLocked(!isHeadingLocked);
-                      triggerHapticFeedback(ImpactStyle.Medium);
-                      toast.info(isHeadingLocked ? "Heading Unlocked" : "Heading Locked");
-                    }}
-                    className={cn(
-                      "w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm",
-                      isHeadingLocked 
-                        ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_12px_#f59e0b]" 
-                        : "bg-stone-800/80 border-white/15 text-stone-400 hover:text-white"
-                    )}
-                    title="Lock/Unlock Heading"
-                  >
-                    {isHeadingLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setMainTab('vastu');
-                      triggerHapticFeedback();
-                    }}
-                    className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 hover:text-white flex items-center justify-center active:scale-95 transition-all shadow-sm"
-                    title="Vastu Guidance"
-                  >
-                    <Bookmark className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                {/* Vastu Report */}
+                <button
+                  onClick={() => {
+                    setMainTab('vastu');
+                    triggerHapticFeedback();
+                  }}
+                  className="w-9 h-9 rounded-xl bg-stone-800/80 border border-white/12 text-stone-300 hover:text-white hover:border-white/25 flex items-center justify-center active:scale-95 transition-all duration-200"
+                  title={language === 'hi' ? 'वास्तु रिपोर्ट' : 'Vastu Report'}
+                >
+                  <Bookmark className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
@@ -1061,89 +1040,135 @@ export const CompassView = () => {
                   {get32Pada(displayHeading).isAuspicious ? "AUSPICIOUS" : "INAUSPICIOUS"}
                 </span>
               </div>
-            ) : selectedStyle === 'sandalwood' ? (
-              <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#FAF3E8] via-[#F3E6D3] to-[#E9D4B8] border border-[#C9A67E] text-stone-900 flex items-center justify-between shadow-md">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl sm:text-3xl font-black font-serif text-[#3E2718]">
-                    {displayHeading !== null ? Math.round(displayHeading) : 80}°
-                  </span>
-                  <span className="text-sm sm:text-base font-black text-red-700 font-serif">
-                    {language === 'hi' ? `${vastuInfo.name.split(' ')[0]} (${vastuInfo.code})` : `${vastuInfo.name.split(' ')[0]} (${vastuInfo.code})`}
-                  </span>
-                </div>
-                <button 
-                  onClick={() => {
-                    setUseTrueNorth(!useTrueNorth);
-                    triggerHapticFeedback();
-                  }}
-                  className="px-2.5 py-1 rounded-full bg-[#3E2718]/10 hover:bg-[#3E2718]/15 border border-[#8C6239]/40 text-[9.5px] font-black uppercase text-[#5C3A1E] tracking-wider transition-colors shadow-sm"
-                >
-                  {useTrueNorth ? 'True North' : 'Magnetic'}
-                </button>
-              </div>
             ) : (
-              <div className="flex flex-col items-center justify-center my-0.5">
-                <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-white leading-none">
-                  {displayHeading !== null ? Math.round(displayHeading) : 76}°
-                </span>
-                <span className="text-lg sm:text-xl font-black tracking-widest text-red-500 uppercase mt-1">
-                  {language === 'hi' ? vastuInfo.name.split(' ')[0] : (vastuInfo.code === 'E' ? 'EAST' : vastuInfo.code === 'N' ? 'NORTH' : vastuInfo.code === 'S' ? 'SOUTH' : vastuInfo.code === 'W' ? 'WEST' : vastuInfo.name.split(' ')[0].toUpperCase())}
-                </span>
-              </div>
+              (() => {
+                // Theme-aware center readout box — each theme gets its own colors
+                // Direction name (localized)
+                const dirName = language === 'hi'
+                  ? vastuInfo.name.split(' ')[0]
+                  : (vastuInfo.code === 'E' ? 'EAST' : vastuInfo.code === 'N' ? 'NORTH' : vastuInfo.code === 'S' ? 'SOUTH' : vastuInfo.code === 'W' ? 'WEST' : vastuInfo.name.split(' ')[0].toUpperCase());
+
+                // Box background + text colors per theme
+                const box = (() => {
+                  switch (selectedStyle) {
+                    case 'sandalwood':
+                      return { bg: 'bg-gradient-to-r from-[#FAF3E8] via-[#F3E6D3] to-[#E9D4B8]', border: 'border-[#C9A67E]', heading: 'text-[#3E2718]', dir: 'text-red-700', btn: 'bg-[#3E2718]/10 hover:bg-[#3E2718]/15 border-[#8C6239]/40 text-[#5C3A1E]' };
+                    case 'royal_gold':
+                      return { bg: 'bg-gradient-to-r from-[#3b2a12] via-[#2a1c0c] to-[#1a1008]', border: 'border-[#D4AF37]/60', heading: 'text-[#F7E8A0]', dir: 'text-[#E8C547]', btn: 'bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border-[#D4AF37]/50 text-[#F7E8A0]' };
+                    case 'cyberpunk':
+                      return { bg: 'bg-gradient-to-r from-[#050b14] via-[#0a0f1e] to-[#100520]', border: 'border-cyan-400/50', heading: 'text-cyan-300', dir: 'text-fuchsia-400', btn: 'bg-cyan-400/10 hover:bg-cyan-400/20 border-cyan-400/40 text-cyan-300' };
+                    case 'minimal_onyx':
+                      return { bg: 'bg-gradient-to-r from-[#18181B] via-[#101013] to-[#09090B]', border: 'border-white/15', heading: 'text-white', dir: 'text-stone-300', btn: 'bg-white/5 hover:bg-white/10 border-white/20 text-stone-300' };
+                    case 'tactical_ops':
+                      return { bg: 'bg-gradient-to-r from-[#0F1710] via-[#0C120D] to-[#0A0E0B]', border: 'border-green-500/50', heading: 'text-green-400', dir: 'text-orange-400', btn: 'bg-green-500/10 hover:bg-green-500/20 border-green-500/40 text-green-300' };
+                    case 'cosmic_galaxy':
+                      return { bg: 'bg-gradient-to-r from-[#110B29] via-[#0D0820] to-[#070314]', border: 'border-indigo-400/50', heading: 'text-indigo-200', dir: 'text-purple-300', btn: 'bg-indigo-400/10 hover:bg-indigo-400/20 border-indigo-400/40 text-indigo-200' };
+                    case 'satellite_earth':
+                      return { bg: 'bg-gradient-to-r from-[#1E293B] via-[#16202E] to-[#0F172A]', border: 'border-sky-400/50', heading: 'text-sky-200', dir: 'text-red-400', btn: 'bg-sky-400/10 hover:bg-sky-400/20 border-sky-400/40 text-sky-200' };
+                    case 'ios_compass':
+                      return { bg: 'bg-gradient-to-r from-[#161C24] via-[#1F2937] to-[#0B0F14]', border: 'border-slate-400/40', heading: 'text-slate-100', dir: 'text-red-400', btn: 'bg-slate-400/10 hover:bg-slate-400/20 border-slate-400/40 text-slate-200' };
+                    case 'color_palette':
+                      return { bg: 'bg-gradient-to-r from-[#1a1a1f] via-[#141419] to-[#0d0d10]', border: 'border-white/15', heading: 'text-white', dir: 'text-red-400', btn: 'bg-white/5 hover:bg-white/10 border-white/20 text-stone-300' };
+                    default:
+                      return { bg: 'bg-gradient-to-r from-[#1a1a1f] via-[#141419] to-[#0d0d10]', border: 'border-white/15', heading: 'text-white', dir: 'text-red-400', btn: 'bg-white/5 hover:bg-white/10 border-white/20 text-stone-300' };
+                  }
+                })();
+
+                return (
+                  <div className={cn("w-full p-2.5 rounded-2xl border flex items-center justify-between shadow-md my-1", box.bg, box.border)}>
+                    <div className="flex items-center gap-2">
+                      <span className={cn("text-3xl sm:text-4xl font-black font-serif animate-heading-glow", box.heading)}>
+                        {displayHeading !== null ? Math.round(displayHeading) : 80}°
+                      </span>
+                      <span className={cn("text-sm sm:text-base font-black font-serif", box.dir)}>
+                        {dirName} ({vastuInfo.code})
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setUseTrueNorth(!useTrueNorth);
+                        triggerHapticFeedback();
+                      }}
+                      className={cn("px-2.5 py-1 rounded-full border text-[9.5px] font-black uppercase tracking-wider transition-colors shadow-sm", box.btn)}
+                    >
+                      {useTrueNorth ? 'True North' : 'Magnetic'}
+                    </button>
+                  </div>
+                );
+              })()
             )}
 
-            {/* GPS Coordinates & Sea Level */}
+            {/* GPS Coordinates & Accuracy */}
             <div className="w-full flex items-center justify-between text-xs pt-1 border-t border-white/10">
               <button
                 onClick={copyCoordinates}
                 className="flex items-center gap-1.5 text-amber-300 font-mono font-bold hover:text-amber-200 transition-colors"
               >
                 <Globe className="w-3.5 h-3.5 text-amber-400" />
-                <span>
-                  {location ? `${location.latitude.toFixed(6)}°, ${location.longitude.toFixed(6)}°` : '18.550434°, 73.920091°'}
-                </span>
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400">
+                    {location?.city ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}` : ''}
+                  </span>
+                  <span className="text-[10px] font-mono opacity-80">
+                    {location ? `${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°` : '18.5504°, 73.9201°'}
+                  </span>
+                </div>
               </button>
 
-              <span className="px-2.5 py-1 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-stone-300 flex items-center gap-1">
-                <Mountain className="w-3 h-3 text-stone-400" />
-                <span>SEA LEVEL: {location?.altitude ? Math.round(location.altitude * 3.28084) : 1632} FT</span>
-              </span>
+              <div className="flex items-center gap-2">
+                {location?.accuracy != null ? (
+                  <span className={cn(
+                    "text-[9px] font-black uppercase tracking-wider flex items-center gap-1",
+                    location.accuracy <= 15
+                      ? "text-emerald-400"
+                      : location.accuracy <= 50
+                      ? "text-amber-400"
+                      : "text-red-400"
+                  )}>
+                    <Crosshair className="w-3 h-3" />
+                    <span>{location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±{Math.round(location.accuracy)}m</span>
+                  </span>
+                ) : (
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                    <Crosshair className="w-3 h-3" />
+                    <span>HIGH ACC</span>
+                  </span>
+                )}
+                <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1">
+                  <Mountain className="w-3 h-3 text-stone-500" />
+                  <span>SEA LEVEL: {location?.altitude ? Math.round(location.altitude * 3.28084) : 1632} FT</span>
+                </span>
+              </div>
+              {location?.speed && location.speed > 0.5 && (
+                <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-bold text-emerald-300 flex items-center gap-1">
+                  <Gauge className="w-3 h-3" />
+                  <span>{Math.round(location.speed * 3.6)} km/h</span>
+                </span>
+              )}
             </div>
 
-            {/* Surface Level (Bubble Level) Quick Preview Card */}
-            <div className="w-full p-2.5 rounded-2xl bg-stone-900/90 border border-white/10 flex items-center justify-between shadow-inner">
-              <div className="flex items-center gap-2.5">
-                {/* Mini 2D Bubble Level Indicator */}
-                <div className="w-8 h-8 rounded-full border border-white/20 bg-stone-950 relative overflow-hidden flex items-center justify-center shrink-0">
-                  <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-white/20" />
-                  <div className="absolute inset-y-0 left-1/2 w-[0.5px] bg-white/20" />
-                  <div 
-                    className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#10b981] transition-transform duration-75 ease-out"
-                    style={{
-                      transform: `translate(${Math.max(-8, Math.min(8, -roll * 0.8))}px, ${Math.max(-8, Math.min(8, -pitch * 0.8))}px)`
-                    }}
-                  />
-                </div>
-
-                <div className="flex flex-col text-left leading-tight">
-                  <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider">
-                    SURFACE LEVEL (BUBBLE LEVEL)
+            {/* Surface Level: Pitch, Roll + Open Level Tab */}
+            <div className="w-full flex items-center justify-between text-xs pt-1 border-t border-white/10">
+              <div className="flex items-center gap-1.5">
+                <Gauge className="w-3.5 h-3.5 text-emerald-400" />
+                <div className="flex flex-col items-start text-left">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400">
+                    {language === 'hi' ? 'सतह स्तर' : 'SURFACE LEVEL'}
                   </span>
-                  <span className="text-xs text-stone-300 font-bold mt-0.5 font-mono">
-                    Pitch: {Math.round(pitch)}° | Roll: {Math.round(roll)}°
+                  <span className="text-[10px] font-mono text-stone-300">
+                    PITCH {pitch.toFixed(1)}° • ROLL {roll.toFixed(1)}°
                   </span>
                 </div>
               </div>
-
               <button
                 onClick={() => {
                   setMainTab('level');
                   triggerHapticFeedback();
                 }}
-                className="px-3 py-1 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black uppercase tracking-wider text-stone-300 hover:text-white flex items-center gap-1 active:scale-95 transition-all"
+                className="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
               >
-                <span>OPEN</span>
-                <ArrowRight className="w-3 h-3" />
+                <Gauge className="w-3 h-3" />
+                <span>{language === 'hi' ? 'खोलें' : 'OPEN'}</span>
               </button>
             </div>
 
@@ -1163,11 +1188,14 @@ export const CompassView = () => {
               </div>
             </div>
 
-            {/* Weather Telemetry Row */}
-            <div className="w-full flex items-center justify-between text-[10.5px] font-bold pt-2 border-t border-white/10 text-stone-300">
-              <div className="flex items-center gap-1.5">
+            {/* Weather Telemetry Row (click to open detail) */}
+            <button
+              onClick={() => { setShowWeatherModal(true); triggerHapticFeedback(); }}
+              className="w-full flex items-center justify-between text-[10.5px] font-bold pt-2 border-t border-white/10 text-stone-300 hover:bg-white/[0.03] rounded-lg transition-colors"
+            >
+              <div className="flex items-center gap-2">
                 <span className="text-sm leading-none">{getWeatherIcon(weather?.code)}</span>
-                <span className="font-mono uppercase">
+                <span className="font-mono uppercase text-[10px]">
                   {weather ? `${weather.temp}°C • ${getWeatherDescription(weather.code, language).toUpperCase()}` : '24°C • PARTLY CLOUDY'}
                 </span>
               </div>
@@ -1185,10 +1213,135 @@ export const CompassView = () => {
                   <Gauge className="w-3 h-3 text-red-400" />
                   {weather ? `${weather.pressure} hPa` : '947 hPa'}
                 </span>
+                <ChevronRight className="w-3 h-3 text-stone-500" />
               </div>
-            </div>
+            </button>
 
           </div>
+
+          {/* Inline Vastu Suggestions Panel — shown when Vastu button tapped */}
+          {showVastuPanel && (
+            <div className="w-full max-w-sm rounded-[22px] border border-amber-500/40 bg-gradient-to-b from-[#1A1408] via-[#140F06] to-[#0A0804] shadow-[0_12px_40px_rgba(0,0,0,0.9),0_0_20px_rgba(245,158,11,0.15)] p-4 flex flex-col gap-3 my-1.5 text-white animate-in slide-in-from-top-2 fade-in duration-300">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-black text-amber-400 uppercase tracking-wider">
+                      {language === 'hi' ? 'वास्तु मार्गदर्शन' : 'VASTU GUIDANCE'}
+                    </span>
+                    <p className="text-[9px] text-stone-400 font-medium">
+                      {language === 'hi' ? 'आपकी वर्तमान दिशा के लिए सुझाव' : 'Suggestions for your current heading'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowVastuPanel(false)}
+                  className="p-1.5 rounded-full bg-white/5 border border-white/10 text-stone-400 hover:text-white hover:bg-white/10 transition-all"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Current Direction Info */}
+              <div className="w-full p-3 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300/70">
+                    {language === 'hi' ? 'वर्तमान दिशा' : 'Current Direction'}
+                  </span>
+                  <span className="text-sm font-black text-amber-400">
+                    {Math.round(displayHeading)}° — {vastuInfo.name}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400">
+                    {language === 'hi' ? 'तत्व' : 'Element'}
+                  </span>
+                  <span className="text-[11px] font-bold text-stone-300">{vastuInfo.element}</span>
+                </div>
+              </div>
+
+              {/* Vastu Suggestions Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {/* Room Recommendation */}
+                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-amber-400/80">
+                    {language === 'hi' ? 'उपयुक्त कमरा' : 'Ideal Room'}
+                  </span>
+                  <span className="text-[11px] font-bold text-white leading-tight">
+                    {vastuInfo.code === 'N' ? (language === 'hi' ? 'कोषागार / कार्यालय' : 'Treasury / Office') 
+                      : vastuInfo.code === 'NE' ? (language === 'hi' ? 'मंदिर / ध्यान कक्ष' : 'Prayer / Meditation')
+                      : vastuInfo.code === 'E' ? (language === 'hi' ? 'मुख्य प्रवेश द्वार' : 'Main Entrance')
+                      : vastuInfo.code === 'SE' ? (language === 'hi' ? 'रसोई / अग्नि स्थान' : 'Kitchen / Fire Zone')
+                      : vastuInfo.code === 'S' ? (language === 'hi' ? 'मास्टर बेडरूम' : 'Master Bedroom')
+                      : vastuInfo.code === 'SW' ? (language === 'hi' ? 'भंडारण / भारी सामान' : 'Storage / Heavy Items')
+                      : vastuInfo.code === 'W' ? (language === 'hi' ? 'बच्चों का कमरा' : "Children's Room")
+                      : (language === 'hi' ? 'अध्ययन कक्ष' : 'Study Room')}
+                  </span>
+                </div>
+
+                {/* Deity / Ruling Energy */}
+                <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400/80">
+                    {language === 'hi' ? 'शासक ऊर्जा' : 'Ruling Energy'}
+                  </span>
+                  <span className="text-[11px] font-bold text-white leading-tight">
+                    {vastuInfo.deity}
+                  </span>
+                  <span className="text-[9px] text-stone-400 leading-tight">
+                    {vastuInfo.vastuDesc}
+                  </span>
+                </div>
+
+                {/* Tip / Do */}
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex flex-col gap-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400/80">
+                    {language === 'hi' ? 'करें' : 'DO'}
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-200 leading-tight">
+                    {vastuInfo.code === 'N' ? (language === 'hi' ? 'उत्तर दिशा में तिजोरी रखें, कुबेर मंत्र का जाप करें' : 'Place treasury in North, chant Kuber mantra')
+                      : vastuInfo.code === 'NE' ? (language === 'hi' ? 'पूजा कक्ष यहां बनाएं, रोज़ प्रार्थना करें' : 'Build prayer room here, pray daily')
+                      : vastuInfo.code === 'E' ? (language === 'hi' ? 'मुख्य द्वार पूर्व में खोलें' : 'Open main entrance facing East')
+                      : vastuInfo.code === 'SE' ? (language === 'hi' ? 'रसोई यहां बनाएं, अग्नि तत्व रखें' : 'Place kitchen here, fire element')
+                      : vastuInfo.code === 'S' ? (language === 'hi' ? 'मास्टर बेडरूम दक्षिण में बनाएं' : 'Master bedroom in South')
+                      : vastuInfo.code === 'SW' ? (language === 'hi' ? 'भारी फर्नीचर यहां रखें' : 'Place heavy furniture here')
+                      : vastuInfo.code === 'W' ? (language === 'hi' ? 'पश्चिम में बच्चों का कमरा' : "Children's room in West")
+                      : (language === 'hi' ? 'पूर्व-उत्तर में अध्ययन कक्ष' : 'Study in North-East')}
+                  </span>
+                </div>
+
+                {/* Don't */}
+                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/25 flex flex-col gap-1">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-rose-400/80">
+                    {language === 'hi' ? 'न करें' : "DON'T"}
+                  </span>
+                  <span className="text-[10px] font-bold text-rose-200 leading-tight">
+                    {vastuInfo.code === 'N' ? (language === 'hi' ? 'दक्षिण में जल न रखें' : 'No water body in South')
+                      : vastuInfo.code === 'NE' ? (language === 'hi' ? 'शौचालय या भारी सामान न रखें' : 'No toilet or heavy items')
+                      : vastuInfo.code === 'E' ? (language === 'hi' ? 'भारी दीवार न बनाएं' : 'No heavy walls blocking')
+                      : vastuInfo.code === 'SE' ? (language === 'hi' ? 'पानी का स्रोत न रखें' : 'No water source here')
+                      : vastuInfo.code === 'S' ? (language === 'hi' ? 'मुख्य द्वार न बनाएं' : 'No main entrance')
+                      : vastuInfo.code === 'SW' ? (language === 'hi' ? 'जल या मंदिर न रखें' : 'No water or temple')
+                      : vastuInfo.code === 'W' ? (language === 'hi' ? 'कचरा घर न बनाएं' : 'No waste area')
+                      : (language === 'hi' ? 'रसोई न बनाएं' : 'No kitchen here')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Location Context */}
+              <div className="w-full p-2.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="text-[10px] text-stone-300 font-medium">
+                  {language === 'hi' 
+                    ? `${location?.city || '—'} में ${vastuInfo.code} दिशा ${vastuInfo.vastuTitle} — ${vastuInfo.deity} का प्रभाव क्षेत्र`
+                    : `In ${location?.city || '—'}, ${vastuInfo.code} direction is ${vastuInfo.vastuTitle} — ruled by ${vastuInfo.deity}`}
+                </span>
+              </div>
+            </div>
+          )}
         </>
       )}
 
@@ -1216,7 +1369,8 @@ export const CompassView = () => {
           sunPos={sunPos}
           isLevel={isLevel}
           selectedStyle={selectedStyle}
-          customAccentColor={selectedAccentColor}
+          customAccentColor="#EF4444"
+          variantId={selectedVariant}
           dialRef={dialRef}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -1245,7 +1399,10 @@ export const CompassView = () => {
               <span className="text-sm font-black tracking-wide text-amber-500">{t.settings}</span>
               <button 
                 onClick={() => setShowSettings(false)}
-                className="p-1.5 rounded-full hover:bg-white/10 transition-colors"
+                className={cn(
+                  "p-1.5 rounded-full transition-colors",
+                  theme === 'light' ? "hover:bg-stone-200" : "hover:bg-white/10"
+                )}
               >
                 <X className="w-4 h-4 text-stone-400" />
               </button>
@@ -1257,12 +1414,15 @@ export const CompassView = () => {
                 <Languages className="w-4 h-4 text-amber-500" />
                 {t.language}
               </span>
-              <div className="flex items-center p-0.5 rounded-xl bg-stone-800 border border-white/10">
+              <div className={cn(
+                "flex items-center p-0.5 rounded-xl border",
+                theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10"
+              )}>
                 <button
                   onClick={() => setLanguage('hi')}
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                    language === 'hi' ? "bg-amber-500 text-stone-950" : "text-stone-400"
+                    language === 'hi' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400")
                   )}
                 >
                   हिंदी
@@ -1271,7 +1431,7 @@ export const CompassView = () => {
                   onClick={() => setLanguage('en')}
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                    language === 'en' ? "bg-amber-500 text-stone-950" : "text-stone-400"
+                    language === 'en' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400")
                   )}
                 >
                   English
@@ -1280,7 +1440,10 @@ export const CompassView = () => {
             </div>
 
             {/* 12 Styles Gallery Trigger */}
-            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
               <span className="flex items-center gap-2">
                 <Palette className="w-4 h-4 text-amber-500" />
                 {t.styles}
@@ -1291,13 +1454,21 @@ export const CompassView = () => {
                   setShowSettings(false);
                   setShowStyleModal(true);
                 }}
-                className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30">
+                className={cn(
+                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
+                  theme === 'light'
+                    ? "bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                )}>
                 {language === 'hi' ? '12+ शैलियां देखें' : 'View 12+ Styles'}
               </button>
             </div>
 
             {/* Vastu Grid Toggle */}
-            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
               <span className="flex items-center gap-2">
                 <Grid className="w-4 h-4 text-amber-500" />
                 {t.vastuGrid}
@@ -1311,7 +1482,7 @@ export const CompassView = () => {
                 }}
                 className={cn(
                   "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                  vastuGridEnabled ? "bg-amber-500 text-stone-950" : "bg-stone-800 text-stone-400"
+                  vastuGridEnabled ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
                 )}
               >
                 {vastuGridEnabled ? (language === 'hi' ? "चालू" : "ON") : (language === 'hi' ? "बंद" : "OFF")}
@@ -1319,7 +1490,10 @@ export const CompassView = () => {
             </div>
 
             {/* Sensor Diagnostics */}
-            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
               <span className="flex items-center gap-2">
                 <Zap className="w-4 h-4 text-emerald-400" />
                 {t.sensorDiagnostics}
@@ -1330,13 +1504,21 @@ export const CompassView = () => {
                   setShowSettings(false);
                   setShowSensorsModal(true);
                 }}
-                className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                className={cn(
+                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
+                  theme === 'light'
+                    ? "bg-emerald-100 text-emerald-800 border-emerald-400 hover:bg-emerald-200"
+                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                )}>
                 {t.check}
               </button>
             </div>
 
             {/* Calibration Guide */}
-            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
               <span className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 {t.calibrationGuide}
@@ -1347,15 +1529,44 @@ export const CompassView = () => {
                   setShowSettings(false);
                   setShowCalibrationModal(true);
                 }}
-                className="px-3 py-1 rounded-xl text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                className={cn(
+                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
+                  theme === 'light'
+                    ? "bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                )}>
                 {t.view}
               </button>
             </div>
 
             {/* Theme Switcher */}
-            <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-white/5">
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
               <span>{t.themeMode}</span>
               <ThemeToggle />
+            </div>
+
+            {/* Always Visible (Pin Compass) */}
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
+              <span>Always Visible</span>
+              <button
+                onClick={() => {
+                  const next = !alwaysVisible;
+                  setAlwaysVisible(next);
+                  try { localStorage.setItem('com.hcompass.always_visible', next.toString()); } catch {}
+                }}
+                className={cn(
+                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                  alwaysVisible ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
+                )}
+              >
+                {alwaysVisible ? (language === 'hi' ? 'देखते रहें' : 'Pinned') : (language === 'hi' ? 'बंद' : 'Off')}
+              </button>
             </div>
           </div>
         </div>
@@ -1363,38 +1574,60 @@ export const CompassView = () => {
 
       {/* Sensors Inspector Modal */}
       {showSensorsModal && (
-        <SensorsInspectorModal 
-          isOpen={showSensorsModal} 
-          onClose={() => setShowSensorsModal(false)}
-          theme={theme}
-          language={language}
-          heading={heading}
-          pitch={pitch}
-          roll={roll}
-        />
+        <React.Suspense fallback={null}>
+          <SensorsInspectorModal 
+            isOpen={showSensorsModal} 
+            onClose={() => setShowSensorsModal(false)}
+            theme={theme}
+            language={language}
+            heading={heading}
+            pitch={pitch}
+            roll={roll}
+          />
+        </React.Suspense>
       )}
 
       {/* Calibration Guide Modal */}
       {showCalibrationModal && (
-        <CalibrationGuideModal
-          isOpen={showCalibrationModal}
-          onClose={() => setShowCalibrationModal(false)}
-          theme={theme}
-          language={language}
-        />
+        <React.Suspense fallback={null}>
+          <CalibrationGuideModal
+            isOpen={showCalibrationModal}
+            onClose={() => setShowCalibrationModal(false)}
+            theme={theme}
+            language={language}
+          />
+        </React.Suspense>
       )}
 
       {/* Style Selector Modal */}
       {showStyleModal && (
-        <StyleSelectorModal
-          isOpen={showStyleModal}
-          onClose={() => setShowStyleModal(false)}
-          selectedStyle={selectedStyle}
-          onSelectStyle={handleSelectStyle}
+        <React.Suspense fallback={null}>
+          <StyleSelectorModal
+            isOpen={showStyleModal}
+            onClose={() => setShowStyleModal(false)}
+            selectedStyle={selectedStyle}
+            onSelectStyle={handleSelectStyle}
+            language={language}
+            theme={theme}
+            selectedVariantId={selectedVariant}
+            onSelectVariant={handleSelectVariant}
+          />
+        </React.Suspense>
+      )}
+
+      {/* Weather Detail Modal */}
+      <React.Suspense fallback={null}>
+        <WeatherModal
+          isOpen={showWeatherModal}
+          onClose={() => setShowWeatherModal(false)}
           language={language}
           theme={theme}
+          weather={weather}
+          cityName={location?.city}
+          latitude={location?.latitude}
+          longitude={location?.longitude}
         />
-      )}
+      </React.Suspense>
     </div>
   );
 };

@@ -1,22 +1,49 @@
 export type Language = 'hi' | 'en';
 
+export type NeedleType =
+  | 'delta_bicolor'
+  | 'ornate_spear'
+  | 'laser_hud'
+  | 'stealth_needle'
+  | 'chakra_arrow'
+  | 'tactical_crosshair'
+  | 'pulsar_pointer'
+  | 'ios_needle'
+  | 'metal_needle'
+  | 'graphite_needle';
+
 export type CompassStyleId =
-  | 'daylight'
-  | 'pitch_black'
+  | 'ios_compass'
+  | 'color_palette'
   | 'satellite_earth'
   | 'sandalwood'
   | 'royal_gold'
   | 'cyberpunk'
-  | 'nautical'
   | 'minimal_onyx'
-  | 'emerald_aurora'
   | 'vedic_mandala'
   | 'tactical_ops'
-  | 'cosmic_galaxy'
-  | 'rose_gold'
-  | 'steampunk'
-  | 'crystal_glass'
-  | 'sunset_aura';
+  | 'cosmic_galaxy';
+
+export interface CompassStyleVariant {
+  id: string;
+  nameHi: string;
+  nameEn: string;
+  colorSwatch: string;
+  primaryColor: string;
+  accentColor: string;
+  previewBg: string;
+  bezelClass: string;
+  dialFaceBg: string;
+  needleType: NeedleType;
+  apexY?: number;
+  hasCenterNeedle?: boolean;
+  tickMajorColor?: string;
+  tickMidColor?: string;
+  tickMinorColor?: string;
+  degreeColor?: string;
+  cardinalColor?: string;
+  northColor?: string;
+}
 
 export interface CompassStyleInfo {
   id: CompassStyleId;
@@ -28,7 +55,9 @@ export interface CompassStyleInfo {
   primaryColor: string;
   accentColor: string;
   previewBg: string;
-  needleType: 'delta_bicolor' | 'ornate_spear' | 'laser_hud' | 'stealth_needle' | 'chakra_arrow' | 'tactical_crosshair' | 'pulsar_pointer' | 'luxury_sword' | 'nixie_needle' | 'crystal_prism';
+  premium?: boolean;
+  needleType: NeedleType;
+  variants?: CompassStyleVariant[];
 }
 
 export interface DirectionInfo {

@@ -1,87 +1,170 @@
-import React from 'react';
-import { X, CheckCircle2, RotateCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Compass, Sparkles, CheckCircle2, RotateCcw, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Language } from '@/types/compass';
-import { translations } from '@/lib/translations';
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
-interface Props {
+interface CalibrationGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
+  language: string;
   theme: string;
-  language: Language;
+  magneticInterference?: boolean;
 }
 
-export const CalibrationGuideModal: React.FC<Props> = ({ isOpen, onClose, theme, language }) => {
+export const CalibrationGuideModal = ({
+  isOpen,
+  onClose,
+  language,
+  theme,
+  magneticInterference
+}: CalibrationGuideModalProps) => {
+  const [progress, setProgress] = useState<number>(10);
+  const [isCalibrated, setIsCalibrated] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setProgress(10);
+      setIsCalibrated(false);
+      return;
+    }
+
+    let count = 0;
+    const interval = setInterval(() => {
+      count += 15;
+      setProgress(Math.min(100, count));
+      if (count >= 100) {
+        clearInterval(interval);
+        setIsCalibrated(true);
+        try {
+          Haptics.impact({ style: ImpactStyle.Heavy });
+        } catch {}
+      }
+    }, 600);
+
+    return () => clearInterval(interval);
+  }, [isOpen]);
+
   if (!isOpen) return null;
-  const t = translations[language];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in">
-      <div className={cn(
-        "w-full max-w-sm rounded-3xl p-6 border shadow-2xl flex flex-col items-center text-center relative animate-in zoom-in-95",
-        theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-stone-950 border-white/15 text-white"
-      )}>
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 text-stone-400 hover:text-white transition-colors"
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.92, y: 20 }}
+          className={cn(
+            "w-full max-w-sm rounded-[2rem] border p-6 shadow-2xl relative overflow-hidden flex flex-col items-center text-center",
+            theme === 'light'
+              ? "bg-gradient-to-b from-amber-50/95 to-amber-100/90 border-amber-500/30 text-amber-950"
+              : "bg-gradient-to-b from-[#1c1917]/95 via-[#181512]/95 to-black/95 border-amber-500/20 text-amber-100"
+          )}
         >
-          <X className="w-5 h-5" />
-        </button>
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 active:scale-90 transition-transform text-stone-400 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
-        {/* Header Icon */}
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3 shadow-[0_0_20px_rgba(245,158,11,0.3)]">
-          <RotateCw className="w-7 h-7 animate-[spin_6s_linear_infinite]" />
-        </div>
-
-        <h3 className="text-lg font-black tracking-wide text-amber-400 mb-1">
-          {t.calibTitle}
-        </h3>
-        <p className="text-xs text-stone-400 mb-5">
-          {t.calibSubtitle}
-        </p>
-
-        {/* 8-Figure Vector Animation Graphic */}
-        <div className="relative w-48 h-24 mb-5 flex items-center justify-center">
-          <svg className="w-full h-full" viewBox="0 0 200 100">
-            {/* 8 Figure Track */}
-            <path
-              d="M 50,50 C 50,20 10,20 10,50 C 10,80 50,80 50,50 C 50,20 90,20 90,50 C 90,80 50,80 50,50 Z"
-              fill="none"
-              stroke="rgba(245, 158, 11, 0.3)"
-              strokeWidth="4"
-              strokeDasharray="4 4"
-              transform="scale(2, 1)"
-            />
-            {/* Glowing Motion Particle */}
-            <circle cx="100" cy="50" r="7" fill="#F59E0B" className="drop-shadow-[0_0_10px_#F59E0B] animate-pulse" />
-          </svg>
-        </div>
-
-        {/* Instructions */}
-        <div className="w-full flex flex-col gap-2.5 text-left text-xs mb-6">
-          <div className="flex items-start gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <span className="text-stone-300 font-medium">{t.calibStep1}</span>
+          {/* Heading */}
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">
+              {language === 'hi' ? 'सटीकता कैलिब्रेशन' : 'Precision Calibration'}
+            </span>
           </div>
-          <div className="flex items-start gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <span className="text-stone-300 font-medium">{t.calibStep2}</span>
-          </div>
-          <div className="flex items-start gap-2.5 p-2 rounded-xl bg-white/5 border border-white/5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-            <span className="text-stone-300 font-medium">{t.calibStep3}</span>
-          </div>
-        </div>
 
-        {/* Action Button */}
-        <button
-          onClick={onClose}
-          className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-stone-950 font-black text-xs uppercase tracking-wider shadow-lg active:scale-98 transition-all hover:brightness-110"
-        >
-          {t.calibDone}
-        </button>
+          <h3 className="text-lg font-black font-serif text-white mb-2">
+            {language === 'hi' ? '8-आकार (Figure-8) में घुमाएँ' : 'Wave in Figure-8 Motion'}
+          </h3>
+
+          <p className="text-xs text-stone-400 max-w-[260px] leading-relaxed mb-6">
+            {language === 'hi'
+              ? 'चुंबकीय सटीकता और शून्य-विचलन के लिए अपने फोन को हवा में 8 के आकार में 2-3 बार धीरे-धीरे घुमाएँ।'
+              : 'Smoothly move your device in an infinity (∞) / figure-8 pattern in the air to calibrate magnetic sensors.'}
+          </p>
+
+          {/* Animated 3D Figure-8 Illustration */}
+          <div className="relative w-40 h-28 flex items-center justify-center mb-6">
+            {/* SVG Path */}
+            <svg viewBox="0 0 160 100" className="w-full h-full stroke-amber-500/30 fill-none stroke-[3] overflow-visible">
+              <path
+                d="M 40,50 C 40,25 80,25 80,50 C 80,75 120,75 120,50 C 120,25 80,25 80,50 C 80,75 40,75 40,50 Z"
+                strokeDasharray="6,4"
+              />
+            </svg>
+
+            {/* Orbiting Satellite Indicator */}
+            <motion.div
+              animate={{
+                offsetDistance: ['0%', '100%']
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                offsetPath: "path('M 40,50 C 40,25 80,25 80,50 C 80,75 120,75 120,50 C 120,25 80,25 80,50 C 80,75 40,75 40,50 Z')",
+              }}
+              className="absolute w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 shadow-[0_0_15px_rgba(251,191,36,0.9)] flex items-center justify-center"
+            >
+              <Compass className="w-3.5 h-3.5 text-stone-950 animate-spin" />
+            </motion.div>
+          </div>
+
+          {/* Interference Badge if flagged */}
+          {magneticInterference && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold mb-4">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+              <span>{language === 'hi' ? 'चुंबकीय हस्तक्षेप पहचाना गया' : 'Interference Detected'}</span>
+            </div>
+          )}
+
+          {/* Progress bar */}
+          <div className="w-full space-y-1.5 mb-5">
+            <div className="flex justify-between text-[11px] font-black text-stone-400">
+              <span>{language === 'hi' ? 'सेंसर संरेखन' : 'Sensor Alignment'}</span>
+              <span className={cn(isCalibrated ? "text-emerald-400" : "text-amber-400")}>{progress}%</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-stone-800 overflow-hidden border border-white/10">
+              <motion.div
+                className={cn(
+                  "h-full rounded-full transition-all duration-300",
+                  isCalibrated ? "bg-gradient-to-r from-emerald-500 to-green-400" : "bg-gradient-to-r from-amber-500 to-yellow-400"
+                )}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Action button */}
+          <button
+            onClick={onClose}
+            className={cn(
+              "w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all",
+              isCalibrated
+                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/20"
+                : "bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/20"
+            )}
+          >
+            {isCalibrated ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>{language === 'hi' ? 'कैलिब्रेशन पूर्ण' : 'Sensor Calibrated'}</span>
+              </>
+            ) : (
+              <>
+                <RotateCcw className="w-4 h-4" />
+                <span>{language === 'hi' ? 'जारी रखें' : 'Done / Continue'}</span>
+              </>
+            )}
+          </button>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 };

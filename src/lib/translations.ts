@@ -2,10 +2,10 @@ import { DirectionInfo } from '@/types/compass';
 
 export const translations = {
   hi: {
-    appTitle: 'हिंदी कंपास 360°',
+    appTitle: 'Digital Compass 360°',
     appSubtitle: 'सटीक 360° दिशा, वास्तु एवं लेवल दर्शक',
     tabCompass: 'कंपास',
-    tabLevel: 'समतल स्तर (Level)',
+    tabLevel: 'लेवल',
     trueNorth: 'उत्तर',
     magneticNorth: 'चुंबकीय',
     trueNorthMode: 'सच्चा उत्तर (True North)',
@@ -106,7 +106,7 @@ export const translations = {
     appTitle: 'Digital Compass 360°',
     appSubtitle: 'Precision 360° Direction, Vastu & Spirit Level',
     tabCompass: 'Compass',
-    tabLevel: 'Spirit Level',
+    tabLevel: 'Level',
     trueNorth: 'True N',
     magneticNorth: 'Mag N',
     trueNorthMode: 'True North',

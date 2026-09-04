@@ -56,9 +56,29 @@
   body {
     @apply bg-background text-foreground font-sans;
     font-family: 'Mukta', 'Yantramanav', sans-serif;
+    text-rendering: optimizeLegibility;
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer utilities {
+  /* Shared readable surfaces for panels that follow the active app theme. */
+  .surface-readable {
+    @apply border border-stone-200/80 bg-white/90 text-stone-900 shadow-[0_12px_32px_rgba(71,45,16,0.10)];
+  }
+
+  .dark .surface-readable {
+    @apply border-white/10 bg-slate-950/80 text-slate-50 shadow-[0_12px_32px_rgba(0,0,0,0.32)];
+  }
+
+  .dark .text-muted-readable {
+    @apply text-slate-300;
+  }
+
+  .light .text-muted-readable {
+    @apply text-stone-600;
   }
 }
 
@@ -68,8 +88,38 @@
   50% { opacity: 0.85; transform: scale(1.02); }
 }
 
+/* Satellite orbit animation for satellite_earth compass theme */
+@keyframes satellite-orbit {
+  0% { transform: rotate(0deg) translateX(var(--orbit-radius)) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(var(--orbit-radius)) rotate(-360deg); }
+}
+
+.animate-satellite-orbit {
+  animation: satellite-orbit var(--orbit-duration, 12s) linear infinite;
+}
+
+/* Satellite blink/flash effect */
+@keyframes satellite-blink {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px rgba(0,240,255,0.9)); }
+  50% { opacity: 0.5; filter: drop-shadow(0 0 8px rgba(0,240,255,1)); }
+}
+
+.animate-satellite-blink {
+  animation: satellite-blink 2s ease-in-out infinite;
+}
+
 .animate-pulse-subtle {
   animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+/* Heading glow pulse for the center readout */
+@keyframes heading-glow {
+  0%, 100% { text-shadow: 0 0 6px rgba(245, 158, 11, 0.35); }
+  50% { text-shadow: 0 0 16px rgba(245, 158, 11, 0.75); }
+}
+
+.animate-heading-glow {
+  animation: heading-glow 2.5s ease-in-out infinite;
 }
 
 .liquid-shine {

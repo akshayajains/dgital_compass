@@ -76,7 +76,7 @@ export const MapCompassView: React.FC<Props> = ({
 
   return (
     <div 
-      className="w-full relative rounded-3xl overflow-hidden bg-[#0A0E14] border border-slate-700 shadow-2xl flex flex-col items-center select-none aspect-[4/5] sm:aspect-square touch-none cursor-grab active:cursor-grabbing"
+      className="w-full h-full relative overflow-hidden bg-[#0A0E14] flex flex-col items-center select-none touch-none cursor-grab active:cursor-grabbing"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -131,7 +131,8 @@ export const MapCompassView: React.FC<Props> = ({
           className="absolute w-44 h-44 -translate-y-22 flex items-center justify-center transition-transform duration-75 ease-out"
           style={{
             transform: `rotate(${headingUp ? 0 : displayDeg}deg)`,
-            transformOrigin: '50% 100%'
+            transformOrigin: '50% 100%',
+            willChange: 'transform'
           }}
         >
           <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">

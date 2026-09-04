@@ -9,8 +9,11 @@ export interface Location {
   longitude: number;
   city: string;
   state?: string;
+  cityEn?: string;
+  stateEn?: string;
   altitude?: number | null;
   accuracy?: number | null;
+  speed?: number | null;
 }
 
 export interface SunTimes {
@@ -57,27 +60,37 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const reverseGeocode = async (lat: number, lng: number): Promise<{ city: string; state: string }> => {
-    try {
-      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=hi`);
-      if (res.ok) {
-        const data = await res.json();
-        const city = data.city || data.locality || data.principalSubdivision || '';
-        const state = data.principalSubdivision || '';
-        return { city, state };
-      }
-    } catch {
+  const reverseGeocode = async (lat: number, lng: number): Promise<{ city: string; state: string; cityEn: string; stateEn: string }> => {
+    const fetchNames = async (lang: string): Promise<{ city: string; state: string }> => {
       try {
-        const res2 = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=hi`);
-        if (res2.ok) {
-          const data2 = await res2.json();
-          const city = data2.address?.city || data2.address?.town || data2.address?.district || '';
-          const state = data2.address?.state || '';
+        const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=${lang}`);
+        if (res.ok) {
+          const data = await res.json();
+          const city = data.city || data.locality || data.principalSubdivision || '';
+          const state = data.principalSubdivision || '';
           return { city, state };
         }
-      } catch {}
-    }
-    return { city: '', state: '' };
+      } catch {
+        try {
+          const res2 = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=${lang}`);
+          if (res2.ok) {
+            const data2 = await res2.json();
+            const city = data2.address?.city || data2.address?.town || data2.address?.district || '';
+            const state = data2.address?.state || '';
+            return { city, state };
+          }
+        } catch {}
+      }
+      return { city: '', state: '' };
+    };
+    const hi = await fetchNames('hi');
+    const en = await fetchNames('en');
+    return {
+      city: hi.city,
+      state: hi.state,
+      cityEn: en.city || hi.city,
+      stateEn: en.state || hi.state
+    };
   };
 
   const fetchCurrentLocation = async () => {
@@ -91,14 +104,18 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           const lng = pos.coords.longitude;
           const alt = pos.coords.altitude;
           const acc = pos.coords.accuracy;
-          const { city, state } = await reverseGeocode(lat, lng);
+          const spd = pos.coords.speed;
+          const { city, state, cityEn, stateEn } = await reverseGeocode(lat, lng);
           setLocation({
             latitude: lat,
             longitude: lng,
             city: city || 'नई दिल्ली',
             state: state || ' भारत',
+            cityEn: cityEn || 'New Delhi',
+            stateEn: stateEn || 'India',
             altitude: alt,
-            accuracy: acc
+            accuracy: acc,
+            speed: spd
           });
           setLoading(false);
         },
@@ -110,14 +127,17 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
               const lat = parseFloat(ipData.latitude);
               const lng = parseFloat(ipData.longitude);
               if (!isNaN(lat) && !isNaN(lng)) {
-                const { city, state } = await reverseGeocode(lat, lng);
+                const { city, state, cityEn, stateEn } = await reverseGeocode(lat, lng);
                 setLocation({
                   latitude: lat,
                   longitude: lng,
                   city: city || ipData.city || 'नई दिल्ली',
                   state: state || ipData.region || '',
+                  cityEn: cityEn || ipData.city || 'New Delhi',
+                  stateEn: stateEn || ipData.region || '',
                   altitude: null,
-                  accuracy: 1000
+                  accuracy: 1000,
+                  speed: null
                 });
               }
             }
@@ -137,14 +157,17 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
         });
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        const { city, state } = await reverseGeocode(lat, lng);
+        const { city, state, cityEn, stateEn } = await reverseGeocode(lat, lng);
         setLocation({
           latitude: lat,
           longitude: lng,
           city: city || 'नई दिल्ली',
           state: state || '',
+          cityEn: cityEn || 'New Delhi',
+          stateEn: stateEn || '',
           altitude: pos.coords.altitude,
-          accuracy: pos.coords.accuracy
+          accuracy: pos.coords.accuracy,
+          speed: pos.coords.speed
         });
       } catch (err) {
         console.warn('Capacitor geolocation fallback:', err);

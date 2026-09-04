@@ -1,7 +1,7 @@
 @echo off
 set JAVA_HOME=C:\Program Files\Android\Android Studio\jbr
 echo =========================================
-echo 🚀 Starting Hindi Compass Build & Pack
+echo 🚀 Starting Digital Compass Build & Pack
 echo =========================================
 
 echo.
@@ -32,5 +32,5 @@ if %ERRORLEVEL% neq 0 (
 cd ..
 
 echo =========================================
-echo 🎉 Success! Hindi Compass Build Complete!
+echo 🎉 Success! Digital Compass Build Complete!
 echo =========================================
