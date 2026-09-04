@@ -440,7 +440,7 @@ export const AdvancedLevelView: React.FC<Props> = ({
         <div className="flex items-center gap-1.5">
           {displayLevel ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <AlertTriangle className={cn("w-3.5 h-3.5 shrink-0", displayHigh ? "text-red-400 animate-pulse" : "text-amber-400")} />}
           <div className="flex flex-col text-left leading-tight">
-            <span className="text-[10px] font-black tracking-wide uppercase">{displayLevel ? t.perfectLevelText : displayHigh ? t.highTilt : t.tilt}</span>
+            <span className="text-[10px] font-black tracking-wide uppercase">{displayLevel ? t.perfectLevelText : t.tilt}</span>
             <span className={cn("text-[8px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>{t.totalTilt}: {displayTotal.toFixed(1)}°</span>
           </div>
         </div>
