@@ -34,7 +34,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
 }) => {
   const [internalMode, setInternalMode] = useState<'satellite' | 'map'>(mode === 'map' ? 'map' : 'satellite');
   const displayHeading = heading !== null ? ((heading % 360) + 360) % 360 : 0;
-  const city = location?.city || 'Los Angeles';
+  const city = location?.city ? `${location.city}${location.state ? `, ${location.state}` : ''}` : 'Los Angeles';
   const lat = location?.latitude || 34.0522;
   const lng = location?.longitude || -118.2437;
   const currentMode = mode === 'map' || mode === 'satellite' ? mode : internalMode;

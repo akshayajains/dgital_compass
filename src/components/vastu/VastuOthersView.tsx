@@ -429,10 +429,50 @@ export const VastuOthersView: React.FC<Props> = ({
   };
 
   return (
-    <div className="w-full max-w-sm flex flex-col items-center select-none text-white pb-14 animate-in fade-in">
+    <div className={cn(
+      "w-full max-w-sm flex flex-col items-center select-none pb-14 animate-in fade-in",
+      theme === 'light' ? "text-stone-900" : "text-white"
+    )}>
 
       {/* ========================================================================= */}
-      {/* 1. COMPASS DIAL (MOUNTED AT TOP OF VASTU VIEW) */}
+      {/* 1. THE 6 SUB-TABS (Vastu | Jyotish | Numerology | Sadhana | Feng Shui | Qibla) */}
+      {/* ========================================================================= */}
+      <div 
+        className="w-full max-w-sm flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1 touch-pan-x"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {[
+          { id: 'vastu', label: 'Vastu', icon: '✨' },
+          { id: 'jyotish', label: 'Jyotish', icon: '⭐' },
+          { id: 'numerology', label: 'Numerology', icon: '#' },
+          { id: 'sadhana', label: 'Sadhana', icon: '⊙' },
+          { id: 'feng_shui', label: 'Feng Shui', icon: '🧭' },
+          { id: 'qibla', label: 'Qibla', icon: '↗' }
+        ].map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as VastuSubTab);
+                triggerHaptic();
+              }}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full text-[11px] font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 shadow-sm active:scale-95",
+                isActive
+                  ? (theme === 'light' ? "bg-stone-800 text-white border-white/40 shadow-[0_0_12px_rgba(0,0,0,0.15)] scale-[1.03]" : "bg-stone-800 text-white border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.25)] scale-[1.03]")
+                  : (theme === 'light' ? "bg-white text-stone-600 border-stone-300 hover:text-stone-900 hover:border-stone-400" : "bg-stone-950/80 text-stone-400 border-white/10 hover:text-white hover:border-white/25")
+              )}
+            >
+              <span className="text-xs">{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. COMPASS DIAL (MOUNTED AT TOP OF VASTU VIEW) */}
       {/* ========================================================================= */}
       <div className="w-full flex flex-col items-center relative my-1">
         <CompassDialRenderer
@@ -458,7 +498,12 @@ export const VastuOthersView: React.FC<Props> = ({
       </div>
 
       {/* Crimson Quick Dashboard Card */}
-      <div className="w-full max-w-sm rounded-[28px] p-4 border border-red-900/60 bg-gradient-to-b from-[#18090C] via-[#120608] to-[#0A0304] shadow-[0_15px_50px_rgba(0,0,0,0.95)] flex flex-col gap-3 my-2">
+      <div className={cn(
+        "w-full max-w-sm rounded-[28px] p-4 border flex flex-col gap-3 my-2",
+        theme === 'light'
+          ? "border-red-200 bg-gradient-to-b from-[#FFF7F7] via-[#FEF2F2] to-[#FDE8E8] shadow-[0_15px_50px_rgba(0,0,0,0.12)]"
+          : "border-red-900/60 bg-gradient-to-b from-[#18090C] via-[#120608] to-[#0A0304] shadow-[0_15px_50px_rgba(0,0,0,0.95)]"
+      )}>
         {/* Top Badges & Actions */}
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -466,30 +511,36 @@ export const VastuOthersView: React.FC<Props> = ({
               "text-[9px] font-black uppercase tracking-wider",
               location?.accuracy != null
                 ? location.accuracy <= 15
-                  ? "text-emerald-400"
+                  ? (theme === 'light' ? "text-emerald-700" : "text-emerald-400")
                   : location.accuracy <= 50
-                  ? "text-amber-400"
+                  ? (theme === 'light' ? "text-amber-700" : "text-amber-400")
                   : "text-red-400"
-                : "text-emerald-400"
+                : (theme === 'light' ? "text-emerald-700" : "text-emerald-400")
             )}>
               {location?.accuracy != null
                 ? `${location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±${Math.round(location.accuracy)}m`
                 : 'HIGH ACC'}
             </span>
-            <span className="text-[9px] font-black uppercase tracking-wider text-sky-400">
+            <span className={cn("text-[9px] font-black uppercase tracking-wider", theme === 'light' ? "text-sky-700" : "text-sky-400")}>
               Δ {declination > 0 ? `+${declination}°` : `${declination}°`}
             </span>
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button onClick={onCopyCoordinates} className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center active:scale-95 transition-all shadow-sm">
-              <Camera className="w-4 h-4 text-amber-400" />
+            <button onClick={onCopyCoordinates} className={cn(
+              "w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm",
+              theme === 'light' ? "bg-amber-100 border-amber-400 text-amber-800" : "bg-amber-500/20 border-amber-500/40 text-amber-300"
+            )}>
+              <Camera className={cn("w-4 h-4", theme === 'light' ? "text-amber-700" : "text-amber-400")} />
             </button>
-            <button onClick={onToggleTorch} className={cn("w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm", isTorchOn ? "bg-emerald-500 text-stone-950 border-emerald-400" : "bg-emerald-950/60 text-emerald-400 border-emerald-500/40")}>
+            <button onClick={onToggleTorch} className={cn("w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm", isTorchOn ? "bg-emerald-500 text-stone-950 border-emerald-400" : (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"))}>
               <Zap className="w-4 h-4" />
             </button>
-            <button onClick={onCopyCoordinates} className="w-8 h-8 rounded-full bg-stone-800/80 border border-white/15 text-stone-300 flex items-center justify-center active:scale-95 transition-all shadow-sm">
-              <Copy className="w-4 h-4 text-stone-300" />
+            <button onClick={onCopyCoordinates} className={cn(
+              "w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm",
+              theme === 'light' ? "bg-white border-stone-300 text-stone-600" : "bg-stone-800/80 border-white/15 text-stone-300"
+            )}>
+              <Copy className={cn("w-4 h-4", theme === 'light' ? "text-stone-600" : "text-stone-300")} />
             </button>
           </div>
         </div>
@@ -504,105 +555,77 @@ export const VastuOthersView: React.FC<Props> = ({
           </span>
         </div>
 
-        {/* Location & Coordinates */}
+        {/* Location & Coordinates (single line to save space) */}
         <div className="text-center">
-          <div className="text-[11px] font-black uppercase tracking-wider text-stone-300">
-            {location?.city || 'Pune'}
-          </div>
-          <div className="text-[10px] font-mono font-bold text-stone-500 mt-0.5">
-            {location ? `${location.latitude.toFixed(4)}°N, ${location.longitude.toFixed(4)}°E` : '18.5504°N, 73.9201°E'}
+          <div className={cn("text-[11px] font-black uppercase tracking-wider", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
+            {location?.city
+              ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}${location.state ? `, ${language === 'hi' ? location.state : (location.stateEn || location.state)}` : ''}`
+              : 'Pune'}
+            <span className="text-[10px] font-mono font-bold text-stone-500 ml-1.5">
+              • {location ? `${location.latitude.toFixed(4)}°N, ${location.longitude.toFixed(4)}°E` : '18.5504°N, 73.9201°E'}
+            </span>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-2xl border border-white/10 bg-black/25 px-3 py-2">
-            <div className="flex items-center gap-1 text-[9px] uppercase tracking-[0.18em] text-stone-500">
+          <div className={cn("rounded-2xl border px-3 py-2", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
+            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", theme === 'light' ? "text-stone-500" : "text-stone-500")}>
               <ShieldCheck className="w-3 h-3 text-emerald-400" />
               <span>Pada</span>
             </div>
-            <div className="mt-1 text-sm font-black text-white">{livePada.code}</div>
+            <div className={cn("mt-1 text-sm font-black", theme === 'light' ? "text-stone-900" : "text-white")}>{livePada.code}</div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-black/25 px-3 py-2">
-            <div className="flex items-center gap-1 text-[9px] uppercase tracking-[0.18em] text-stone-500">
+          <div className={cn("rounded-2xl border px-3 py-2", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
+            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", theme === 'light' ? "text-stone-500" : "text-stone-500")}>
               <Gauge className="w-3 h-3 text-cyan-400" />
               <span>Tilt</span>
             </div>
-            <div className="mt-1 text-sm font-black text-white">{totalTilt.toFixed(1)}°</div>
+            <div className={cn("mt-1 text-sm font-black", theme === 'light' ? "text-stone-900" : "text-white")}>{totalTilt.toFixed(1)}°</div>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-black/25 px-3 py-2">
-            <div className="flex items-center gap-1 text-[9px] uppercase tracking-[0.18em] text-stone-500">
+          <div className={cn("rounded-2xl border px-3 py-2", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
+            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", theme === 'light' ? "text-stone-500" : "text-stone-500")}>
               <MapPinned className="w-3 h-3 text-amber-400" />
               <span>Score</span>
             </div>
-            <div className="mt-1 text-sm font-black text-white">{floorplanScore}%</div>
+            <div className={cn("mt-1 text-sm font-black", theme === 'light' ? "text-stone-900" : "text-white")}>{floorplanScore}%</div>
           </div>
         </div>
 
         {/* Pitch / Roll / Level integrated into bottom of dashboard */}
-        <div className="w-full flex items-center justify-between px-3 py-2 rounded-2xl border border-white/10 bg-black/25">
+        <div className={cn("w-full flex items-center justify-between px-3 py-2 rounded-2xl border", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] uppercase tracking-[0.18em] text-stone-500">PITCH</span>
-            <span className="text-sm font-black font-mono text-amber-400">{Math.round(pitch)}°</span>
+            <span className={cn("text-sm font-black font-mono", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{Math.round(pitch)}°</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-[9px] uppercase tracking-[0.18em] text-stone-500">ROLL</span>
-            <span className="text-sm font-black font-mono text-amber-400">{Math.round(roll)}°</span>
+            <span className={cn("text-sm font-black font-mono", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{Math.round(roll)}°</span>
           </div>
           <span className={cn(
             "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border tracking-wider",
-            isLevel ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.4)]" : "bg-rose-950/60 text-rose-300 border-rose-500/40"
+            isLevel
+              ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.4)]")
+              : (theme === 'light' ? "bg-rose-100 text-rose-700 border-rose-400" : "bg-rose-950/60 text-rose-300 border-rose-500/40")
           )}>
             {isLevel ? 'LEVEL' : 'TILT'}
           </span>
         </div>
       </div>
 
-      <div className="w-full max-w-sm rounded-[26px] p-4 border border-emerald-500/20 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_35%),linear-gradient(180deg,#07130F_0%,#050806_100%)] shadow-[0_15px_40px_rgba(0,0,0,0.75)] flex flex-col gap-2 mb-2">
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
+      <div className={cn(
+        "w-full max-w-sm rounded-[26px] p-4 border flex flex-col gap-2 mb-2",
+        theme === 'light'
+          ? "border-emerald-500/30 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.10),transparent_35%),linear-gradient(180deg,#f0fdf4_0%,#dcfce7_100%)] shadow-[0_15px_40px_rgba(0,0,0,0.12)]"
+          : "border-emerald-500/20 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_35%),linear-gradient(180deg,#07130F_0%,#050806_100%)] shadow-[0_15px_40px_rgba(0,0,0,0.75)]"
+      )}>
+        <div className={cn("flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em]", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
           <ScanSearch className="w-3.5 h-3.5" />
           <span>Live Premium Insight</span>
         </div>
-        <p className="text-sm font-black text-white">{premiumInsight}</p>
-        <p className="text-[11px] leading-relaxed text-stone-300">
+        <p className={cn("text-sm font-black", theme === 'light' ? "text-emerald-900" : "text-white")}>{premiumInsight}</p>
+        <p className={cn("text-[11px] leading-relaxed", theme === 'light' ? "text-emerald-800" : "text-stone-300")}>
           Ideal for: {liveHeadingAdvice.idealFor}. Avoid for: {liveHeadingAdvice.avoidFor}.
         </p>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 2. THE 6 SUB-TABS (EXACTLY AS IN USER SCREENSHOTS) */}
-      {/* ========================================================================= */}
-      <div 
-        className="w-full max-w-sm flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1 touch-pan-x"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {[
-          { id: 'vastu', label: 'Vastu', icon: '✨' },
-          { id: 'jyotish', label: 'Jyotish', icon: '⭐' },
-          { id: 'numerology', label: 'Numerology', icon: '#' },
-          { id: 'sadhana', label: 'Sadhana', icon: '⊙' },
-          { id: 'feng_shui', label: 'Feng Shui', icon: '🧭' },
-          { id: 'qibla', label: 'Qibla', icon: '↗' }
-        ].map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id as VastuSubTab);
-                triggerHaptic();
-              }}
-              className={cn(
-                "px-3.5 py-1.5 rounded-full text-[11px] font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 shadow-sm active:scale-95",
-                isActive
-                  ? "bg-stone-800 text-white border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.25)] scale-[1.03]"
-                  : "bg-stone-950/80 text-stone-400 border-white/10 hover:text-white hover:border-white/25"
-              )}
-            >
-              <span className="text-xs">{tab.icon}</span>
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
       </div>
 
       {/* ========================================================================= */}
@@ -632,37 +655,46 @@ export const VastuOthersView: React.FC<Props> = ({
           <div className="w-full flex items-center gap-1.5">
             <button
               onClick={() => { setShowARScanner(true); triggerHaptic(); }}
-              className="flex-1 py-2 rounded-xl bg-stone-900 border border-amber-500/30 text-amber-300 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              className={cn(
+                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all",
+                theme === 'light' ? "bg-white border-amber-400 text-amber-800" : "bg-stone-900 border-amber-500/30 text-amber-300"
+              )}
             >
               <Camera className="w-3.5 h-3.5" />
               <span>AR Scan</span>
             </button>
             <button
               onClick={() => { setShowFloorPlan(true); triggerHaptic(); }}
-              className="flex-1 py-2 rounded-xl bg-stone-900 border border-amber-500/30 text-amber-300 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              className={cn(
+                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all",
+                theme === 'light' ? "bg-white border-amber-400 text-amber-800" : "bg-stone-900 border-amber-500/30 text-amber-300"
+              )}
             >
               <Layers className="w-3.5 h-3.5" />
               <span>Floor Plan</span>
             </button>
             <button
               onClick={() => { setShowWeather(true); triggerHaptic(); }}
-              className="flex-1 py-2 rounded-xl bg-stone-900 border border-amber-500/30 text-amber-300 text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              className={cn(
+                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all",
+                theme === 'light' ? "bg-white border-amber-400 text-amber-800" : "bg-stone-900 border-amber-500/30 text-amber-300"
+              )}
             >
               <Sun className="w-3.5 h-3.5" />
               <span>Weather</span>
             </button>
           </div>
 
-          <div className="w-full rounded-2xl border border-white/10 bg-stone-950/70 px-3.5 py-2.5 shadow-xl">
+          <div className={cn("w-full rounded-2xl border px-3.5 py-2.5 shadow-xl", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-stone-950/70")}>
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-300">Best Direction Live</div>
-                <div className="mt-0.5 text-[13px] font-black text-white truncate">{activityDirections.title}</div>
+                <div className={cn("text-[9px] font-black uppercase tracking-[0.2em]", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>Best Direction Live</div>
+                <div className={cn("mt-0.5 text-[13px] font-black truncate", theme === 'light' ? "text-stone-900" : "text-white")}>{activityDirections.title}</div>
                 <div className={cn("mt-0.5 text-[10px] font-bold truncate", activityDirections.color)}>{activityDirections.facing}</div>
               </div>
-              <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1.5 text-center shrink-0">
+              <div className={cn("rounded-xl border px-2.5 py-1.5 text-center shrink-0", theme === 'light' ? "border-cyan-500/30 bg-cyan-500/10" : "border-cyan-500/20 bg-cyan-500/10")}>
                 <div className="text-[8px] uppercase tracking-[0.18em] text-stone-500">Target</div>
-                <div className="text-base font-black font-mono text-cyan-300">{Math.round(activityDirections.targetDeg)}°</div>
+                <div className={cn("text-base font-black font-mono", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>{Math.round(activityDirections.targetDeg)}°</div>
               </div>
             </div>
           </div>
@@ -758,23 +790,30 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {activeTab === 'qibla' && (
         <div className="w-full flex flex-col gap-3">
-          <div className="w-full rounded-3xl p-4 border border-emerald-900/40 bg-gradient-to-b from-[#0A1E14] to-[#040E0A] shadow-2xl flex flex-col gap-3 text-xs text-center">
-            <span className="font-black text-sm text-emerald-300 uppercase tracking-wider flex items-center justify-center gap-1.5">
+          <div className={cn(
+            "w-full rounded-3xl p-4 border flex flex-col gap-3 text-xs text-center",
+            theme === 'light'
+              ? "border-emerald-900/30 bg-gradient-to-b from-[#ECFDF5] to-[#D1FAE5] shadow-2xl"
+              : "border-emerald-900/40 bg-gradient-to-b from-[#0A1E14] to-[#040E0A] shadow-2xl"
+          )}>
+            <span className={cn("font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5", theme === 'light' ? "text-emerald-800" : "text-emerald-300")}>
               <span>↗</span>
               <span>Qibla Direction (Makkah Al-Mukarramah)</span>
             </span>
 
-            <div className="p-3 rounded-2xl bg-black/40 border border-white/10 flex flex-col items-center gap-1">
-              <span className="text-[10px] uppercase text-stone-400 font-bold">Kaaba Bearing from Your GPS:</span>
-              <span className="text-3xl font-black font-mono text-emerald-400">{qiblaData.qiblaBearing}°</span>
-              <span className="text-[10.5px] text-stone-300 font-bold">
+            <div className={cn("p-3 rounded-2xl border flex flex-col items-center gap-1", theme === 'light' ? "bg-white border-stone-200" : "bg-black/40 border-white/10")}>
+              <span className={cn("text-[10px] uppercase font-bold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>Kaaba Bearing from Your GPS:</span>
+              <span className={cn("text-3xl font-black font-mono", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>{qiblaData.qiblaBearing}°</span>
+              <span className={cn("text-[10.5px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
                 Distance: {qiblaData.distanceKm} km
               </span>
             </div>
 
             <div className={cn(
               "p-3 rounded-2xl border flex items-center justify-center gap-2 font-black transition-all",
-              qiblaData.isFacingQibla ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]" : "bg-stone-900 text-stone-400 border-white/10"
+              qiblaData.isFacingQibla
+                ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]")
+                : (theme === 'light' ? "bg-white text-stone-600 border-stone-300" : "bg-stone-900 text-stone-400 border-white/10")
             )}>
               <Navigation className="w-4 h-4" />
               <span>{qiblaData.isFacingQibla ? "ALIGNED WITH KAABA ✓" : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`}</span>
@@ -786,9 +825,14 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {/* 9. CREATOR BRANDING FOOTER CARD (EXACTLY AS IN ALL SCREENSHOTS) */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-sm rounded-[24px] p-4 bg-gradient-to-r from-[#181109] via-[#2A180B] to-[#140C04] border border-amber-500/40 shadow-2xl flex flex-col items-center justify-center text-center mt-4">
+      <div className={cn(
+        "w-full max-w-sm rounded-[24px] p-4 border shadow-2xl flex flex-col items-center justify-center text-center mt-4",
+        theme === 'light'
+          ? "bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FCD34D] border-amber-400"
+          : "bg-gradient-to-r from-[#181109] via-[#2A180B] to-[#140C04] border-amber-500/40"
+      )}>
         <div className="flex items-center gap-2 mb-1">
-          <h4 className="text-sm font-serif font-black tracking-wider text-amber-300 uppercase">
+          <h4 className={cn("text-sm font-serif font-black tracking-wider uppercase", theme === 'light' ? "text-amber-900" : "text-amber-300")}>
             BY AADISH JAIN
           </h4>
           <span className="px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-amber-500 text-stone-950 shadow-sm">
@@ -796,11 +840,11 @@ export const VastuOthersView: React.FC<Props> = ({
           </span>
         </div>
 
-        <p className="text-[10.5px] text-stone-300 font-bold tracking-wide">
+        <p className={cn("text-[10.5px] font-bold tracking-wide", theme === 'light' ? "text-amber-900" : "text-stone-300")}>
           Spiritual & Vastu Guidance Services
         </p>
 
-        <span className="text-[9px] text-stone-400 mt-1 flex items-center gap-1 font-bold">
+        <span className={cn("text-[9px] mt-1 flex items-center gap-1 font-bold", theme === 'light' ? "text-amber-800" : "text-stone-400")}>
           <span>Made with</span>
           <span className="text-rose-500">❤️</span>
           <span>for Spiritual Alignment</span>

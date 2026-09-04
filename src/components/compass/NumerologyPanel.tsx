@@ -64,14 +64,14 @@ export const NumerologyPanel = ({
                   theme === 'light' ? "bg-cyan-50/50 border-cyan-500/20" : "bg-cyan-950/20 border-cyan-900/40"
                 )}>
                   <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">{language === 'hi' ? 'ड्राइवर (मूलांक)' : 'Driver (Mulank)'}</span>
-                  <span className="text-2xl font-black text-cyan-400 mt-1">{mulank}</span>
+                  <span className={cn("text-2xl font-black mt-1", theme === 'light' ? "text-cyan-700" : "text-cyan-400")}>{mulank}</span>
                 </div>
                 <div className={cn(
                   "p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center text-center",
                   theme === 'light' ? "bg-cyan-50/50 border-cyan-500/20" : "bg-cyan-900/40 border-cyan-900/40"
                 )}>
                   <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">{language === 'hi' ? 'कंडक्टर (भाग्यांक)' : 'Conductor (Bhagyank)'}</span>
-                  <span className="text-2xl font-black text-cyan-400 mt-1">{numerologyNumber}</span>
+                  <span className={cn("text-2xl font-black mt-1", theme === 'light' ? "text-cyan-700" : "text-cyan-400")}>{numerologyNumber}</span>
                 </div>
               </div>
 
@@ -81,7 +81,7 @@ export const NumerologyPanel = ({
                   "p-3 rounded-2xl border transition-all duration-300 space-y-2",
                   theme === 'light' ? "bg-white border-cyan-500/20" : "bg-stone-950/80 border-stone-900"
                 )}>
-                  <h5 className="text-[10px] text-cyan-400 uppercase font-black tracking-wider text-center">
+                  <h5 className={cn("text-[10px] uppercase font-black tracking-wider text-center", theme === 'light' ? "text-cyan-700" : "text-cyan-400")}>
                     {language === 'hi' ? 'लो शू ग्रिड (Lo Shu Grid)' : 'Lo Shu Grid Magic Square'}
                   </h5>
                   <div className="grid grid-cols-3 gap-1.5 max-w-[12rem] mx-auto">
@@ -98,7 +98,7 @@ export const NumerologyPanel = ({
                             className={cn(
                               "h-10 rounded-lg flex flex-col items-center justify-center border transition-all duration-300 relative shadow-sm",
                               frequency > 0
-                                ? "bg-cyan-500/10 border-cyan-500/40 text-cyan-200"
+                                ? cn("border-cyan-500/40", theme === 'light' ? "bg-cyan-500/10 text-cyan-800" : "bg-cyan-500/10 text-cyan-200")
                                 : "bg-stone-900/40 border-stone-800 text-stone-600 opacity-40"
                             )}
                           >
@@ -128,7 +128,7 @@ export const NumerologyPanel = ({
               )}>
                 <div className="flex justify-between items-center border-b border-white/5 pb-2">
                   <span className="text-stone-400 font-bold">{language === 'hi' ? 'स्वामी ग्रह:' : 'Ruling Planet:'}</span>
-                  <span className="font-extrabold text-cyan-300">
+                  <span className={cn("font-extrabold", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>
                     {
                       ['Sun (Surya)', 'Moon (Chandra)', 'Jupiter (Guru)', 'Rahu', 'Mercury (Budh)', 'Venus (Shukra)', 'Ketu', 'Saturn (Shani)', 'Mars (Mangal)'][numerologyNumber - 1]
                     }
@@ -195,7 +195,7 @@ export const NumerologyPanel = ({
                 <div className="grid grid-cols-2 gap-2 text-[10px] border-b border-white/5 pb-2">
                   <div>
                     <span className="text-stone-400 font-bold block">{language === 'hi' ? 'क्या खरीदें/पास रखें:' : 'What to Buy/Carry:'}</span>
-                    <span className="font-extrabold text-cyan-300">
+                    <span className={cn("font-extrabold", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>
                       {
                         [
                           language === 'hi' ? 'तांबे की वस्तुएं, लाल धागा' : 'Copper items, Red thread',
@@ -213,7 +213,7 @@ export const NumerologyPanel = ({
                   </div>
                   <div>
                     <span className="text-stone-400 font-bold block">{language === 'hi' ? 'शुभ दिन:' : 'Lucky Days:'}</span>
-                    <span className="font-extrabold text-cyan-300">
+                    <span className={cn("font-extrabold", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>
                       {
                         ['Sunday, Monday', 'Monday, Sunday', 'Thursday, Tuesday', 'Wednesday, Friday', 'Wednesday, Friday', 'Friday, Wednesday', 'Monday, Sunday', 'Saturday, Friday', 'Tuesday, Thursday'][mulank - 1]
                       }
@@ -249,7 +249,7 @@ export const NumerologyPanel = ({
               "p-4 rounded-2xl border transition-all duration-300 space-y-4 text-xs mt-3",
               theme === 'light' ? "bg-white border-cyan-500/20" : "bg-stone-950/80 border-stone-900"
             )}>
-              <h4 className="text-[10px] font-black uppercase tracking-wider text-cyan-400">
+              <h4 className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-cyan-700" : "text-cyan-400")}>
                 {language === 'hi' ? 'अंक अनुकूलता कैलकुलेटर' : 'Ank Compatibility Calculators'}
               </h4>
 

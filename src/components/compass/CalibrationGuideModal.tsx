@@ -64,24 +64,27 @@ export const CalibrationGuideModal = ({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/10 active:scale-90 transition-transform text-stone-400 hover:text-white"
+            className={cn(
+              "absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 active:scale-90 transition-transform",
+              theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-400 hover:bg-white/10 hover:text-white"
+            )}
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Heading */}
           <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">
+            <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">
               {language === 'hi' ? 'सटीकता कैलिब्रेशन' : 'Precision Calibration'}
             </span>
           </div>
 
-          <h3 className="text-lg font-black font-serif text-white mb-2">
+          <h3 className={cn("text-lg font-black font-serif mb-2", theme === 'light' ? "text-amber-950" : "text-white")}>
             {language === 'hi' ? '8-आकार (Figure-8) में घुमाएँ' : 'Wave in Figure-8 Motion'}
           </h3>
 
-          <p className="text-xs text-stone-400 max-w-[260px] leading-relaxed mb-6">
+          <p className={cn("text-xs max-w-[260px] leading-relaxed mb-6", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
             {language === 'hi'
               ? 'चुंबकीय सटीकता और शून्य-विचलन के लिए अपने फोन को हवा में 8 के आकार में 2-3 बार धीरे-धीरे घुमाएँ।'
               : 'Smoothly move your device in an infinity (∞) / figure-8 pattern in the air to calibrate magnetic sensors.'}
@@ -118,19 +121,24 @@ export const CalibrationGuideModal = ({
 
           {/* Interference Badge if flagged */}
           {magneticInterference && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold mb-4">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+            <div className={cn(
+              "flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold mb-4",
+              theme === 'light'
+                ? "bg-amber-500/10 border-amber-500/40 text-amber-700"
+                : "bg-amber-500/10 border-amber-500/30 text-amber-300"
+            )}>
+              <AlertTriangle className={cn("w-3.5 h-3.5", theme === 'light' ? "text-amber-600" : "text-amber-400")} />
               <span>{language === 'hi' ? 'चुंबकीय हस्तक्षेप पहचाना गया' : 'Interference Detected'}</span>
             </div>
           )}
 
           {/* Progress bar */}
           <div className="w-full space-y-1.5 mb-5">
-            <div className="flex justify-between text-[11px] font-black text-stone-400">
+            <div className={cn("flex justify-between text-[11px] font-black", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
               <span>{language === 'hi' ? 'सेंसर संरेखन' : 'Sensor Alignment'}</span>
-              <span className={cn(isCalibrated ? "text-emerald-400" : "text-amber-400")}>{progress}%</span>
+              <span className={cn(isCalibrated ? "text-emerald-500" : "text-amber-500")}>{progress}%</span>
             </div>
-            <div className="w-full h-2 rounded-full bg-stone-800 overflow-hidden border border-white/10">
+            <div className={cn("w-full h-2 rounded-full overflow-hidden border", theme === 'light' ? "bg-stone-200 border-stone-300" : "bg-stone-800 border-white/10")}>
               <motion.div
                 className={cn(
                   "h-full rounded-full transition-all duration-300",

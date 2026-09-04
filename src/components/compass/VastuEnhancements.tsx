@@ -94,7 +94,7 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
       className={cn(
         "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider flex flex-col items-center gap-1 border transition-all active:scale-95",
         activeSection === id
-          ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
+          ? (theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-400" : "bg-amber-500/20 text-amber-300 border-amber-500/40")
           : (theme === 'light' ? "bg-white border-stone-200 text-stone-500" : "bg-stone-900 border-stone-800 text-stone-400")
       )}
     >
@@ -125,7 +125,10 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
           </h5>
 
           {/* Octagonal-ish 3x3 grid with center */}
-          <div className="grid grid-cols-3 gap-1.5 p-2 bg-black/40 rounded-xl border border-white/10 text-center">
+          <div className={cn(
+            "grid grid-cols-3 gap-1.5 p-2 rounded-xl border text-center",
+            theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-black/40 border-white/10"
+          )}>
             {[
               { code: 'NW', name: isHi ? 'वायव्य' : 'NW' },
               { code: 'N', name: isHi ? 'उत्तर' : 'N' },
@@ -148,26 +151,29 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
                       ? "bg-amber-500/25 border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.4)] scale-[1.03]"
                       : zone
                       ? cn("bg-gradient-to-br border", zone.color)
-                      : "bg-stone-900/60 border-white/10"
+                      : (theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/60 border-white/10")
                   )}
                 >
-                  <span className="text-[8px] font-black uppercase text-stone-300">{sec.name}</span>
+                  <span className={cn("text-[8px] font-black uppercase", theme === 'light' ? "text-stone-600" : "text-stone-300")}>{sec.name}</span>
                   {zone && <span className="text-[10px]">{zone.icon}</span>}
-                  {isCurrent && <span className="text-[7px] font-black text-amber-300 animate-pulse">●</span>}
+                  {isCurrent && <span className={cn("text-[7px] font-black animate-pulse", theme === 'light' ? "text-amber-600" : "text-amber-300")}>●</span>}
                 </div>
               );
             })}
           </div>
 
           {/* Current zone detail */}
-          <div className="mt-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10">
+          <div className={cn(
+            "mt-3 p-3 rounded-xl border",
+            theme === 'light' ? "border-amber-500/40 bg-amber-50" : "border-amber-500/30 bg-amber-500/10"
+          )}>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">
+              <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
                 {isHi ? 'वर्तमान दिशा' : 'Current Direction'}
               </span>
-              <span className="text-[10px] font-black text-amber-300">{currentZone}</span>
+              <span className={cn("text-[10px] font-black", theme === 'light' ? "text-amber-800" : "text-amber-300")}>{currentZone}</span>
             </div>
-            <p className="text-[11px] font-medium text-stone-300 mt-1">
+            <p className={cn("text-[11px] font-medium mt-1", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
               {isHi
                 ? `${ZONES.find(z => z.code === currentZone)?.nameHi} — ${currentHeading !== null ? Math.round(currentHeading) : '—'}°`
                 : `${ZONES.find(z => z.code === currentZone)?.nameEn} — ${currentHeading !== null ? Math.round(currentHeading) : '—'}°`}
@@ -185,9 +191,9 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
               const abs = Math.round(Math.abs(diff));
               if (abs < 5) return null;
               return (
-                <div className="mt-2 pt-2 border-t border-amber-500/20 flex items-center gap-2">
-                  <span className="text-[10px] font-black text-amber-300">↻</span>
-                  <span className="text-[10px] font-bold text-stone-300">
+                <div className={cn("mt-2 pt-2 border-t flex items-center gap-2", theme === 'light' ? "border-amber-500/30" : "border-amber-500/20")}>
+                  <span className={cn("text-[10px] font-black", theme === 'light' ? "text-amber-700" : "text-amber-300")}>↻</span>
+                  <span className={cn("text-[10px] font-bold", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                     {isHi
                       ? `सर्वोत्तम (${idealZone}) के लिए ${abs}° ${dir} घुमाएं`
                       : `Rotate ${abs}° ${dir} to align with ${idealZone}`}
@@ -230,14 +236,17 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
           {(() => {
             const act = ACTIVITIES.find(a => a.id === searchActivity) || ACTIVITIES[0];
             return (
-              <div className="mt-2 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10">
+              <div className={cn(
+                "mt-2 p-3 rounded-xl border",
+                theme === 'light' ? "border-amber-500/40 bg-amber-50" : "border-amber-500/30 bg-amber-500/10"
+              )}>
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">
+                  <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
                     {isHi ? 'सर्वोत्तम दिशाएं' : 'Best Zones'}
                   </span>
-                  <span className="text-[10px] font-black text-amber-300">{act.best.join(', ')}</span>
+                  <span className={cn("text-[10px] font-black", theme === 'light' ? "text-amber-800" : "text-amber-300")}>{act.best.join(', ')}</span>
                 </div>
-                <p className="text-[11px] font-medium text-stone-300 mt-1.5">
+                <p className={cn("text-[11px] font-medium mt-1.5", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                   {isHi ? act.facing : act.facing}
                 </p>
                 <div className="flex gap-1.5 mt-2">
@@ -278,14 +287,14 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
                 <span className="text-base leading-none">{d.severity === 'major' ? '🔴' : '🟡'}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className={cn("text-[10px] font-black uppercase tracking-wider", d.severity === 'major' ? "text-red-400" : "text-amber-400")}>
+                    <span className={cn("text-[10px] font-black uppercase tracking-wider", d.severity === 'major' ? (theme === 'light' ? "text-red-700" : "text-red-400") : (theme === 'light' ? "text-amber-700" : "text-amber-400"))}>
                       {isHi ? d.labelHi : d.labelEn}
                     </span>
-                    <span className={cn("text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full border", d.severity === 'major' ? "text-red-400 border-red-500/40" : "text-amber-400 border-amber-500/40")}>
+                    <span className={cn("text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full border", d.severity === 'major' ? (theme === 'light' ? "text-red-700 border-red-500/50" : "text-red-400 border-red-500/40") : (theme === 'light' ? "text-amber-700 border-amber-500/50" : "text-amber-400 border-amber-500/40"))}>
                       {d.severity === 'major' ? (isHi ? 'गंभीर' : 'Major') : (isHi ? 'मध्यम' : 'Moderate')}
                     </span>
                   </div>
-                  <p className="text-[10px] font-medium text-stone-300 mt-1">
+                  <p className={cn("text-[10px] font-medium mt-1", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                     {isHi ? d.remedyHi : d.remedyEn}
                   </p>
                 </div>
@@ -318,7 +327,7 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
               <div className={cn("text-[10px] font-black uppercase tracking-wider", choghadiya.currentSlot.color)}>
                 {isHi ? choghadiya.currentSlot.nameHi : choghadiya.currentSlot.name}
               </div>
-              <div className="text-[10px] font-bold text-stone-300 mt-0.5">
+              <div className={cn("text-[10px] font-bold mt-0.5", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                 {choghadiya.currentSlot.startTime} - {choghadiya.currentSlot.endTime}
               </div>
             </div>
@@ -329,10 +338,10 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
 
           {choghadiya.nextGoodSlot && (
             <div className="mt-2 p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-300">
+              <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
                 {isHi ? 'अगला शुभ मुहूर्त' : 'Next Good Muhurat'}
               </span>
-              <span className="text-[10px] font-black text-emerald-300">
+              <span className={cn("text-[10px] font-black", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
                 {isHi ? choghadiya.nextGoodSlot.nameHi : choghadiya.nextGoodSlot.name} · {choghadiya.nextGoodSlot.startTime}
               </span>
             </div>
@@ -349,7 +358,7 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
         {isHi ? 'वास्तु रिपोर्ट साझा करें' : 'Share Vastu Report'}
       </button>
       {shareMsg && (
-        <div className="text-center text-[11px] font-bold text-emerald-400 animate-in fade-in">
+        <div className={cn("text-center text-[11px] font-bold animate-in fade-in", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>
           {shareMsg}
         </div>
       )}

@@ -59,7 +59,7 @@ const WeatherModal = React.lazy(() => import('@/components/compass/WeatherModal'
 const STYLE_STORAGE_KEY = 'com.hcompass.app_style';
 
 export const CompassView = () => {
-  const { location, times } = useSunTimes();
+  const { location, times, liveTracking, toggleLiveTracking } = useSunTimes();
   const { theme } = useTheme();
   const { language, toggleLanguage, setLanguage } = useLanguage();
   const t = translations[language];
@@ -610,10 +610,20 @@ export const CompassView = () => {
           </div>
           <div className="flex flex-col text-left justify-center">
             <h1 className="text-base sm:text-lg font-black tracking-tight leading-snug pt-0.5 pb-0">
-              <span className="bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_1px_2px_rgba(217,119,6,0.3)]">
+              <span className={cn(
+                "bg-clip-text text-transparent",
+                theme === 'light'
+                  ? "bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]"
+                  : "bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400 drop-shadow-[0_1px_2px_rgba(217,119,6,0.3)]"
+              )}>
                 DIGITAL{' '}
               </span>
-              <span className="bg-gradient-to-r from-rose-400 via-red-500 to-rose-600 bg-clip-text text-transparent drop-shadow-[0_1px_2px_rgba(220,38,38,0.3)]">
+              <span className={cn(
+                "bg-clip-text text-transparent",
+                theme === 'light'
+                  ? "bg-gradient-to-r from-rose-700 via-red-700 to-rose-900 drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]"
+                  : "bg-gradient-to-r from-rose-400 via-red-500 to-rose-600 drop-shadow-[0_1px_2px_rgba(220,38,38,0.3)]"
+              )}>
                 COMPASS
               </span>
             </h1>
@@ -877,7 +887,12 @@ export const CompassView = () => {
           )}
 
           {/* Main Crimson Obsidian Dashboard Card */}
-          <div className="w-full max-w-sm rounded-[28px] p-4 border border-red-900/60 bg-gradient-to-b from-[#18090C] via-[#120608] to-[#0A0304] shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_30px_rgba(220,38,38,0.18)] flex flex-col gap-3 my-2 text-white">
+          <div className={cn(
+            "w-full max-w-sm rounded-[28px] p-4 border flex flex-col gap-3 my-2",
+            theme === 'light'
+              ? "border-red-200 bg-gradient-to-b from-[#FFF7F7] via-[#FEF2F2] to-[#FDE8E8] shadow-[0_15px_50px_rgba(0,0,0,0.12),0_0_30px_rgba(220,38,38,0.08)] text-stone-900"
+              : "border-red-900/60 bg-gradient-to-b from-[#18090C] via-[#120608] to-[#0A0304] shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_30px_rgba(220,38,38,0.18)] text-white"
+          )}>
             
             {/* Top Quick Actions Row */}
             <div className="w-full flex items-center justify-between">
@@ -890,11 +905,11 @@ export const CompassView = () => {
                     "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
                     isFlashlightOn 
                       ? "bg-emerald-500 text-white border-emerald-400 shadow-[0_0_14px_#10b981]" 
-                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
                   title={t.torch}
                 >
-                  <FlashlightIcon className="w-4 h-4" />
+                  <FlashlightIcon className={cn("w-4 h-4", !isFlashlightOn && (theme === 'light' ? "text-amber-600" : "text-amber-400"))} />
                 </button>
 
                 {/* Vastu Inline Toggle */}
@@ -907,20 +922,23 @@ export const CompassView = () => {
                     "w-9 h-9 rounded-xl flex items-center justify-center active:scale-95 transition-all duration-200 border",
                     showVastuPanel
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.6)]"
-                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
                   title={language === 'hi' ? 'वास्तु मार्गदर्शन' : 'Vastu Guidance'}
                 >
-                  <Sparkles className="w-4 h-4" />
+                  <Sparkles className={cn("w-4 h-4", !showVastuPanel && (theme === 'light' ? "text-emerald-600" : "text-emerald-400"))} />
                 </button>
 
                 {/* Copy Coordinates */}
                 <button
                   onClick={copyCoordinates}
-                  className="w-9 h-9 rounded-xl bg-stone-800/80 border border-white/12 text-stone-300 hover:text-white hover:border-white/25 flex items-center justify-center active:scale-95 transition-all duration-200"
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
                   title={language === 'hi' ? 'कॉपी करें' : 'Copy Coordinates'}
                 >
-                  <Copy className="w-4 h-4" />
+                  <Copy className={cn("w-4 h-4", theme === 'light' ? "text-sky-600" : "text-sky-400")} />
                 </button>
 
                 {/* Qibla Toggle */}
@@ -934,11 +952,11 @@ export const CompassView = () => {
                     "w-9 h-9 rounded-xl flex items-center justify-center active:scale-95 transition-all duration-200 border",
                     isQiblaMode
                       ? "bg-emerald-500 text-white border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.6)]"
-                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
                   title={language === 'hi' ? 'किबला दिशा' : 'Qibla Direction'}
                 >
-                  <Navigation className="w-4 h-4" />
+                  <Navigation className={cn("w-4 h-4", !isQiblaMode && (theme === 'light' ? "text-teal-600" : "text-teal-400"))} />
                 </button>
               </div>
 
@@ -955,11 +973,11 @@ export const CompassView = () => {
                     "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
                     isHeadingLocked 
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]" 
-                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
                   title="Lock Heading"
                 >
-                  {isHeadingLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                  {isHeadingLocked ? <Lock className="w-4 h-4" /> : <Unlock className={cn("w-4 h-4", theme === 'light' ? "text-rose-600" : "text-rose-400")} />}
                 </button>
 
                 {/* Set Target + Lock */}
@@ -980,11 +998,11 @@ export const CompassView = () => {
                     "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
                     targetHeading !== null
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]"
-                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
                   title={language === 'hi' ? 'लक्ष्य सेट करें' : 'Set Target'}
                 >
-                  <Target className="w-4 h-4" />
+                  <Target className={cn("w-4 h-4", targetHeading === null && (theme === 'light' ? "text-orange-600" : "text-orange-400"))} />
                 </button>
 
                 {/* Pin / Always Visible */}
@@ -999,11 +1017,11 @@ export const CompassView = () => {
                     "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
                     alwaysVisible
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]"
-                      : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
                   title={language === 'hi' ? 'हमेशा दिखाएं' : 'Pin (Always Visible)'}
                 >
-                  <Pin className="w-4 h-4" />
+                  <Pin className={cn("w-4 h-4", !alwaysVisible && (theme === 'light' ? "text-violet-600" : "text-violet-400"))} />
                 </button>
 
                 {/* Vastu Report */}
@@ -1012,22 +1030,28 @@ export const CompassView = () => {
                     setMainTab('vastu');
                     triggerHapticFeedback();
                   }}
-                  className="w-9 h-9 rounded-xl bg-stone-800/80 border border-white/12 text-stone-300 hover:text-white hover:border-white/25 flex items-center justify-center active:scale-95 transition-all duration-200"
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
                   title={language === 'hi' ? 'वास्तु रिपोर्ट' : 'Vastu Report'}
                 >
-                  <Bookmark className="w-4 h-4" />
+                  <Bookmark className={cn("w-4 h-4", theme === 'light' ? "text-fuchsia-600" : "text-fuchsia-400")} />
                 </button>
               </div>
             </div>
 
             {/* Center Heading Readout */}
             {selectedStyle === 'vedic_mandala' ? (
-              <div className="w-full p-2.5 rounded-2xl bg-[#14120E] border border-amber-500/50 text-white flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.8)] my-1">
+              <div className={cn(
+                "w-full p-2.5 rounded-2xl border flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.8)] my-1",
+                theme === 'light' ? "bg-white border-amber-500/40 text-stone-900" : "bg-[#14120E] border-amber-500/50 text-white"
+              )}>
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 font-mono font-black text-xs border border-amber-500/40">
                     {get32Pada(displayHeading).code} • {get32Pada(displayHeading).nameHi}
                   </span>
-                  <span className="text-xs text-stone-300 font-mono font-bold">
+                  <span className={cn("text-xs font-mono font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
                     {get32Pada(displayHeading).startDeg.toFixed(1)}° - {get32Pada(displayHeading).endDeg.toFixed(1)}°
                   </span>
                 </div>
@@ -1099,17 +1123,19 @@ export const CompassView = () => {
             )}
 
             {/* GPS Coordinates & Accuracy */}
-            <div className="w-full flex items-center justify-between text-xs pt-1 border-t border-white/10">
+            <div className={cn("w-full flex items-center justify-between text-xs pt-1 border-t", theme === 'light' ? "border-stone-200" : "border-white/10")}>
               <button
                 onClick={copyCoordinates}
-                className="flex items-center gap-1.5 text-amber-300 font-mono font-bold hover:text-amber-200 transition-colors"
+                className={cn("flex items-center gap-1.5 font-mono font-bold hover:opacity-80 transition-colors", theme === 'light' ? "text-amber-700" : "text-amber-300 hover:text-amber-200")}
               >
-                <Globe className="w-3.5 h-3.5 text-amber-400" />
+                <Globe className={cn("w-3.5 h-3.5", theme === 'light' ? "text-amber-600" : "text-amber-400")} />
                 <div className="flex flex-col items-start text-left">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400">
-                    {location?.city ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}` : ''}
+                  <span className={cn("text-[9px] font-bold uppercase tracking-wider", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
+                    {location?.city
+                      ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}${location.state ? `, ${language === 'hi' ? location.state : (location.stateEn || location.state)}` : ''}`
+                      : ''}
                   </span>
-                  <span className="text-[10px] font-mono opacity-80">
+                  <span className="text-[10px] font-mono font-bold opacity-80">
                     {location ? `${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°` : '18.5504°, 73.9201°'}
                   </span>
                 </div>
@@ -1120,42 +1146,61 @@ export const CompassView = () => {
                   <span className={cn(
                     "text-[9px] font-black uppercase tracking-wider flex items-center gap-1",
                     location.accuracy <= 15
-                      ? "text-emerald-400"
+                      ? (theme === 'light' ? "text-emerald-700" : "text-emerald-400")
                       : location.accuracy <= 50
-                      ? "text-amber-400"
+                      ? (theme === 'light' ? "text-amber-700" : "text-amber-400")
                       : "text-red-400"
                   )}>
                     <Crosshair className="w-3 h-3" />
                     <span>{location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±{Math.round(location.accuracy)}m</span>
                   </span>
                 ) : (
-                  <span className="text-[9px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                  <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>
                     <Crosshair className="w-3 h-3" />
                     <span>HIGH ACC</span>
                   </span>
                 )}
-                <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400 flex items-center gap-1">
-                  <Mountain className="w-3 h-3 text-stone-500" />
+                <span className={cn("text-[9px] font-bold uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
+                  <Mountain className={cn("w-3 h-3", theme === 'light' ? "text-stone-400" : "text-stone-500")} />
                   <span>SEA LEVEL: {location?.altitude ? Math.round(location.altitude * 3.28084) : 1632} FT</span>
                 </span>
               </div>
-              {location?.speed && location.speed > 0.5 && (
-                <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[10px] font-bold text-emerald-300 flex items-center gap-1">
-                  <Gauge className="w-3 h-3" />
-                  <span>{Math.round(location.speed * 3.6)} km/h</span>
+              {/* Speed readout — always visible, prominent for driving. Tap to toggle live GPS tracking. */}
+              <button
+                onClick={() => { toggleLiveTracking(); triggerHapticFeedback(ImpactStyle.Light); }}
+                title={liveTracking
+                  ? (language === 'hi' ? 'लाइव ट्रैकिंग चालू — बंद करने के लिए टैप करें' : 'Live tracking ON — tap to stop')
+                  : (language === 'hi' ? 'लाइव ट्रैकिंग बंद — चालू करने के लिए टैप करें' : 'Live tracking OFF — tap to start')}
+                className={cn(
+                  "px-2.5 py-1 rounded-xl border text-[11px] font-black flex items-center gap-1.5 shrink-0 active:scale-95 transition-all",
+                  liveTracking
+                    ? (theme === 'light' ? "bg-emerald-500 text-white border-emerald-600 shadow-[0_0_12px_rgba(16,185,129,0.4)]" : "bg-emerald-500 text-stone-950 border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.5)]")
+                    : (theme === 'light' ? "bg-emerald-100 border-emerald-400 text-emerald-800 hover:bg-emerald-200" : "bg-emerald-500/10 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20")
+                )}
+              >
+                <Gauge className={cn("w-3.5 h-3.5", liveTracking && "animate-pulse")} />
+                <span className="font-mono">{location?.speed != null ? Math.round(location.speed * 3.6) : 0} <span className="text-[8px] font-bold uppercase tracking-wider">km/h</span></span>
+                {/* Clear state + affordance indicator */}
+                <span className={cn(
+                  "text-[7.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded-md border",
+                  liveTracking
+                    ? (theme === 'light' ? "bg-white/25 text-white border-white/40" : "bg-stone-950/20 text-stone-950 border-stone-950/30")
+                    : (theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-400" : "bg-amber-500/20 text-amber-300 border-amber-500/40")
+                )}>
+                  {liveTracking ? (isHi ? 'लाइव' : 'LIVE') : (isHi ? 'चालू करें' : 'TAP')}
                 </span>
-              )}
+              </button>
             </div>
 
             {/* Surface Level: Pitch, Roll + Open Level Tab */}
-            <div className="w-full flex items-center justify-between text-xs pt-1 border-t border-white/10">
+            <div className={cn("w-full flex items-center justify-between text-xs pt-1 border-t", theme === 'light' ? "border-stone-200" : "border-white/10")}>
               <div className="flex items-center gap-1.5">
                 <Gauge className="w-3.5 h-3.5 text-emerald-400" />
                 <div className="flex flex-col items-start text-left">
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-stone-400">
+                  <span className={cn("text-[9px] font-bold uppercase tracking-wider", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
                     {language === 'hi' ? 'सतह स्तर' : 'SURFACE LEVEL'}
                   </span>
-                  <span className="text-[10px] font-mono text-stone-300">
+                  <span className={cn("text-[10px] font-mono font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
                     PITCH {pitch.toFixed(1)}° • ROLL {roll.toFixed(1)}°
                   </span>
                 </div>
@@ -1165,7 +1210,10 @@ export const CompassView = () => {
                   setMainTab('level');
                   triggerHapticFeedback();
                 }}
-                className="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1"
+                className={cn(
+                  "px-3 py-1 rounded-xl border text-[10px] font-black uppercase tracking-wider flex items-center gap-1 transition-colors",
+                  theme === 'light' ? "bg-emerald-100 border-emerald-400 text-emerald-800 hover:bg-emerald-200" : "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30"
+                )}
               >
                 <Gauge className="w-3 h-3" />
                 <span>{language === 'hi' ? 'खोलें' : 'OPEN'}</span>
@@ -1173,16 +1221,16 @@ export const CompassView = () => {
             </div>
 
             {/* Solar Cycle Times: RISE | NOON | SET */}
-            <div className="w-full flex items-center justify-between text-[10px] font-bold px-1 text-stone-300 font-mono">
-              <div className="flex items-center gap-1 text-amber-400">
+            <div className={cn("w-full flex items-center justify-between text-[10px] font-bold px-1 font-mono", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
+              <div className={cn("flex items-center gap-1", theme === 'light' ? "text-amber-700" : "text-amber-400")}>
                 <Sunrise className="w-3.5 h-3.5" />
                 <span>RISE: {formatTime(times.sunrise, '06:21 AM')}</span>
               </div>
-              <div className="flex items-center gap-1 text-amber-300">
-                <Sun className="w-3.5 h-3.5 text-yellow-400" />
+              <div className={cn("flex items-center gap-1", theme === 'light' ? "text-amber-700" : "text-amber-300")}>
+                <Sun className={cn("w-3.5 h-3.5", theme === 'light' ? "text-amber-500" : "text-yellow-400")} />
                 <span>NOON: {formatTime(times.solarNoon, '12:35 PM')}</span>
               </div>
-              <div className="flex items-center gap-1 text-purple-400">
+              <div className={cn("flex items-center gap-1", theme === 'light' ? "text-purple-700" : "text-purple-400")}>
                 <Sunset className="w-3.5 h-3.5" />
                 <span>SET: {formatTime(times.sunset, '06:50 PM')}</span>
               </div>
@@ -1191,29 +1239,32 @@ export const CompassView = () => {
             {/* Weather Telemetry Row (click to open detail) */}
             <button
               onClick={() => { setShowWeatherModal(true); triggerHapticFeedback(); }}
-              className="w-full flex items-center justify-between text-[10.5px] font-bold pt-2 border-t border-white/10 text-stone-300 hover:bg-white/[0.03] rounded-lg transition-colors"
+              className={cn(
+                "w-full flex items-center justify-between text-[10.5px] font-bold pt-2 border-t rounded-lg transition-colors",
+                theme === 'light' ? "border-stone-200 text-stone-700 hover:bg-stone-100/60" : "border-white/10 text-stone-300 hover:bg-white/[0.03]"
+              )}
             >
               <div className="flex items-center gap-2">
                 <span className="text-sm leading-none">{getWeatherIcon(weather?.code)}</span>
-                <span className="font-mono uppercase text-[10px]">
+                <span className="font-mono uppercase text-[10px] font-bold">
                   {weather ? `${weather.temp}°C • ${getWeatherDescription(weather.code, language).toUpperCase()}` : '24°C • PARTLY CLOUDY'}
                 </span>
               </div>
 
-              <div className="flex items-center gap-3 text-stone-400 font-mono text-[10px]">
+              <div className={cn("flex items-center gap-3 font-mono text-[10px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
                 <span className="flex items-center gap-1">
-                  <Droplets className="w-3 h-3 text-sky-400" />
+                  <Droplets className={cn("w-3 h-3", theme === 'light' ? "text-sky-600" : "text-sky-400")} />
                   {weather ? `${weather.humidity}%` : '82%'}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Wind className="w-3 h-3 text-teal-400" />
+                  <Wind className={cn("w-3 h-3", theme === 'light' ? "text-teal-600" : "text-teal-400")} />
                   {weather ? `${weather.windSpeed} km/h` : '15 km/h'}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Gauge className="w-3 h-3 text-red-400" />
+                  <Gauge className={cn("w-3 h-3", theme === 'light' ? "text-red-600" : "text-red-400")} />
                   {weather ? `${weather.pressure} hPa` : '947 hPa'}
                 </span>
-                <ChevronRight className="w-3 h-3 text-stone-500" />
+                <ChevronRight className={cn("w-3 h-3", theme === 'light' ? "text-stone-400" : "text-stone-500")} />
               </div>
             </button>
 
@@ -1357,6 +1408,8 @@ export const CompassView = () => {
           }}
           theme={theme}
           triggerHaptic={triggerHapticFeedback}
+          onCalibrate={() => { setShowCalibrationModal(true); triggerHapticFeedback(); }}
+          playSound={playBellSound}
         />
       )}
 

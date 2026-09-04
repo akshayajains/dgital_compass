@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Target, Layers, RotateCcw, AlertTriangle, CheckCircle2, Lock, Unlock, TrendingUp, Ruler } from 'lucide-react';
+import { Target, Layers, RotateCcw, AlertTriangle, CheckCircle2, Lock, Unlock, TrendingUp, Ruler, Volume2, VolumeX, Crosshair, Copy, Check, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, RefreshCw, Hand } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translations } from '@/lib/translations';
@@ -11,6 +11,8 @@ interface Props {
   onToggleTare: () => void;
   theme: string;
   triggerHaptic: () => void;
+  onCalibrate?: () => void;
+  playSound?: (type?: 'bell' | 'chime') => void;
 }
 
 export const AdvancedLevelView: React.FC<Props> = ({
@@ -18,7 +20,10 @@ export const AdvancedLevelView: React.FC<Props> = ({
   roll,
   tareOffset,
   onToggleTare,
-  triggerHaptic
+  theme,
+  triggerHaptic,
+  onCalibrate,
+  playSound
 }) => {
   const { language } = useLanguage();
   const isHi = language === 'hi';
@@ -31,8 +36,45 @@ export const AdvancedLevelView: React.FC<Props> = ({
   const [flatnessScore, setFlatnessScore] = useState(100);
   const historyRef = useRef<number[]>([]);
 
-  const effPitch = pitch - (tareOffset?.pitch || 0);
-  const effRoll = roll - (tareOffset?.roll || 0);
+  // ── New feature state ──
+  // Hold to measure / freeze-on-tap
+  const [isHeld, setIsHeld] = useState(false);
+  const [heldPitch, setHeldPitch] = useState(0);
+  const [heldRoll, setHeldRoll] = useState(0);
+  const [heldTotal, setHeldTotal] = useState(0);
+  // Surface angle mode: relative (tare-based) vs absolute (from horizontal)
+  const [angleMode, setAngleMode] = useState<'relative' | 'absolute'>('relative');
+  // Sound on level toggle (persisted)
+  const [soundOnLevel, setSoundOnLevel] = useState<boolean>(() => {
+    try { return localStorage.getItem('com.hcompass.app_level_sound') !== 'false'; } catch { return true; }
+  });
+  // Reference lock: hold current as 0°
+  const [referenceLock, setReferenceLock] = useState<{ pitch: number; roll: number } | null>(null);
+  // Max/Min tilt recorder
+  const [maxTilt, setMaxTilt] = useState(0);
+  const [minTilt, setMinTilt] = useState(0);
+  // Level history sparkline
+  const [history, setHistory] = useState<number[]>([]);
+  // Copy feedback
+  const [copied, setCopied] = useState(false);
+  // Haptic-on-level guard
+  const wasLevelRef = useRef(false);
+
+  // Effective values (tare + reference lock applied)
+  const tarePitch = tareOffset?.pitch || 0;
+  const tareRoll = tareOffset?.roll || 0;
+  const refPitch = referenceLock?.pitch || 0;
+  const refRoll = referenceLock?.roll || 0;
+
+  // Absolute angle from horizontal (device flat = 0)
+  const absPitch = pitch;
+  const absRoll = roll;
+  // Relative angle (tare + reference applied)
+  const relPitch = pitch - tarePitch - refPitch;
+  const relRoll = roll - tareRoll - refRoll;
+
+  const effPitch = angleMode === 'absolute' ? absPitch : relPitch;
+  const effRoll = angleMode === 'absolute' ? absRoll : relRoll;
   const totalTilt = Math.sqrt(effPitch * effPitch + effRoll * effRoll);
   const isLevel = totalTilt < 1.0;
   const isHighTilt = totalTilt >= 3.0;
@@ -46,10 +88,29 @@ export const AdvancedLevelView: React.FC<Props> = ({
     const avg = readings.reduce((a, b) => a + b, 0) / readings.length;
     const variance = readings.reduce((s, v) => s + (v - avg) ** 2, 0) / readings.length;
     const stdDev = Math.sqrt(variance);
-    // Lower variance = flatter surface. Score 0–100
     const score = Math.max(0, Math.min(100, Math.round(100 - stdDev * 20)));
     setFlatnessScore(score);
   }, [totalTilt]);
+
+  // Max/Min tilt recorder + history sparkline
+  useEffect(() => {
+    setMaxTilt((m) => Math.max(m, totalTilt));
+    setMinTilt((m) => (m === 0 ? totalTilt : Math.min(m, totalTilt)));
+    setHistory((h) => {
+      const next = [...h, totalTilt];
+      if (next.length > 30) next.shift();
+      return next;
+    });
+  }, [totalTilt]);
+
+  // Haptic + sound feedback when reaching level
+  useEffect(() => {
+    if (isLevel && !wasLevelRef.current) {
+      triggerHaptic();
+      if (soundOnLevel && playSound) playSound('chime');
+    }
+    wasLevelRef.current = isLevel;
+  }, [isLevel, soundOnLevel, triggerHaptic, playSound]);
 
   const handleLock = () => {
     triggerHaptic();
@@ -63,27 +124,86 @@ export const AdvancedLevelView: React.FC<Props> = ({
     }
   };
 
-  const displayPitch = isLocked ? lockedPitch : effPitch;
-  const displayRoll = isLocked ? lockedRoll : effRoll;
-  const displayTotal = isLocked ? lockedTotal : totalTilt;
-  const displayLevel = isLocked ? lockedTotal < 1.0 : isLevel;
-  const displayHigh = isLocked ? lockedTotal >= 3.0 : isHighTilt;
+  // Hold to measure / freeze-on-tap
+  const handleHold = () => {
+    triggerHaptic();
+    if (isHeld) {
+      setIsHeld(false);
+    } else {
+      setHeldPitch(effPitch);
+      setHeldRoll(effRoll);
+      setHeldTotal(totalTilt);
+      setIsHeld(true);
+    }
+  };
+
+  // Reference lock: set current as 0°
+  const handleReferenceLock = () => {
+    triggerHaptic();
+    if (referenceLock) {
+      setReferenceLock(null);
+    } else {
+      setReferenceLock({ pitch, roll });
+    }
+  };
+
+  // Copy reading
+  const handleCopy = () => {
+    triggerHaptic();
+    const text = `Pitch: ${displayPitch.toFixed(1)}°, Roll: ${displayRoll.toFixed(1)}°, Total Tilt: ${displayTotal.toFixed(1)}°`;
+    try {
+      navigator.clipboard?.writeText(text);
+    } catch {}
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // Reset max/min
+  const handleResetMaxMin = () => {
+    triggerHaptic();
+    setMaxTilt(0);
+    setMinTilt(0);
+  };
+
+  const displayPitch = isLocked ? lockedPitch : isHeld ? heldPitch : effPitch;
+  const displayRoll = isLocked ? lockedRoll : isHeld ? heldRoll : effRoll;
+  const displayTotal = isLocked ? lockedTotal : isHeld ? heldTotal : totalTilt;
+  const displayLevel = isLocked ? lockedTotal < 1.0 : isHeld ? heldTotal < 1.0 : isLevel;
+  const displayHigh = isLocked ? lockedTotal >= 3.0 : isHeld ? heldTotal >= 3.0 : isHighTilt;
+
+  // Directional guidance arrows
+  const guidance = (() => {
+    if (displayLevel) return null;
+    const p = displayPitch;
+    const r = displayRoll;
+    const parts: { icon: React.ReactNode; label: string }[] = [];
+    if (Math.abs(r) > 0.5) parts.push({ icon: r > 0 ? <ArrowLeft className="w-3 h-3" /> : <ArrowRight className="w-3 h-3" />, label: r > 0 ? t.tiltLeft : t.tiltRight });
+    if (Math.abs(p) > 0.5) parts.push({ icon: p > 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />, label: p > 0 ? t.tiltForward : t.tiltBack });
+    return parts;
+  })();
 
   const flatnessLabel = flatnessScore >= 90 ? (isHi ? 'बहुत सपाट' : 'Very Flat')
     : flatnessScore >= 70 ? (isHi ? 'सपाट' : 'Flat')
     : flatnessScore >= 40 ? (isHi ? 'थोड़ा टेढ़ा' : 'Uneven')
     : (isHi ? 'बहुत टेढ़ा' : 'Very Uneven');
-  const flatnessColor = flatnessScore >= 90 ? 'text-emerald-400' : flatnessScore >= 70 ? 'text-teal-400' : flatnessScore >= 40 ? 'text-amber-400' : 'text-red-400';
+  const flatnessColor = flatnessScore >= 90 ? (theme === 'light' ? 'text-emerald-700' : 'text-emerald-400') : flatnessScore >= 70 ? (theme === 'light' ? 'text-teal-700' : 'text-teal-400') : flatnessScore >= 40 ? (theme === 'light' ? 'text-amber-700' : 'text-amber-400') : 'text-red-400';
 
   return (
-    <div className="w-full max-w-sm flex flex-col items-center rounded-[24px] border border-emerald-500/15 bg-[radial-gradient(circle_at_50%_35%,rgba(16,185,129,0.13),transparent_35%),linear-gradient(180deg,#07130e_0%,#030705_100%)] p-2.5 shadow-[0_20px_45px_rgba(0,0,0,0.7)] animate-in fade-in zoom-in-95">
+    <div className={cn(
+      "w-full max-w-sm flex flex-col items-center rounded-[24px] border p-2.5 animate-in fade-in zoom-in-95",
+      theme === 'light'
+        ? "border-emerald-500/30 bg-[radial-gradient(circle_at_50%_35%,rgba(16,185,129,0.10),transparent_35%),linear-gradient(180deg,#f0fdf4_0%,#dcfce7_100%)] shadow-[0_20px_45px_rgba(0,0,0,0.15)]"
+        : "border-emerald-500/15 bg-[radial-gradient(circle_at_50%_35%,rgba(16,185,129,0.13),transparent_35%),linear-gradient(180deg,#07130e_0%,#030705_100%)] shadow-[0_20px_45px_rgba(0,0,0,0.7)]"
+    )}>
       {/* Header row — compact */}
       <div className="mb-1.5 flex w-full items-center justify-between px-1">
-        <span className="text-[9px] font-black uppercase tracking-[0.22em] text-emerald-300">Precision Spirit Level</span>
+        <span className={cn("text-[9px] font-black uppercase tracking-[0.22em]", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>Precision Spirit Level</span>
         <div className="flex items-center gap-1.5">
           <button onClick={handleLock} className={cn(
             "rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider flex items-center gap-0.5 transition-all active:scale-95",
-            isLocked ? "border-amber-400/50 bg-amber-400/10 text-amber-300" : "border-white/10 bg-white/5 text-stone-400 hover:text-white"
+            isLocked
+              ? "border-amber-400/50 bg-amber-400/10 text-amber-300"
+              : (theme === 'light' ? "border-stone-300 bg-white text-stone-600 hover:text-stone-900" : "border-white/10 bg-white/5 text-stone-400 hover:text-white")
           )}>
             {isLocked ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
             {isLocked ? (isHi ? 'लॉक' : 'Lock') : (isHi ? 'अनलॉक' : 'Open')}
@@ -94,13 +214,48 @@ export const AdvancedLevelView: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Sub-mode + Tare — compact pill buttons */}
-      <div className="w-full flex items-center justify-between gap-1 p-0.5 rounded-xl bg-stone-900/90 border border-white/10 mb-1.5">
+      {/* ── NEW: Large glanceable LEVEL status banner with directional guidance ── */}
+      <div className={cn(
+        "w-full rounded-2xl p-2.5 mb-1.5 border flex items-center justify-between transition-all duration-300",
+        displayLevel
+          ? (theme === 'light' ? "bg-emerald-500 text-white border-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.4)]" : "bg-emerald-500 text-stone-950 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)]")
+          : displayHigh
+          ? (theme === 'light' ? "bg-red-500 text-white border-red-600 shadow-[0_0_20px_rgba(239,68,68,0.4)]" : "bg-red-600 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)]")
+          : (theme === 'light' ? "bg-amber-500 text-white border-amber-600 shadow-[0_0_20px_rgba(245,158,11,0.4)]" : "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)]")
+      )}>
+        <div className="flex items-center gap-2">
+          {displayLevel
+            ? <CheckCircle2 className="w-6 h-6 shrink-0 animate-pulse" />
+            : <AlertTriangle className={cn("w-6 h-6 shrink-0", displayHigh && "animate-pulse")} />}
+          <div className="flex flex-col text-left leading-tight">
+            <span className="text-sm font-black uppercase tracking-wide">
+              {displayLevel ? t.levelAchieved : displayHigh ? t.highTilt : t.tilt}
+            </span>
+            <span className="text-[10px] font-bold opacity-90">
+              {displayLevel ? `${t.totalTilt}: ${displayTotal.toFixed(1)}°` : `${t.totalTilt}: ${displayTotal.toFixed(1)}°`}
+            </span>
+          </div>
+        </div>
+        {/* Directional guidance arrows */}
+        {!displayLevel && guidance && guidance.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            {guidance.map((g, i) => (
+              <span key={i} className="flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider bg-white/20 rounded-lg px-1.5 py-1">
+                {g.icon}
+                {g.label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Sub-mode + Tare + new quick actions — compact pill buttons */}
+      <div className={cn("w-full flex items-center justify-between gap-1 p-0.5 rounded-xl border mb-1.5", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-900/90 border-white/10")}>
         <button
           onClick={() => { setSubMode('bullseye'); triggerHaptic(); }}
           className={cn(
             "flex-1 py-1 px-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1",
-            subMode === 'bullseye' ? "bg-[#F59E0B] text-stone-950 shadow-md scale-100" : "text-stone-400 hover:text-white"
+            subMode === 'bullseye' ? "bg-[#F59E0B] text-stone-950 shadow-md scale-100" : (theme === 'light' ? "text-stone-600 hover:text-stone-900" : "text-stone-400 hover:text-white")
           )}
         >
           <Target className="w-3 h-3 stroke-[2.5]" />
@@ -110,7 +265,7 @@ export const AdvancedLevelView: React.FC<Props> = ({
           onClick={() => { setSubMode('vials'); triggerHaptic(); }}
           className={cn(
             "flex-1 py-1 px-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1",
-            subMode === 'vials' ? "bg-[#F59E0B] text-stone-950 shadow-md scale-100" : "text-stone-400 hover:text-white"
+            subMode === 'vials' ? "bg-[#F59E0B] text-stone-950 shadow-md scale-100" : (theme === 'light' ? "text-stone-600 hover:text-stone-900" : "text-stone-400 hover:text-white")
           )}
         >
           <Layers className="w-3 h-3 stroke-[2.5]" />
@@ -120,7 +275,9 @@ export const AdvancedLevelView: React.FC<Props> = ({
           onClick={() => { onToggleTare(); triggerHaptic(); }}
           className={cn(
             "py-1 px-2 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border flex items-center justify-center gap-0.5 active:scale-95",
-            tareOffset ? "bg-amber-500/25 text-amber-300 border-amber-500/50" : "bg-white/5 text-stone-300 border-white/10 hover:text-white"
+            tareOffset
+              ? "bg-amber-500/25 text-amber-300 border-amber-500/50"
+              : (theme === 'light' ? "bg-white text-stone-600 border-stone-300 hover:text-stone-900" : "bg-white/5 text-stone-300 border-white/10 hover:text-white")
           )}
         >
           <RotateCcw className="w-2.5 h-2.5" />
@@ -128,36 +285,127 @@ export const AdvancedLevelView: React.FC<Props> = ({
         </button>
       </div>
 
+      {/* ── NEW: Feature quick-action row (Hold, Angle mode, Sound, Ref lock, Calibrate) ── */}
+      <div className={cn("w-full grid grid-cols-5 gap-1 mb-1.5", theme === 'light' ? "" : "")}>
+        {/* Hold to measure */}
+        <button
+          onClick={handleHold}
+          title={t.levelHoldHint}
+          className={cn(
+            "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl border transition-all active:scale-95",
+            isHeld
+              ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+              : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white")
+          )}
+        >
+          <Hand className="w-3.5 h-3.5" />
+          <span className="text-[7px] font-black uppercase tracking-wider">{t.levelHold}</span>
+        </button>
+        {/* Angle mode toggle */}
+        <button
+          onClick={() => { setAngleMode(angleMode === 'relative' ? 'absolute' : 'relative'); triggerHaptic(); }}
+          title={t.levelAngleMode}
+          className={cn(
+            "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl border transition-all active:scale-95",
+            angleMode === 'absolute'
+              ? "bg-sky-500 text-white border-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.5)]"
+              : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white")
+          )}
+        >
+          <Crosshair className="w-3.5 h-3.5" />
+          <span className="text-[7px] font-black uppercase tracking-wider">{angleMode === 'absolute' ? t.angleAbsolute : t.angleRelative}</span>
+        </button>
+        {/* Sound on level */}
+        <button
+          onClick={() => { setSoundOnLevel(!soundOnLevel); triggerHaptic(); }}
+          title={t.soundOnLevel}
+          className={cn(
+            "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl border transition-all active:scale-95",
+            soundOnLevel
+              ? "bg-emerald-500 text-white border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.5)]"
+              : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white")
+          )}
+        >
+          {soundOnLevel ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+          <span className="text-[7px] font-black uppercase tracking-wider">{isHi ? 'ध्वनि' : 'Sound'}</span>
+        </button>
+        {/* Reference lock */}
+        <button
+          onClick={handleReferenceLock}
+          title={t.referenceLockHint}
+          className={cn(
+            "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl border transition-all active:scale-95",
+            referenceLock
+              ? "bg-violet-500 text-white border-violet-400 shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+              : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white")
+          )}
+        >
+          <Lock className="w-3.5 h-3.5" />
+          <span className="text-[7px] font-black uppercase tracking-wider">{t.referenceLock}</span>
+        </button>
+        {/* Calibrate */}
+        <button
+          onClick={() => { onCalibrate?.(); }}
+          title={t.calibrate}
+          className={cn(
+            "flex flex-col items-center justify-center gap-0.5 py-1.5 rounded-xl border transition-all active:scale-95",
+            theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white"
+          )}
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span className="text-[7px] font-black uppercase tracking-wider">{t.calibrate}</span>
+        </button>
+      </div>
+
       {/* Main visualization */}
       {subMode === 'bullseye' ? (
-        <div className="relative w-52 h-52 sm:w-60 sm:h-60 rounded-full flex items-center justify-center border border-emerald-400 shadow-[0_0_34px_rgba(16,185,129,0.32),inset_0_0_30px_rgba(16,185,129,0.18)] bg-[radial-gradient(circle_at_center,#123f31_0%,#071e16_55%,#020806_100%)] overflow-hidden my-0.5">
-          <div className="absolute inset-2.5 rounded-full border border-emerald-300/25 pointer-events-none" />
-          <div className="absolute inset-8 rounded-full border border-emerald-300/20 pointer-events-none" />
-          <div className="absolute inset-14 rounded-full border border-dashed border-emerald-300/25 pointer-events-none" />
-          <div className="absolute inset-20 rounded-full border border-emerald-300/30 pointer-events-none" />
-          <div className="absolute inset-x-0 top-1/2 h-px bg-emerald-200/25 pointer-events-none" />
-          <div className="absolute inset-y-0 left-1/2 w-px bg-emerald-200/25 pointer-events-none" />
+        <div className={cn(
+          "relative w-52 h-52 sm:w-60 sm:h-60 rounded-full flex items-center justify-center border overflow-hidden my-0.5",
+          theme === 'light'
+            ? "border-emerald-400 bg-[radial-gradient(circle_at_center,#d1fae5_0%,#a7f3d0_55%,#6ee7b7_100%)] shadow-[0_0_34px_rgba(16,185,129,0.25),inset_0_0_30px_rgba(16,185,129,0.15)]"
+            : "border-emerald-400 bg-[radial-gradient(circle_at_center,#123f31_0%,#071e16_55%,#020806_100%)] shadow-[0_0_34px_rgba(16,185,129,0.32),inset_0_0_30px_rgba(16,185,129,0.18)]"
+        )}>
+          <div className={cn("absolute inset-2.5 rounded-full border pointer-events-none", theme === 'light' ? "border-emerald-600/25" : "border-emerald-300/25")} />
+          <div className={cn("absolute inset-8 rounded-full border pointer-events-none", theme === 'light' ? "border-emerald-600/20" : "border-emerald-300/20")} />
+          <div className={cn("absolute inset-14 rounded-full border border-dashed pointer-events-none", theme === 'light' ? "border-emerald-600/25" : "border-emerald-300/25")} />
+          <div className={cn("absolute inset-20 rounded-full border pointer-events-none", theme === 'light' ? "border-emerald-600/30" : "border-emerald-300/30")} />
+          <div className={cn("absolute inset-x-0 top-1/2 h-px pointer-events-none", theme === 'light' ? "bg-emerald-700/25" : "bg-emerald-200/25")} />
+          <div className={cn("absolute inset-y-0 left-1/2 w-px pointer-events-none", theme === 'light' ? "bg-emerald-700/25" : "bg-emerald-200/25")} />
 
-          <div className={cn("w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all duration-300 pointer-events-none z-10", displayLevel ? "border-emerald-400 bg-emerald-500/20 shadow-[0_0_25px_#10b981]" : "border-amber-400/80 bg-amber-400/5 shadow-[0_0_12px_rgba(245,158,11,0.3)]")}>
-            <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", displayLevel ? "bg-emerald-400 shadow-[0_0_10px_#10b981]" : "bg-amber-400/60")} />
+          {/* Center target ring */}
+          <div className={cn("w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all duration-300 pointer-events-none z-10", displayLevel ? "border-emerald-500 bg-emerald-500/20 shadow-[0_0_25px_#10b981]" : "border-amber-400/80 bg-amber-400/5 shadow-[0_0_12px_rgba(245,158,11,0.3)]")}>
+            <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", displayLevel ? "bg-emerald-500 shadow-[0_0_10px_#10b981]" : "bg-amber-400/60")} />
           </div>
 
+          {/* Bubble */}
           <div
             className={cn(
-              "absolute w-9 h-9 rounded-full transition-transform duration-75 ease-out shadow-2xl border border-white/90 flex items-center justify-center z-20",
-              displayLevel ? "bg-gradient-to-tr from-[#A7F3D0] via-[#34D399] to-[#059669] shadow-[0_0_25px_#10b981] scale-105" : "bg-gradient-to-tr from-[#C6F6D5] via-[#68D391] to-[#38A169] shadow-[0_0_20px_rgba(72,187,120,0.8)]"
+              "absolute w-9 h-9 rounded-full transition-transform duration-75 ease-out shadow-2xl border flex items-center justify-center z-20",
+              theme === 'light'
+                ? (displayLevel ? "bg-gradient-to-tr from-[#059669] via-[#10b981] to-[#34d399] border-white shadow-[0_0_25px_#10b981] scale-105" : "bg-gradient-to-tr from-[#059669] via-[#10b981] to-[#34d399] border-white shadow-[0_0_20px_rgba(16,185,129,0.8)]")
+                : (displayLevel ? "bg-gradient-to-tr from-[#A7F3D0] via-[#34D399] to-[#059669] border-white/90 shadow-[0_0_25px_#10b981] scale-105" : "bg-gradient-to-tr from-[#C6F6D5] via-[#68D391] to-[#38A169] border-white/90 shadow-[0_0_20px_rgba(72,187,120,0.8)]")
             )}
             style={{ transform: `translate(${Math.max(-70, Math.min(70, -displayRoll * 4.5))}px, ${Math.max(-70, Math.min(70, -displayPitch * 4.5))}px)` }}
           >
             <div className="w-full h-full rounded-full liquid-shine flex items-center justify-center">
-              <div className="w-1 h-1 rounded-full bg-stone-900/60 shadow-sm" />
+              <div className={cn("w-1 h-1 rounded-full shadow-sm", theme === 'light' ? "bg-white/80" : "bg-stone-900/60")} />
             </div>
+          </div>
+
+          {/* ── NEW: Live degree readout overlay on bullseye ── */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 z-30">
+            <span className={cn("px-1.5 py-0.5 rounded-md text-[8px] font-black font-mono border", theme === 'light' ? "bg-white/80 text-emerald-800 border-emerald-300" : "bg-black/50 text-emerald-300 border-emerald-500/40")}>
+              P {displayPitch > 0 ? `+${displayPitch.toFixed(1)}°` : `${displayPitch.toFixed(1)}°`}
+            </span>
+            <span className={cn("px-1.5 py-0.5 rounded-md text-[8px] font-black font-mono border", theme === 'light' ? "bg-white/80 text-sky-800 border-sky-300" : "bg-black/50 text-sky-300 border-sky-500/40")}>
+              R {displayRoll > 0 ? `+${displayRoll.toFixed(1)}°` : `${displayRoll.toFixed(1)}°`}
+            </span>
           </div>
         </div>
       ) : (
-        <div className="w-full flex flex-col gap-2 my-1 p-2 rounded-xl bg-stone-950/80 border border-white/10 shadow-xl">
+        <div className={cn("w-full flex flex-col gap-2 my-1 p-2 rounded-xl border shadow-xl", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-950/80 border-white/10")}>
           <div className="flex flex-col gap-1">
-            <div className="flex items-center justify-between text-[10px] font-bold text-stone-400 px-0.5">
+            <div className={cn("flex items-center justify-between text-[10px] font-bold px-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
               <span>{t.vialHorizontal}</span>
               <span className="font-mono text-emerald-400">{displayRoll > 0 ? `+${displayRoll.toFixed(1)}°` : `${displayRoll.toFixed(1)}°`}</span>
             </div>
@@ -171,7 +419,7 @@ export const AdvancedLevelView: React.FC<Props> = ({
             </div>
           </div>
           <div className="flex flex-col gap-1 pt-0.5">
-            <div className="flex items-center justify-between text-[10px] font-bold text-stone-400 px-0.5">
+            <div className={cn("flex items-center justify-between text-[10px] font-bold px-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
               <span>{t.vialVertical}</span>
               <span className="font-mono text-sky-400">{displayPitch > 0 ? `+${displayPitch.toFixed(1)}°` : `${displayPitch.toFixed(1)}°`}</span>
             </div>
@@ -193,7 +441,7 @@ export const AdvancedLevelView: React.FC<Props> = ({
           {displayLevel ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <AlertTriangle className={cn("w-3.5 h-3.5 shrink-0", displayHigh ? "text-red-400 animate-pulse" : "text-amber-400")} />}
           <div className="flex flex-col text-left leading-tight">
             <span className="text-[10px] font-black tracking-wide uppercase">{displayLevel ? t.perfectLevelText : displayHigh ? t.highTilt : t.tilt}</span>
-            <span className="text-[8px] text-stone-400 font-bold">{t.totalTilt}: {displayTotal.toFixed(1)}°</span>
+            <span className={cn("text-[8px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>{t.totalTilt}: {displayTotal.toFixed(1)}°</span>
           </div>
         </div>
         <span className={cn("font-mono text-2xl font-black tracking-tight", displayLevel ? "text-emerald-400" : displayHigh ? "text-red-400" : "text-amber-400")}>{displayTotal.toFixed(1)}°</span>
@@ -201,48 +449,90 @@ export const AdvancedLevelView: React.FC<Props> = ({
 
       {/* Compact metrics grid — 2x2 */}
       <div className="w-full grid grid-cols-2 gap-1.5 my-0.5">
-        <div className="p-1.5 rounded-xl bg-stone-900/80 border border-white/10 flex flex-col items-center">
-          <span className="text-[8px] font-bold uppercase text-stone-400 tracking-wider">{t.pitchX}</span>
+        <div className={cn("p-1.5 rounded-xl border flex flex-col items-center", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
+          <span className={cn("text-[8px] font-bold uppercase tracking-wider", theme === 'light' ? "text-stone-600" : "text-stone-400")}>{t.pitchX}</span>
           <span className="text-sm font-black font-mono text-sky-400">{displayPitch > 0 ? `+${displayPitch.toFixed(1)}°` : `${displayPitch.toFixed(1)}°`}</span>
         </div>
-        <div className="p-1.5 rounded-xl bg-stone-900/80 border border-white/10 flex flex-col items-center">
-          <span className="text-[8px] font-bold uppercase text-stone-400 tracking-wider">{t.rollY}</span>
+        <div className={cn("p-1.5 rounded-xl border flex flex-col items-center", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
+          <span className={cn("text-[8px] font-bold uppercase tracking-wider", theme === 'light' ? "text-stone-600" : "text-stone-400")}>{t.rollY}</span>
           <span className="text-sm font-black font-mono text-emerald-400">{displayRoll > 0 ? `+${displayRoll.toFixed(1)}°` : `${displayRoll.toFixed(1)}°`}</span>
         </div>
-        <div className="p-1.5 rounded-xl bg-stone-900/80 border border-white/10 flex flex-col items-center">
-          <span className="text-[8px] font-bold uppercase text-stone-400 tracking-wider flex items-center gap-0.5"><TrendingUp className="w-2 h-2" />{isHi ? 'ढलान' : 'Slope'}</span>
+        <div className={cn("p-1.5 rounded-xl border flex flex-col items-center", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
+          <span className={cn("text-[8px] font-bold uppercase tracking-wider flex items-center gap-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}><TrendingUp className="w-2 h-2" />{isHi ? 'ढलान' : 'Slope'}</span>
           <span className="text-sm font-black font-mono text-amber-400">{displayTotal > 89 ? '999+' : (Math.tan((displayTotal * Math.PI) / 180) * 100).toFixed(1)}%</span>
         </div>
-        <div className="p-1.5 rounded-xl bg-stone-900/80 border border-white/10 flex flex-col items-center">
-          <span className="text-[8px] font-bold uppercase text-stone-400 tracking-wider flex items-center gap-0.5"><Ruler className="w-2 h-2" />{isHi ? 'छत' : 'Roof'}</span>
+        <div className={cn("p-1.5 rounded-xl border flex flex-col items-center", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
+          <span className={cn("text-[8px] font-bold uppercase tracking-wider flex items-center gap-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}><Ruler className="w-2 h-2" />{isHi ? 'छत' : 'Roof'}</span>
           <span className="text-sm font-black font-mono text-orange-400">1:{displayTotal > 89 ? '999' : (Math.tan((displayTotal * Math.PI) / 180) * 12).toFixed(1)}</span>
         </div>
       </div>
 
-      {/* Surface flatness indicator — compact */}
-      <div className="w-full rounded-xl p-2 border border-white/10 bg-stone-900/80 my-0.5">
+      {/* ── NEW: Max/Min tilt + stability sparkline + copy ── */}
+      <div className={cn("w-full rounded-xl p-2 border my-0.5", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
         <div className="flex items-center justify-between mb-1">
-          <span className="text-[8px] font-black uppercase tracking-wider text-stone-400 flex items-center gap-0.5">
+          <span className={cn("text-[8px] font-black uppercase tracking-wider flex items-center gap-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+            <TrendingUp className="w-2 h-2" />{t.maxTilt} / {t.minTilt}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleResetMaxMin}
+              className={cn("text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border transition-all active:scale-95", theme === 'light' ? "bg-stone-100 border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-400 hover:text-white")}
+            >
+              <RefreshCw className="w-2 h-2 inline mr-0.5" />{t.resetMaxMin}
+            </button>
+            <button
+              onClick={handleCopy}
+              className={cn("text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border transition-all active:scale-95", copied ? "bg-emerald-500 text-white border-emerald-400" : (theme === 'light' ? "bg-stone-100 border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-400 hover:text-white"))}
+            >
+              {copied ? <Check className="w-2 h-2 inline mr-0.5" /> : <Copy className="w-2 h-2 inline mr-0.5" />}
+              {copied ? (isHi ? 'कॉपी!' : 'Copied') : t.copyReading}
+            </button>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={cn("text-sm font-black font-mono", theme === 'light' ? "text-red-600" : "text-red-400")}>{maxTilt.toFixed(1)}°</span>
+          <span className={cn("text-[8px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-500")}>/</span>
+          <span className={cn("text-sm font-black font-mono", theme === 'light' ? "text-emerald-600" : "text-emerald-400")}>{minTilt.toFixed(1)}°</span>
+          {/* Stability sparkline */}
+          <div className="flex-1 flex items-end gap-[2px] h-6 ml-1">
+            {history.map((v, i) => (
+              <div
+                key={i}
+                className={cn("w-[3px] rounded-sm transition-all duration-300", v < 1 ? "bg-emerald-400" : v < 3 ? "bg-amber-400" : "bg-red-400")}
+                style={{ height: `${Math.max(8, Math.min(100, v * 12))}%` }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Surface flatness indicator — compact */}
+      <div className={cn("w-full rounded-xl p-2 border my-0.5", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
+        <div className="flex items-center justify-between mb-1">
+          <span className={cn("text-[8px] font-black uppercase tracking-wider flex items-center gap-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
             {isHi ? 'सतह की सपाटता' : 'Surface Flatness'}
           </span>
           <span className={cn("text-[9px] font-black", flatnessColor)}>{flatnessLabel}</span>
         </div>
-        <div className="w-full h-1.5 rounded-full bg-stone-800 overflow-hidden">
+        <div className={cn("w-full h-1.5 rounded-full overflow-hidden", theme === 'light' ? "bg-stone-200" : "bg-stone-800")}>
           <div
             className={cn("h-full rounded-full transition-all duration-500", flatnessScore >= 90 ? "bg-emerald-400" : flatnessScore >= 70 ? "bg-teal-400" : flatnessScore >= 40 ? "bg-amber-400" : "bg-red-400")}
             style={{ width: `${flatnessScore}%` }}
           />
         </div>
         <div className="flex justify-between mt-0.5">
-          <span className="text-[7px] text-stone-500 font-bold">{isHi ? 'अस्थिर' : 'Unstable'}</span>
-          <span className="text-[7px] text-stone-500 font-bold">{isHi ? 'सपाट' : 'Flat'}</span>
+          <span className={cn("text-[7px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-500")}>{isHi ? 'अस्थिर' : 'Unstable'}</span>
+          <span className={cn("text-[7px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-500")}>{isHi ? 'सपाट' : 'Flat'}</span>
         </div>
       </div>
 
       {/* Figure-8 calibration — compact */}
-      <div className="w-full rounded-xl p-2 border border-amber-500/30 bg-gradient-to-b from-[#211707] to-[#100b03] mt-0.5 text-center">
-        <div className="text-[9px] font-black uppercase tracking-[0.20em] text-amber-300">Figure-8 Calibration</div>
-        <p className="mt-0.5 text-[9px] leading-snug text-stone-300">
+      <div className={cn(
+        "w-full rounded-xl p-2 border mt-0.5 text-center",
+        theme === 'light' ? "border-amber-500/40 bg-gradient-to-b from-[#FEF3C7] to-[#FDE68A]" : "border-amber-500/30 bg-gradient-to-b from-[#211707] to-[#100b03]"
+      )}>
+        <div className={cn("text-[9px] font-black uppercase tracking-[0.20em]", theme === 'light' ? "text-amber-800" : "text-amber-300")}>Figure-8 Calibration</div>
+        <p className={cn("mt-0.5 text-[9px] leading-snug", theme === 'light' ? "text-amber-900" : "text-stone-300")}>
           {isLevel
             ? (isHi ? 'स्तर लॉक प्राप्त। सतह माउंटिंग, फ्रेमिंग, वास्तु फ्लोर-प्लान, या कैमरा ऑडिट के लिए तैयार।' : 'Level lock achieved. Surface is ready for mounting, framing, vastu floor-plan, or camera audits.')
             : (isHi ? 'उपकरण को 8 में घुमाएं, रेफरेंस प्लेन पर टेयर सेट करें, फिर बबल केंद्र तक सपाट करें।' : 'Move device in a figure-8, set tare on reference plane, then flatten until bubble centers.')}

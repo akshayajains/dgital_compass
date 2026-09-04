@@ -255,7 +255,7 @@ export const COMPASS_STYLES: CompassStyleInfo[] = [
   {
     id: 'cyberpunk',
     nameHi: 'साइबरपंक',
-    nameEn: 'Cyberpunk HUD',
+    nameEn: 'Cyberpunk',
     tagHi: 'भविष्यवादी नियॉन व होलोग्राफिक इंटरफ़ेस',
     tagEn: 'Futuristic glowing sci-fi holographic HUD',
     category: 'modern',
@@ -278,8 +278,8 @@ export const COMPASS_STYLES: CompassStyleInfo[] = [
   },
   {
     id: 'minimal_onyx',
-    nameHi: 'मिनिमल डार्क',
-    nameEn: 'Minimal Onyx',
+    nameHi: 'मिनिमल',
+    nameEn: 'Minimal',
     tagHi: 'अल्ट्रा-क्लीन आधुनिक मैट ब्लैक डिज़ाइन',
     tagEn: 'Ultra-clean matte titanium & electric beacon',
     category: 'modern',

@@ -48,7 +48,7 @@ export const VastuPanel = ({
         </div>
 
         <div className="mb-4">
-          <label className="text-[10px] text-stone-400 uppercase font-black tracking-wider block mb-1.5">
+          <label className={cn("text-[10px] uppercase font-black tracking-wider block mb-1.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
             {language === 'hi' ? 'कक्ष का प्रकार चुनें:' : 'Select Room Type:'}
           </label>
           <select
@@ -121,9 +121,9 @@ export const VastuPanel = ({
         })()}
 
         {/* Item 13: Saved rooms */}
-        <div className="mt-3 pt-3 border-t border-white/5">
+        <div className={cn("mt-3 pt-3 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
           <div className="flex items-center justify-between mb-2">
-            <h5 className="text-[10px] text-stone-400 uppercase font-black tracking-wider">
+            <h5 className={cn("text-[10px] uppercase font-black tracking-wider", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
               {language === 'hi' ? 'सहेजे गए कक्ष' : 'Saved Rooms'}
             </h5>
             <button
@@ -167,8 +167,8 @@ export const VastuPanel = ({
         </div>
 
         {/* 32 Padas Gate Checker */}
-        <div className="mt-4 pt-3 border-t border-white/5 space-y-2">
-          <label className="text-[10px] text-stone-400 uppercase font-black tracking-wider block mb-1">
+        <div className={cn("mt-4 pt-3 border-t space-y-2", theme === 'light' ? "border-stone-200" : "border-white/5")}>
+          <label className={cn("text-[10px] uppercase font-black tracking-wider block mb-1", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
             {language === 'hi' ? 'मुख्य द्वार की दिशा (डिग्री):' : 'Main Door Direction (Degrees):'}
           </label>
           <div className="flex gap-2 items-center">
@@ -186,7 +186,7 @@ export const VastuPanel = ({
                   : "bg-stone-950 border-amber-500/30 text-amber-100 focus:border-amber-400"
               )}
             />
-            <span className="text-xs text-stone-400 font-bold">°</span>
+            <span className={cn("text-xs font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>°</span>
           </div>
 
           {(() => {
@@ -234,9 +234,9 @@ export const VastuPanel = ({
             return (
               <div className={cn(
                 "p-3 rounded-xl border flex flex-col gap-1 text-[11px] transition-colors duration-300",
-                currentPada.quality === 'good' ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400" :
-                currentPada.quality === 'bad' ? "bg-red-500/10 border-red-500/25 text-red-400" :
-                "bg-stone-900 border-white/5 text-stone-300"
+                currentPada.quality === 'good' ? (theme === 'light' ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-emerald-500/10 border-emerald-500/25 text-emerald-400") :
+                currentPada.quality === 'bad' ? (theme === 'light' ? "bg-red-50 border-red-300 text-red-700" : "bg-red-500/10 border-red-500/25 text-red-400") :
+                (theme === 'light' ? "bg-white border-stone-300 text-stone-700" : "bg-stone-900 border-white/5 text-stone-300")
               )}>
                 <div className="flex justify-between items-center font-extrabold">
                   <span>{language === 'hi' ? 'द्वार पद (Pada):' : 'Gate Pada:'} {currentPada.name}</span>
@@ -257,7 +257,7 @@ export const VastuPanel = ({
           theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-900"
         )}>
           <div>
-            <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-1">{language === 'hi' ? 'वास्तु सुझाव' : 'Vastu Tips'}</h5>
+            <h5 className={cn("text-[10px] uppercase font-black tracking-wider mb-1", theme === 'light' ? "text-stone-600" : "text-stone-500")}>{language === 'hi' ? 'वास्तु सुझाव' : 'Vastu Tips'}</h5>
             <p className={cn("text-[11px] leading-relaxed font-medium transition-colors", theme === 'light' ? "text-amber-900" : "text-stone-300")}>
               {language === 'hi'
                 ? 'कम्पास डायल पर उत्तम (BEST) दिशाओं को देखें। कम्पास को घुमाएं जब तक वह अनुकूल दिशा पर न आ जाए।'
@@ -265,8 +265,8 @@ export const VastuPanel = ({
             </p>
           </div>
 
-          <div className="pt-2 border-t border-white/5">
-            <h5 className="text-[10px] text-amber-400 uppercase font-black tracking-wider mb-1">{language === 'hi' ? 'ब्रह्मस्थान (घर का केंद्र)' : 'Brahmasthan (Center Point)'}</h5>
+          <div className={cn("pt-2 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
+            <h5 className={cn("text-[10px] uppercase font-black tracking-wider mb-1", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? 'ब्रह्मस्थान (घर का केंद्र)' : 'Brahmasthan (Center Point)'}</h5>
             <p className={cn("text-[11px] leading-relaxed font-medium transition-colors", theme === 'light' ? "text-amber-900" : "text-stone-300")}>
               {language === 'hi'
                 ? 'घर के ठीक केंद्र को ब्रह्मस्थान कहते हैं। इसे हमेशा साफ, खुला, हल्का और स्तंभों या भारी फर्नीचर से मुक्त रखें।'
@@ -274,32 +274,32 @@ export const VastuPanel = ({
             </p>
           </div>
 
-          <div className="pt-2 border-t border-white/5 space-y-2">
-            <h5 className="text-[10px] text-amber-500 uppercase font-black tracking-wider">{language === 'hi' ? 'सरल वास्तु दोष उपाय' : 'Easy Vastu Remedies'}</h5>
-            <div className="space-y-1.5 text-[10px] leading-normal text-stone-300">
+          <div className={cn("pt-2 border-t space-y-2", theme === 'light' ? "border-stone-200" : "border-white/5")}>
+            <h5 className={cn("text-[10px] uppercase font-black tracking-wider", theme === 'light' ? "text-amber-700" : "text-amber-500")}>{language === 'hi' ? 'सरल वास्तु दोष उपाय' : 'Easy Vastu Remedies'}</h5>
+            <div className={cn("space-y-1.5 text-[10px] leading-normal", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
               <div className="flex flex-col gap-0.5">
-                <span className="font-extrabold text-amber-400">{language === 'hi' ? '🚽 उत्तर-पूर्व में शौचालय:' : '🚽 Toilet in North-East:'}</span>
+                <span className={cn("font-extrabold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? '🚽 उत्तर-पूर्व में शौचालय:' : '🚽 Toilet in North-East:'}</span>
                 <span>{language === 'hi' ? 'शौचालय में समुद्री नमक का कटोरा रखें (साप्ताहिक बदलें) और बाहर तांबे का पिरामिड लगाएं।' : 'Keep sea salt bowl inside, place brass pyramid outside.'}</span>
               </div>
-              <div className="flex flex-col gap-0.5 pt-1.5 border-t border-white/5">
-                <span className="font-extrabold text-amber-400">{language === 'hi' ? '🍳 दक्षिण-पश्चिम में रसोई:' : '🍳 Kitchen in South-West:'}</span>
+              <div className={cn("flex flex-col gap-0.5 pt-1.5 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
+                <span className={cn("font-extrabold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? '🍳 दक्षिण-पश्चिम में रसोई:' : '🍳 Kitchen in South-West:'}</span>
                 <span>{language === 'hi' ? 'गैस चूल्हे के चारों ओर पीला टेप लगाएं या चूल्हे के नीचे तांबे की प्लेट रखें।' : 'Apply yellow tape around stove base or place a copper plate underneath.'}</span>
               </div>
-              <div className="flex flex-col gap-0.5 pt-1.5 border-t border-white/5">
-                <span className="font-extrabold text-amber-400">{language === 'hi' ? '🚪 दक्षिण-पश्चिम में मुख्य द्वार:' : '🚪 Main Door in South-West:'}</span>
+              <div className={cn("flex flex-col gap-0.5 pt-1.5 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
+                <span className={cn("font-extrabold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? '🚪 दक्षिण-पश्चिम में मुख्य द्वार:' : '🚪 Main Door in South-West:'}</span>
                 <span>{language === 'hi' ? 'दरवाजे को पीले रंग से पेंट करें या प्रवेश द्वार पर हनुमान जी की तस्वीर लगाएं।' : 'Paint the door golden-yellow or place lead metal helix.'}</span>
               </div>
             </div>
           </div>
 
           {/* Interactive 9-Grid Vastu House Floorplan Mapper */}
-          <div className="pt-3 border-t border-white/10">
+          <div className={cn("pt-3 border-t", theme === 'light' ? "border-stone-200" : "border-white/10")}>
             <div className="flex items-center justify-between mb-2">
-              <h5 className="text-[11px] text-amber-300 uppercase font-black tracking-wider flex items-center gap-1.5">
+              <h5 className={cn("text-[11px] uppercase font-black tracking-wider flex items-center gap-1.5", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
                 <Grid className="w-3.5 h-3.5 text-amber-400" />
                 {language === 'hi' ? '9-ग्रिड संपूर्ण घर वास्तु विश्लेषक' : 'Interactive 9-Grid Floorplan Mapper'}
               </h5>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+              <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border", theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40")}>
                 {(() => {
                   let score = 1;
                   const ideal: Record<string, string[]> = {
@@ -321,7 +321,10 @@ export const VastuPanel = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-1.5 p-2 bg-black/40 rounded-xl border border-white/10 text-center">
+            <div className={cn(
+              "grid grid-cols-3 gap-1.5 p-2 rounded-xl border text-center",
+              theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-black/40 border-white/10"
+            )}>
               {[
                 { key: 'NW', label: 'वायव्य (NW)' },
                 { key: 'N', label: 'उत्तर (N)' },
@@ -333,12 +336,18 @@ export const VastuPanel = ({
                 { key: 'S', label: 'दक्षिण (S)' },
                 { key: 'SE', label: 'आग्नेय (SE)' }
               ].map(sec => (
-                <div key={sec.key} className="p-1.5 rounded-lg border border-white/10 bg-stone-900/60 flex flex-col justify-between">
-                  <span className="text-[7.5px] font-black uppercase text-stone-400">{sec.label}</span>
+                <div key={sec.key} className={cn(
+                  "p-1.5 rounded-lg border flex flex-col justify-between",
+                  theme === 'light' ? "border-stone-300 bg-white" : "border-white/10 bg-stone-900/60"
+                )}>
+                  <span className={cn("text-[7.5px] font-black uppercase", theme === 'light' ? "text-stone-500" : "text-stone-400")}>{sec.label}</span>
                   <select
                     value={house9Grid[sec.key] || 'open'}
                     onChange={(e) => setHouse9Grid(prev => ({ ...prev, [sec.key]: e.target.value }))}
-                    className="mt-1 text-[8.5px] font-bold bg-black text-amber-200 border border-white/10 rounded px-0.5 py-0.5 outline-none"
+                    className={cn(
+                      "mt-1 text-[8.5px] font-bold border rounded px-0.5 py-0.5 outline-none",
+                      theme === 'light' ? "bg-white text-amber-800 border-stone-300" : "bg-black text-amber-200 border-white/10"
+                    )}
                   >
                     <option value="open">Open Space</option>
                     <option value="pooja">Pooja Mandir</option>

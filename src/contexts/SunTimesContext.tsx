@@ -29,6 +29,8 @@ interface SunTimesContextType {
   error: string | null;
   refetch: () => void;
   setLocation: (location: Location | null) => void;
+  liveTracking: boolean;
+  toggleLiveTracking: () => void;
 }
 
 export const SunTimesContext = createContext<SunTimesContextType | undefined>(undefined);
@@ -48,6 +50,27 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Live GPS tracking (speedometer) — off by default to save battery.
+  const [liveTracking, setLiveTracking] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('com.hcompass.app_live_tracking') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleLiveTracking = () => {
+    setLiveTracking((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('com.hcompass.app_live_tracking', next.toString());
+      } catch (e) {
+        console.warn('Failed to save live tracking pref', e);
+      }
+      return next;
+    });
+  };
 
   const setLocation = (newLoc: Location | null) => {
     setLocationState(newLoc);
@@ -181,6 +204,42 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     fetchCurrentLocation();
   }, []);
 
+  // Continuous GPS watch for live speed/heading while driving.
+  // Only runs when liveTracking is enabled (toggleable to save battery).
+  // Only updates speed + coordinates (no reverse-geocode spam) to keep it light.
+  useEffect(() => {
+    if (!liveTracking) return;
+    if (typeof window === 'undefined' || !navigator.geolocation) return;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setLocationState((prev) => {
+          const next: Location = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            city: prev?.city || '',
+            state: prev?.state,
+            cityEn: prev?.cityEn,
+            stateEn: prev?.stateEn,
+            altitude: pos.coords.altitude ?? prev?.altitude ?? null,
+            accuracy: pos.coords.accuracy ?? prev?.accuracy ?? null,
+            speed: pos.coords.speed ?? prev?.speed ?? null,
+          };
+          try {
+            localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(next));
+          } catch (e) {
+            console.warn('Failed to save location', e);
+          }
+          return next;
+        });
+      },
+      () => {
+        // Ignore watch errors — the initial getCurrentPosition already gave us a fix.
+      },
+      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [liveTracking]);
+
   const times = React.useMemo(() => {
     if (!location) {
       return {
@@ -216,7 +275,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
         loading,
         error,
         refetch: fetchCurrentLocation,
-        setLocation
+        setLocation,
+        liveTracking,
+        toggleLiveTracking
       }}
     >
       {children}
