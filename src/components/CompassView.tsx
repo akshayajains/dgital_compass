@@ -1187,7 +1187,7 @@ export const CompassView = () => {
                     ? (theme === 'light' ? "bg-white/25 text-white border-white/40" : "bg-stone-950/20 text-stone-950 border-stone-950/30")
                     : (theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-400" : "bg-amber-500/20 text-amber-300 border-amber-500/40")
                 )}>
-                  {liveTracking ? (isHi ? 'लाइव' : 'LIVE') : (isHi ? 'चालू करें' : 'TAP')}
+                  {liveTracking ? (language === 'hi' ? 'लाइव' : 'LIVE') : (language === 'hi' ? 'चालू करें' : 'TAP')}
                 </span>
               </button>
             </div>
