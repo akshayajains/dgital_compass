@@ -202,13 +202,13 @@ export const AdvancedLevelView: React.FC<Props> = ({
           <button onClick={handleLock} className={cn(
             "rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider flex items-center gap-0.5 transition-all active:scale-95",
             isLocked
-              ? "border-amber-400/50 bg-amber-400/10 text-amber-300"
+              ? (theme === 'light' ? "border-amber-500 bg-amber-100 text-amber-800" : "border-amber-400/50 bg-amber-400/10 text-amber-300")
               : (theme === 'light' ? "border-stone-300 bg-white text-stone-600 hover:text-stone-900" : "border-white/10 bg-white/5 text-stone-400 hover:text-white")
           )}>
             {isLocked ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
             {isLocked ? (isHi ? 'लॉक' : 'Lock') : (isHi ? 'अनलॉक' : 'Open')}
           </button>
-          <span className={cn("rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider", displayLevel ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300" : "border-amber-400/40 bg-amber-400/10 text-amber-300")}>
+          <span className={cn("rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider", displayLevel ? (theme === 'light' ? "border-emerald-500 bg-emerald-100 text-emerald-800" : "border-emerald-400/50 bg-emerald-400/10 text-emerald-300") : (theme === 'light' ? "border-amber-500 bg-amber-100 text-amber-800" : "border-amber-400/40 bg-amber-400/10 text-amber-300"))}>
             {displayLevel ? (isHi ? 'सपाट' : 'Flat') : (isHi ? 'खोज' : 'Searching')}
           </span>
         </div>
@@ -276,7 +276,7 @@ export const AdvancedLevelView: React.FC<Props> = ({
           className={cn(
             "py-1 px-2 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all border flex items-center justify-center gap-0.5 active:scale-95",
             tareOffset
-              ? "bg-amber-500/25 text-amber-300 border-amber-500/50"
+              ? (theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-500" : "bg-amber-500/25 text-amber-300 border-amber-500/50")
               : (theme === 'light' ? "bg-white text-stone-600 border-stone-300 hover:text-stone-900" : "bg-white/5 text-stone-300 border-white/10 hover:text-white")
           )}
         >

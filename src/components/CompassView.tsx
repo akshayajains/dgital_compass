@@ -41,7 +41,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { CompassDialRenderer } from '@/components/compass/CompassDialRenderer';
 import { COMPASS_STYLES, getDefaultVariantId } from '@/components/compass/CompassStyles';
-import { CompassStyleId, WeatherData } from '@/types/compass';
+import { CompassStyleId } from '@/types/compass';
 import { getVastuDetails, getWeatherDescription, translations } from '@/lib/translations';
 import { AdvancedLevelView } from '@/components/level/AdvancedLevelView';
 import { VastuOthersView } from '@/components/vastu/VastuOthersView';
@@ -55,6 +55,7 @@ const CalibrationGuideModal = React.lazy(() => import('@/components/compass/Cali
 const SensorsInspectorModal = React.lazy(() => import('@/components/compass/SensorsInspectorModal').then(m => ({ default: m.SensorsInspectorModal })));
 const StyleSelectorModal = React.lazy(() => import('@/components/compass/StyleSelectorModal').then(m => ({ default: m.StyleSelectorModal })));
 const WeatherModal = React.lazy(() => import('@/components/compass/WeatherModal').then(m => ({ default: m.WeatherModal })));
+import type { WeatherData } from '@/components/compass/WeatherModal';
 
 const STYLE_STORAGE_KEY = 'com.hcompass.app_style';
 
@@ -201,15 +202,40 @@ export const CompassView = () => {
     const timer = window.setTimeout(() => {
       const fetchWeather = async () => {
         try {
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,surface_pressure,weather_code,wind_speed_10m`);
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index,visibility&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
           const data = await res.json();
           if (data && data.current) {
+            const c = data.current;
+            const code = c.weather_code;
+            const icon = code === 0 || code === 1 ? 'sun' : (code === 2 ? 'cloud-sun' : (code === 3 ? 'cloud' : (code >= 51 && code <= 67 ? 'rain' : (code >= 95 ? 'thunder' : 'cloud')))) as 'sun' | 'cloud-sun' | 'cloud' | 'rain' | 'thunder';
+            const condition = getWeatherDescription(code, language);
+            const now = new Date();
+            const hourly = (data.hourly && data.hourly.time && data.hourly.temperature_2m)
+              ? data.hourly.time.slice(0, 4).map((t: string, i: number) => ({
+                  time: new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                  tempC: Math.round(data.hourly.temperature_2m[i]),
+                  condition: 'Forecast',
+                  icon: 'cloud-sun' as const
+                }))
+              : [];
             setWeather({
-              temp: Math.round(data.current.temperature_2m),
-              humidity: data.current.relative_humidity_2m,
-              pressure: Math.round(data.current.surface_pressure),
-              windSpeed: Math.round(data.current.wind_speed_10m),
-              code: data.current.weather_code
+              tempC: Math.round(c.temperature_2m),
+              tempF: Math.round(c.temperature_2m * 9 / 5 + 32),
+              tempMinC: data.daily ? Math.round(data.daily.temperature_2m_min[0]) : Math.round(c.temperature_2m),
+              tempMaxC: data.daily ? Math.round(data.daily.temperature_2m_max[0]) : Math.round(c.temperature_2m),
+              apparentTempC: Math.round(c.apparent_temperature ?? c.temperature_2m),
+              humidity: c.relative_humidity_2m,
+              windSpeedKmh: Math.round(c.wind_speed_10m),
+              windDirectionDeg: c.wind_direction_10m ?? 0,
+              pressureHpa: Math.round(c.surface_pressure),
+              precipitationMm: c.precipitation ?? 0,
+              cloudCoverPct: c.cloud_cover ?? 0,
+              condition,
+              conditionIcon: icon,
+              uvIndex: c.uv_index ?? 0,
+              visibilityKm: c.visibility ? Math.round(c.visibility / 1000) : 10,
+              lastUpdated: `${now.toLocaleDateString('en-GB')}, ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+              hourly
             });
           }
         } catch (e) {
@@ -1245,9 +1271,9 @@ export const CompassView = () => {
               )}
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm leading-none">{getWeatherIcon(weather?.code)}</span>
+                <span className="text-sm leading-none">{weather ? (weather.conditionIcon === 'sun' ? '☀️' : weather.conditionIcon === 'cloud-sun' ? '🌤️' : weather.conditionIcon === 'cloud' ? '☁️' : weather.conditionIcon === 'rain' ? '🌧️' : '⛈️') : '☀️'}</span>
                 <span className="font-mono uppercase text-[10px] font-bold">
-                  {weather ? `${weather.temp}°C • ${getWeatherDescription(weather.code, language).toUpperCase()}` : '24°C • PARTLY CLOUDY'}
+                  {weather ? `${weather.tempC}°C • ${weather.condition.toUpperCase()}` : '24°C • PARTLY CLOUDY'}
                 </span>
               </div>
 
@@ -1258,11 +1284,11 @@ export const CompassView = () => {
                 </span>
                 <span className="flex items-center gap-1">
                   <Wind className={cn("w-3 h-3", theme === 'light' ? "text-teal-600" : "text-teal-400")} />
-                  {weather ? `${weather.windSpeed} km/h` : '15 km/h'}
+                  {weather ? `${weather.windSpeedKmh} km/h` : '15 km/h'}
                 </span>
                 <span className="flex items-center gap-1">
                   <Gauge className={cn("w-3 h-3", theme === 'light' ? "text-red-600" : "text-red-400")} />
-                  {weather ? `${weather.pressure} hPa` : '947 hPa'}
+                  {weather ? `${weather.pressureHpa} hPa` : '947 hPa'}
                 </span>
                 <ChevronRight className={cn("w-3 h-3", theme === 'light' ? "text-stone-400" : "text-stone-500")} />
               </div>
