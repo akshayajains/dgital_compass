@@ -435,18 +435,6 @@ export const AdvancedLevelView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* Main tilt readout — compact */}
-      <div className={cn("w-full rounded-xl p-2 border mb-1 flex items-center justify-between transition-all duration-300 shadow-md", displayLevel ? "bg-[#021D12]/90 border-emerald-500/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.2)]" : displayHigh ? "bg-[#250B0E]/90 border-red-500/40 text-red-300 shadow-[0_0_20px_rgba(239,68,68,0.2)]" : "bg-[#231707]/90 border-amber-500/40 text-amber-300")}>
-        <div className="flex items-center gap-1.5">
-          {displayLevel ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <AlertTriangle className={cn("w-3.5 h-3.5 shrink-0", displayHigh ? "text-red-400 animate-pulse" : "text-amber-400")} />}
-          <div className="flex flex-col text-left leading-tight">
-            <span className="text-[10px] font-black tracking-wide uppercase">{displayLevel ? t.perfectLevelText : t.tilt}</span>
-            <span className={cn("text-[8px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>{t.totalTilt}: {displayTotal.toFixed(1)}°</span>
-          </div>
-        </div>
-        <span className={cn("font-mono text-2xl font-black tracking-tight", displayLevel ? "text-emerald-400" : displayHigh ? "text-red-400" : "text-amber-400")}>{displayTotal.toFixed(1)}°</span>
-      </div>
-
       {/* Compact metrics grid — 2x2 */}
       <div className="w-full grid grid-cols-2 gap-1.5 my-0.5">
         <div className={cn("p-1.5 rounded-xl border flex flex-col items-center", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
