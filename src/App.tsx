@@ -7,7 +7,7 @@ import { OnboardingOverlay, shouldShowOnboarding } from "@/components/Onboarding
 
 export const App = () => {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="hindi-compass-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="digital-compass-theme">
       <LanguageProvider>
         <SunTimesProvider>
           <Toaster />

@@ -3,5 +3,5 @@
     <string name="app_name">Digital Compass</string>
     <string name="title_activity_main">Digital Compass</string>
     <string name="package_name">com.hcompass.app</string>
-    <string name="custom_url_scheme">hindicompass</string>
+    <string name="custom_url_scheme">digitalcompass</string>
 </resources>

@@ -159,7 +159,9 @@ export const NumerologyPanel = ({
                     <span className="text-stone-400 font-bold block">{language === 'hi' ? 'शुभ रंग:' : 'Lucky Colors:'}</span>
                     <span className="font-extrabold text-amber-500">
                       {
-                        ['Gold, Orange, Yellow', 'White, Silver, Cream', 'Yellow, Gold, Saffron', 'Blue, Grey, Electric Blue', 'Green, Emerald Green', 'Pink, White, Silver', 'Pastel Shades, Light Green', 'Blue, Black, Dark Blue', 'Red, Pink, Coral'][mulank - 1]
+                        language === 'hi'
+                          ? ['सोना, नारंगी, पीला', 'सफेद, चांदी, क्रीम', 'पीला, सोना, केसरिया', 'नीला, ग्रे, इलेक्ट्रिक ब्लू', 'हरा, पन्ना हरा', 'गुलाबी, सफेद, चांदी', 'पेस्टल शेड्स, हल्का हरा', 'नीला, काला, गहरा नीला', 'लाल, गुलाबी, मूंगा'][mulank - 1]
+                          : ['Gold, Orange, Yellow', 'White, Silver, Cream', 'Yellow, Gold, Saffron', 'Blue, Grey, Electric Blue', 'Green, Emerald Green', 'Pink, White, Silver', 'Pastel Shades, Light Green', 'Blue, Black, Dark Blue', 'Red, Pink, Coral'][mulank - 1]
                       }
                     </span>
                   </div>

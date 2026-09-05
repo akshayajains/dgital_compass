@@ -336,43 +336,44 @@ export const VastuOthersView: React.FC<Props> = ({
 
   // Live heading advice (for Vastu)
   const liveHeadingAdvice = useMemo(() => {
+    const hi = language === 'hi';
     switch (liveZone.code) {
       case 'N':
-        return { idealFor: 'Wealth Accumulation, Career Opportunities, Safe/Locker', avoidFor: 'Kitchen Fire, Toilet, Heavy Clutter' };
+        return hi ? { idealFor: 'धन संचय, करियर अवसर, तिजोरी/लॉकर', avoidFor: 'रसोई की आग, शौचालय, भारी अव्यवस्था' } : { idealFor: 'Wealth Accumulation, Career Opportunities, Safe/Locker', avoidFor: 'Kitchen Fire, Toilet, Heavy Clutter' };
       case 'NNE':
-        return { idealFor: 'Medicine Cabinet, Health Healing, Recovery', avoidFor: 'Toilet, Dustbin' };
+        return hi ? { idealFor: 'दवा कैबिनेट, स्वास्थ्य उपचार, रिकवरी', avoidFor: 'शौचालय, कूड़ेदान' } : { idealFor: 'Medicine Cabinet, Health Healing, Recovery', avoidFor: 'Toilet, Dustbin' };
       case 'NE':
-        return { idealFor: 'Pooja Mandir, Meditation, Spiritual Focus, Study', avoidFor: 'Toilet (Major Dosha), Kitchen, Heavy Stairs' };
+        return hi ? { idealFor: 'पूजा मंदिर, ध्यान, आध्यात्मिक फोकस, अध्ययन', avoidFor: 'शौचालय (प्रमुख दोष), रसोई, भारी सीढ़ियां' } : { idealFor: 'Pooja Mandir, Meditation, Spiritual Focus, Study', avoidFor: 'Toilet (Major Dosha), Kitchen, Heavy Stairs' };
       case 'ENE':
-        return { idealFor: 'Recreation, Family Lounge, Refreshment', avoidFor: 'Toilet, Heavy Junk' };
+        return hi ? { idealFor: 'मनोरंजन, पारिवारिक लाउंज, ताजगी', avoidFor: 'शौचालय, भारी कबाड़' } : { idealFor: 'Recreation, Family Lounge, Refreshment', avoidFor: 'Toilet, Heavy Junk' };
       case 'E':
-        return { idealFor: 'Social Networking, Main Entrance, East-facing Study', avoidFor: 'Toilet, Dark Clutter, Blocked Windows' };
+        return hi ? { idealFor: 'सामाजिक नेटवर्किंग, मुख्य प्रवेश द्वार, पूर्व मुख अध्ययन', avoidFor: 'शौचालय, अंधेरा कबाड़, बंद खिड़कियां' } : { idealFor: 'Social Networking, Main Entrance, East-facing Study', avoidFor: 'Toilet, Dark Clutter, Blocked Windows' };
       case 'ESE':
-        return { idealFor: 'Churning, Mixer/Grinder, Washing Machine', avoidFor: 'Bedroom (Severe Anxiety & Insomnia), Mandir' };
+        return hi ? { idealFor: 'मिक्सर/ग्राइंडर, वॉशिंग मशीन, मंथन', avoidFor: 'शयनकक्ष (गंभीर चिंता और अनिद्रा), मंदिर' } : { idealFor: 'Churning, Mixer/Grinder, Washing Machine', avoidFor: 'Bedroom (Severe Anxiety & Insomnia), Mandir' };
       case 'SE':
-        return { idealFor: 'Kitchen Gas Stove, Fire Element, Electrical Inverter', avoidFor: 'Water Tank, Bedroom, Blue/Black Colors' };
+        return hi ? { idealFor: 'रसोई गैस चूल्हा, अग्नि तत्व, बिजली इन्वर्टर', avoidFor: 'पानी की टंकी, शयनकक्ष, नीले/काले रंग' } : { idealFor: 'Kitchen Gas Stove, Fire Element, Electrical Inverter', avoidFor: 'Water Tank, Bedroom, Blue/Black Colors' };
       case 'SSE':
-        return { idealFor: 'Gym, Workout, Physical Stamina, Grains', avoidFor: 'Toilet, Underground Pit' };
+        return hi ? { idealFor: 'जिम, कसरत, शारीरिक सहनशक्ति, अनाज', avoidFor: 'शौचालय, भूमिगत गड्ढा' } : { idealFor: 'Gym, Workout, Physical Stamina, Grains', avoidFor: 'Toilet, Underground Pit' };
       case 'S':
-        return { idealFor: 'Deep Restful Sleep, Heavy Furniture, Rest', avoidFor: 'Underground Tank, Water Fountains' };
+        return hi ? { idealFor: 'गहरी नींद, भारी फर्नीचर, आराम', avoidFor: 'भूमिगत टंकी, पानी के फव्वारे' } : { idealFor: 'Deep Restful Sleep, Heavy Furniture, Rest', avoidFor: 'Underground Tank, Water Fountains' };
       case 'SSW':
-        return { idealFor: 'Toilet & Septic Tank (Ideal Zone of Disposal)', avoidFor: 'Bedroom, Cash Safe, Mandir' };
+        return hi ? { idealFor: 'शौचालय और सेप्टिक टैंक (निपटान का आदर्श क्षेत्र)', avoidFor: 'शयनकक्ष, नकद तिजोरी, मंदिर' } : { idealFor: 'Toilet & Septic Tank (Ideal Zone of Disposal)', avoidFor: 'Bedroom, Cash Safe, Mandir' };
       case 'SW':
-        return { idealFor: 'Master Bedroom, Head of Family, Stability, Overhead Tank', avoidFor: 'Toilet, Underground Tank, Mandir' };
+        return hi ? { idealFor: 'मास्टर बेडरूम, परिवार मुखिया, स्थिरता, ओवरहेड टैंक', avoidFor: 'शौचालय, भूमिगत टंकी, मंदिर' } : { idealFor: 'Master Bedroom, Head of Family, Stability, Overhead Tank', avoidFor: 'Toilet, Underground Tank, Mandir' };
       case 'WSW':
-        return { idealFor: 'Vidya Pada: Study Desk, Books, Knowledge, Savings', avoidFor: 'Toilet (Washes away education), Kitchen' };
+        return hi ? { idealFor: 'विद्या पद: अध्ययन डेस्क, किताबें, ज्ञान, बचत', avoidFor: 'शौचालय (शिक्षा बहा देता है), रसोई' } : { idealFor: 'Vidya Pada: Study Desk, Books, Knowledge, Savings', avoidFor: 'Toilet (Washes away education), Kitchen' };
       case 'W':
-        return { idealFor: 'Business Profits, Gains, Dining Room, Kids Bedroom', avoidFor: 'Underground Water Tank' };
+        return hi ? { idealFor: 'व्यापार लाभ, लाभ, भोजन कक्ष, बच्चों का बेडरूम', avoidFor: 'भूमिगत पानी की टंकी' } : { idealFor: 'Business Profits, Gains, Dining Room, Kids Bedroom', avoidFor: 'Underground Water Tank' };
       case 'WNW':
-        return { idealFor: 'Emotional Detoxing, Releasing Grief, Waste Paper', avoidFor: 'Bedroom (Depression), Study Desk' };
+        return hi ? { idealFor: 'भावनात्मक डिटॉक्स, शोक मुक्ति, बेकार कागज', avoidFor: 'शयनकक्ष (अवसाद), अध्ययन डेस्क' } : { idealFor: 'Emotional Detoxing, Releasing Grief, Waste Paper', avoidFor: 'Bedroom (Depression), Study Desk' };
       case 'NW':
-        return { idealFor: 'Guest Room, Banking, Support, Ready Goods', avoidFor: 'Master Bedroom, Heavy Fixed Vaults' };
+        return hi ? { idealFor: 'अतिथि कक्ष, बैंकिंग, सहायता, तैयार माल', avoidFor: 'मास्टर बेडरूम, भारी स्थिर तिजोरी' } : { idealFor: 'Guest Room, Banking, Support, Ready Goods', avoidFor: 'Master Bedroom, Heavy Fixed Vaults' };
       case 'NNW':
-        return { idealFor: 'Newly Married Couple, Romance, Charm, Attire', avoidFor: 'Children Study Desk, Toilet' };
+        return hi ? { idealFor: 'नवविवाहित जोड़ा, रोमांस, आकर्षण, वस्त्र', avoidFor: 'बच्चों का अध्ययन डेस्क, शौचालय' } : { idealFor: 'Newly Married Couple, Romance, Charm, Attire', avoidFor: 'Children Study Desk, Toilet' };
       default:
-        return { idealFor: 'General Work', avoidFor: 'Clutter' };
+        return hi ? { idealFor: 'सामान्य कार्य', avoidFor: 'अव्यवस्था' } : { idealFor: 'General Work', avoidFor: 'Clutter' };
     }
-  }, [liveZone.code]);
+  }, [liveZone.code, language]);
 
   // Reverse activity finder (for Vastu)
   const activityDirections = useMemo(() => {
@@ -417,10 +418,11 @@ export const VastuOthersView: React.FC<Props> = ({
   }, [house9Grid]);
 
   const premiumInsight = useMemo(() => {
-    if (activeTab === 'qibla') return 'Compass, tilt, and sacred-direction guidance are aligned in one calibrated view.';
-    if (livePada.isAuspicious) return `Current ${livePada.code} pada is supportive for ${liveHeadingAdvice.idealFor.toLowerCase()}.`;
-    return `Current heading is better avoided for ${liveHeadingAdvice.avoidFor.toLowerCase()}; use the reverse finder below.`;
-  }, [activeTab, livePada, liveHeadingAdvice]);
+    const hi = language === 'hi';
+    if (activeTab === 'qibla') return hi ? 'कम्पास, झुकाव और पवित्र दिशा मार्गदर्शन एक कैलिब्रेटेड दृश्य में संरेखित हैं।' : 'Compass, tilt, and sacred-direction guidance are aligned in one calibrated view.';
+    if (livePada.isAuspicious) return hi ? `वर्तमान ${livePada.code} पद ${liveHeadingAdvice.idealFor.toLowerCase()} के लिए सहायक है।` : `Current ${livePada.code} pada is supportive for ${liveHeadingAdvice.idealFor.toLowerCase()}.`;
+    return hi ? `वर्तमान दिशा ${liveHeadingAdvice.avoidFor.toLowerCase()} के लिए टालना बेहतर है; नीचे रिवर्स फाइंडर का उपयोग करें।` : `Current heading is better avoided for ${liveHeadingAdvice.avoidFor.toLowerCase()}; use the reverse finder below.`;
+  }, [activeTab, livePada, liveHeadingAdvice, language]);
 
   const handleSaveRoom = (name?: string) => {
     const newEntry: SavedRoomEntry = {
@@ -458,12 +460,12 @@ export const VastuOthersView: React.FC<Props> = ({
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {[
-          { id: 'vastu', label: 'Vastu', icon: '✨' },
-          { id: 'jyotish', label: 'Jyotish', icon: '⭐' },
-          { id: 'numerology', label: 'Numerology', icon: '#' },
-          { id: 'sadhana', label: 'Sadhana', icon: '⊙' },
-          { id: 'feng_shui', label: 'Feng Shui', icon: '🧭' },
-          { id: 'qibla', label: 'Qibla', icon: '↗' }
+          { id: 'vastu', label: language === 'hi' ? 'वास्तु' : 'Vastu', icon: '✨' },
+          { id: 'jyotish', label: language === 'hi' ? 'ज्योतिष' : 'Jyotish', icon: '⭐' },
+          { id: 'numerology', label: language === 'hi' ? 'अंक शास्त्र' : 'Numerology', icon: '#' },
+          { id: 'sadhana', label: language === 'hi' ? 'साधना' : 'Sadhana', icon: '⊙' },
+          { id: 'feng_shui', label: language === 'hi' ? 'फेंग शुई' : 'Feng Shui', icon: '🧭' },
+          { id: 'qibla', label: language === 'hi' ? 'किबला' : 'Qibla', icon: '↗' }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -636,11 +638,11 @@ export const VastuOthersView: React.FC<Props> = ({
       )}>
         <div className={cn("flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em]", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
           <ScanSearch className="w-3.5 h-3.5" />
-          <span>Live Premium Insight</span>
+          <span>{language === 'hi' ? 'लाइव प्रीमियम इनसाइट' : 'Live Premium Insight'}</span>
         </div>
         <p className={cn("text-sm font-black", theme === 'light' ? "text-emerald-900" : "text-white")}>{premiumInsight}</p>
         <p className={cn("text-[11px] leading-relaxed", theme === 'light' ? "text-emerald-800" : "text-stone-300")}>
-          Ideal for: {liveHeadingAdvice.idealFor}. Avoid for: {liveHeadingAdvice.avoidFor}.
+          {language === 'hi' ? 'इसके लिए आदर्श:' : 'Ideal for:'} {liveHeadingAdvice.idealFor}. {language === 'hi' ? 'इससे बचें:' : 'Avoid for:'} {liveHeadingAdvice.avoidFor}.
         </p>
       </div>
 
@@ -814,14 +816,14 @@ export const VastuOthersView: React.FC<Props> = ({
           )}>
             <span className={cn("font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5", theme === 'light' ? "text-emerald-800" : "text-emerald-300")}>
               <span>↗</span>
-              <span>Qibla Direction (Makkah Al-Mukarramah)</span>
+              <span>{language === 'hi' ? 'किबला दिशा (मक्का अल-मुकर्रमा)' : 'Qibla Direction (Makkah Al-Mukarramah)'}</span>
             </span>
 
             <div className={cn("p-3 rounded-2xl border flex flex-col items-center gap-1", theme === 'light' ? "bg-white border-stone-200" : "bg-black/40 border-white/10")}>
-              <span className={cn("text-[10px] uppercase font-bold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>Kaaba Bearing from Your GPS:</span>
+              <span className={cn("text-[10px] uppercase font-bold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>{language === 'hi' ? 'आपके GPS से काबा बेयरिंग:' : 'Kaaba Bearing from Your GPS:'}</span>
               <span className={cn("text-3xl font-black font-mono", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>{qiblaData ? `${qiblaData.qiblaBearing}°` : '—'}</span>
               <span className={cn("text-[10.5px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
-                {qiblaData ? `Distance: ${qiblaData.distanceKm} km` : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
+                {qiblaData ? (language === 'hi' ? `दूरी: ${qiblaData.distanceKm} किमी` : `Distance: ${qiblaData.distanceKm} km`) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
               </span>
             </div>
 
@@ -832,7 +834,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 : (theme === 'light' ? "bg-white text-stone-600 border-stone-300" : "bg-stone-900 text-stone-400 border-white/10")
             )}>
               <Navigation className="w-4 h-4" />
-              <span>{qiblaData ? (qiblaData.isFacingQibla ? "ALIGNED WITH KAABA ✓" : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}</span>
+              <span>{qiblaData ? (qiblaData.isFacingQibla ? (language === 'hi' ? 'काबा की ओर संरेखित ✓' : 'ALIGNED WITH KAABA ✓') : (language === 'hi' ? `किबला की ओर मुड़ने के लिए ${qiblaData.qiblaBearing}° घुमाएं` : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`)) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}</span>
             </div>
           </div>
         </div>
