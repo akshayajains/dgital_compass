@@ -242,8 +242,9 @@ export const VastuOthersView: React.FC<Props> = ({
 
   // Qibla Math
   const qiblaData = useMemo(() => {
-    const userLat = location?.latitude || 18.5504;
-    const userLng = location?.longitude || 73.9201;
+    if (!location) return null;
+    const userLat = location.latitude;
+    const userLng = location.longitude;
     const makkahLat = 21.4225;
     const makkahLng = 39.8262;
 
@@ -483,9 +484,9 @@ export const VastuOthersView: React.FC<Props> = ({
           roll={roll}
           sunPos={sunPos}
           isQiblaMode={activeTab === 'qibla'}
-          qiblaBearing={qiblaData.qiblaBearing}
-          qiblaDistanceKm={qiblaData.distanceKm}
-          isFacingQibla={qiblaData.isFacingQibla}
+          qiblaBearing={qiblaData?.qiblaBearing ?? 0}
+          qiblaDistanceKm={qiblaData?.distanceKm ?? 0}
+          isFacingQibla={qiblaData?.isFacingQibla ?? false}
           vastuGridEnabled={true}
           isLevel={isLevel}
           dialRef={effectiveDialRef}
@@ -560,9 +561,9 @@ export const VastuOthersView: React.FC<Props> = ({
           <div className={cn("text-[11px] font-black uppercase tracking-wider", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
             {location?.city
               ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}${location.state ? `, ${language === 'hi' ? location.state : (location.stateEn || location.state)}` : ''}`
-              : 'Pune'}
+              : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
             <span className="text-[10px] font-mono font-bold text-stone-500 ml-1.5">
-              • {location ? `${location.latitude.toFixed(4)}°N, ${location.longitude.toFixed(4)}°E` : '18.5504°N, 73.9201°E'}
+              • {location ? `${location.latitude.toFixed(4)}°N, ${location.longitude.toFixed(4)}°E` : ''}
             </span>
           </div>
         </div>
@@ -803,20 +804,20 @@ export const VastuOthersView: React.FC<Props> = ({
 
             <div className={cn("p-3 rounded-2xl border flex flex-col items-center gap-1", theme === 'light' ? "bg-white border-stone-200" : "bg-black/40 border-white/10")}>
               <span className={cn("text-[10px] uppercase font-bold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>Kaaba Bearing from Your GPS:</span>
-              <span className={cn("text-3xl font-black font-mono", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>{qiblaData.qiblaBearing}°</span>
+              <span className={cn("text-3xl font-black font-mono", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>{qiblaData ? `${qiblaData.qiblaBearing}°` : '—'}</span>
               <span className={cn("text-[10.5px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
-                Distance: {qiblaData.distanceKm} km
+                {qiblaData ? `Distance: ${qiblaData.distanceKm} km` : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
               </span>
             </div>
 
             <div className={cn(
               "p-3 rounded-2xl border flex items-center justify-center gap-2 font-black transition-all",
-              qiblaData.isFacingQibla
+              qiblaData?.isFacingQibla
                 ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]")
                 : (theme === 'light' ? "bg-white text-stone-600 border-stone-300" : "bg-stone-900 text-stone-400 border-white/10")
             )}>
               <Navigation className="w-4 h-4" />
-              <span>{qiblaData.isFacingQibla ? "ALIGNED WITH KAABA ✓" : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`}</span>
+              <span>{qiblaData ? (qiblaData.isFacingQibla ? "ALIGNED WITH KAABA ✓" : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}</span>
             </div>
           </div>
         </div>

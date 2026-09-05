@@ -23,8 +23,8 @@ export const MapCompassView: React.FC<Props> = ({
   heading,
   location
 }) => {
-  const defaultLat = 18.5204;
-  const defaultLon = 73.8567;
+  const defaultLat = 20.5937;
+  const defaultLon = 78.9629;
   const lat = location?.latitude ?? defaultLat;
   const lon = location?.longitude ?? defaultLon;
 
@@ -82,6 +82,15 @@ export const MapCompassView: React.FC<Props> = ({
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
+      {/* No-location overlay: don't show a misleading map when GPS is unavailable */}
+      {!location && (
+        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 bg-[#0A0E14]/95 backdrop-blur-sm">
+          <MapPin className="w-8 h-8 text-red-500 animate-pulse" />
+          <span className="text-sm font-black text-white uppercase tracking-wider">Location Unavailable</span>
+          <span className="text-[10px] text-stone-400 text-center px-8">Enable GPS or grant location permission to see the map</span>
+        </div>
+      )}
+
       {/* 1. Map Canvas Container with Optional Heading-Up Rotation */}
       <div 
         className="absolute inset-0 flex items-center justify-center transition-transform duration-100 ease-out"

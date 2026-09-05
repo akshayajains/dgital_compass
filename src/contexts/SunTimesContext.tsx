@@ -132,10 +132,10 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           setLocation({
             latitude: lat,
             longitude: lng,
-            city: city || 'नई दिल्ली',
-            state: state || ' भारत',
-            cityEn: cityEn || 'New Delhi',
-            stateEn: stateEn || 'India',
+            city: city || '',
+            state: state || '',
+            cityEn: cityEn || '',
+            stateEn: stateEn || '',
             altitude: alt,
             accuracy: acc,
             speed: spd
@@ -154,18 +154,24 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
                 setLocation({
                   latitude: lat,
                   longitude: lng,
-                  city: city || ipData.city || 'नई दिल्ली',
+                  city: city || ipData.city || '',
                   state: state || ipData.region || '',
-                  cityEn: cityEn || ipData.city || 'New Delhi',
+                  cityEn: cityEn || ipData.city || '',
                   stateEn: stateEn || ipData.region || '',
                   altitude: null,
                   accuracy: 1000,
                   speed: null
                 });
+                setError('ip');
+              } else {
+                setError('location');
               }
+            } else {
+              setError('location');
             }
           } catch (ipErr) {
             console.warn("IP Geolocation failed:", ipErr);
+            setError('location');
           } finally {
             setLoading(false);
           }
@@ -184,9 +190,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
         setLocation({
           latitude: lat,
           longitude: lng,
-          city: city || 'नई दिल्ली',
+          city: city || '',
           state: state || '',
-          cityEn: cityEn || 'New Delhi',
+          cityEn: cityEn || '',
           stateEn: stateEn || '',
           altitude: pos.coords.altitude,
           accuracy: pos.coords.accuracy,

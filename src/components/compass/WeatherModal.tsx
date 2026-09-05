@@ -67,8 +67,8 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
   theme,
   weather,
   cityName,
-  latitude = 23.0225,
-  longitude = 72.5714
+  latitude,
+  longitude
 }) => {
   const [activeTab, setActiveTab] = useState<'weather' | 'moon'>('weather');
 
@@ -76,9 +76,13 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
 
   const now = new Date();
 
+  // Format a numeric value as "—" when it's NaN (weather unavailable)
+  const fmt = (v: number, suffix = '') => (Number.isNaN(v) ? '—' : `${v}${suffix}`);
+
   // Moon calculations via SunCalc
   const moonIllum = SunCalc.getMoonIllumination(now);
-  const moonTimes = SunCalc.getMoonTimes(now, latitude, longitude);
+  const hasCoords = typeof latitude === 'number' && typeof longitude === 'number';
+  const moonTimes = hasCoords ? SunCalc.getMoonTimes(now, latitude, longitude) : { rise: null, set: null };
 
   const getMoonPhaseName = (phase: number) => {
     if (phase < 0.03 || phase > 0.97) return language === 'hi' ? 'अमावस्या (New Moon)' : 'New Moon';
@@ -101,33 +105,24 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   };
 
-  const defaultHourly: HourlyForecastItem[] = [
-    { time: '12:00', tempC: 24, condition: 'Sunny', icon: 'cloud-sun' },
-    { time: '13:00', tempC: 25, condition: 'Sunny', icon: 'cloud-sun' },
-    { time: '14:00', tempC: 25, condition: 'Partly Cloudy', icon: 'cloud-sun' },
-    { time: '15:00', tempC: 25, condition: 'Cloudy', icon: 'cloud' },
-    { time: '16:00', tempC: 24, condition: 'Sunny', icon: 'sun' },
-    { time: '17:00', tempC: 23, condition: 'Clear', icon: 'sun' },
-  ];
-
   const current: WeatherData = weather || {
-    tempC: 22,
-    tempF: 72,
-    tempMinC: 15,
-    tempMaxC: 25,
-    apparentTempC: 22,
-    humidity: 69,
-    windSpeedKmh: 9,
-    windDirectionDeg: 247, // WSW
-    pressureHpa: 1013,
-    precipitationMm: 3.2,
-    cloudCoverPct: 0,
-    condition: 'Sunny',
-    conditionIcon: 'sun',
-    uvIndex: 5,
-    visibilityKm: 10,
-    lastUpdated: `${now.toLocaleDateString('en-GB')}, ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-    hourly: defaultHourly
+    tempC: NaN,
+    tempF: NaN,
+    tempMinC: NaN,
+    tempMaxC: NaN,
+    apparentTempC: NaN,
+    humidity: NaN,
+    windSpeedKmh: NaN,
+    windDirectionDeg: NaN,
+    pressureHpa: NaN,
+    precipitationMm: NaN,
+    cloudCoverPct: NaN,
+    condition: language === 'hi' ? 'मौसम उपलब्ध नहीं' : 'Weather Unavailable',
+    conditionIcon: 'cloud',
+    uvIndex: NaN,
+    visibilityKm: NaN,
+    lastUpdated: '',
+    hourly: []
   };
 
   const formattedDate = now.toLocaleDateString(language === 'hi' ? 'hi-IN' : 'en-GB', {
@@ -236,10 +231,10 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                       {current.condition} • {cityName ? cityName : (latitude && longitude ? `${latitude.toFixed(2)}, ${longitude.toFixed(2)}` : '')}
                     </span>
                     <span className="text-4xl sm:text-5xl font-black font-sans tracking-tight text-white mt-0.5">
-                      {current.tempC}°C
+                      {fmt(current.tempC, '°C')}
                     </span>
                     <span className="text-xs font-medium text-stone-400 mt-1">
-                      {current.tempMaxC}°C / {current.tempMinC}°C
+                      {fmt(current.tempMaxC, '°C')} / {fmt(current.tempMinC, '°C')}
                     </span>
                 </div>
 
@@ -263,7 +258,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <CloudDrizzle className="w-4 h-4 text-sky-400 shrink-0" />
-                    <span className="text-xs font-black text-white font-mono">{current.precipitationMm}mm</span>
+                    <span className="text-xs font-black text-white font-mono">{fmt(current.precipitationMm, 'mm')}</span>
                   </div>
                 </div>
 
@@ -274,7 +269,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <Wind className="w-4 h-4 text-stone-300 shrink-0" />
-                    <span className="text-xs font-black text-white font-mono">{current.windSpeedKmh}km/h</span>
+                    <span className="text-xs font-black text-white font-mono">{fmt(current.windSpeedKmh, 'km/h')}</span>
                   </div>
                 </div>
 
@@ -285,7 +280,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <Gauge className="w-4 h-4 text-stone-300 shrink-0" />
-                    <span className="text-xs font-black text-white font-mono">{current.pressureHpa}hPa</span>
+                    <span className="text-xs font-black text-white font-mono">{fmt(current.pressureHpa, 'hPa')}</span>
                   </div>
                 </div>
 
@@ -296,7 +291,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <Droplets className="w-4 h-4 text-stone-400 shrink-0" />
-                    <span className="text-xs font-black text-white font-mono">{current.humidity}%</span>
+                    <span className="text-xs font-black text-white font-mono">{fmt(current.humidity, '%')}</span>
                   </div>
                 </div>
 
@@ -318,7 +313,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
                     <Cloud className="w-4 h-4 text-stone-400 shrink-0" />
-                    <span className="text-xs font-black text-white font-mono">{current.cloudCoverPct}%</span>
+                    <span className="text-xs font-black text-white font-mono">{fmt(current.cloudCoverPct, '%')}</span>
                   </div>
                 </div>
               </div>
@@ -329,7 +324,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                   NEXT HOURS
                 </span>
                 <div className="grid grid-cols-4 gap-1.5 overflow-x-auto pb-1">
-                  {(current.hourly || defaultHourly).slice(0, 4).map((h, i) => (
+                  {(current.hourly && current.hourly.length > 0 ? current.hourly : []).slice(0, 4).map((h, i) => (
                     <div key={i} className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 border border-white/5 text-center">
                       <span className="text-[10px] text-stone-400 font-mono">{h.time}</span>
                       <span className="text-xs font-black text-white font-mono my-1">{h.tempC}°C</span>
@@ -338,6 +333,11 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                       </div>
                     </div>
                   ))}
+                  {(!current.hourly || current.hourly.length === 0) && (
+                    <div className="col-span-4 text-center text-[10px] text-stone-500 py-2">
+                      {language === 'hi' ? 'घंटेवार पूर्वानुमान उपलब्ध नहीं' : 'Hourly forecast unavailable'}
+                    </div>
+                  )}
                 </div>
               </div>
             </>
@@ -369,7 +369,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                     {language === 'hi' ? 'चंद्रोदय (Moonrise)' : 'MOONRISE'}
                   </span>
                   <span className="text-xs font-mono font-black text-white mt-1">
-                    {moonTimes.rise ? formatHourTime(moonTimes.rise) : '02:45 PM'}
+                    {moonTimes.rise ? formatHourTime(moonTimes.rise) : '—'}
                   </span>
                 </div>
 
@@ -378,7 +378,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                     {language === 'hi' ? 'चंद्रास्त (Moonset)' : 'MOONSET'}
                   </span>
                   <span className="text-xs font-mono font-black text-white mt-1">
-                    {moonTimes.set ? formatHourTime(moonTimes.set) : '03:12 AM'}
+                    {moonTimes.set ? formatHourTime(moonTimes.set) : '—'}
                   </span>
                 </div>
 

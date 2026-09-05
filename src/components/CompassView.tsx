@@ -60,7 +60,7 @@ import type { WeatherData } from '@/components/compass/WeatherModal';
 const STYLE_STORAGE_KEY = 'com.hcompass.app_style';
 
 export const CompassView = () => {
-  const { location, times, liveTracking, toggleLiveTracking } = useSunTimes();
+  const { location, times, liveTracking, toggleLiveTracking, loading: locationLoading, error: locationError } = useSunTimes();
   const { theme } = useTheme();
   const { language, toggleLanguage, setLanguage } = useLanguage();
   const t = translations[language];
@@ -202,7 +202,7 @@ export const CompassView = () => {
     const timer = window.setTimeout(() => {
       const fetchWeather = async () => {
         try {
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index,visibility&daily=temperature_2m_max,temperature_2m_min&timezone=auto`);
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=6`);
           const data = await res.json();
           if (data && data.current) {
             const c = data.current;
@@ -246,17 +246,6 @@ export const CompassView = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [location?.latitude, location?.longitude]);
-
-  const getWeatherIcon = (code?: number) => {
-    if (code === undefined || code === null) return '☀️';
-    if (code === 0) return '☀️';
-    if (code >= 1 && code <= 3) return '🌤️';
-    if (code === 45 || code === 48) return '🌫️';
-    if (code >= 51 && code <= 65) return '🌧️';
-    if (code >= 80 && code <= 82) return '🌦️';
-    if (code >= 95) return '⛈️';
-    return '🌤️';
-  };
 
   // Toggle Hardware Flashlight
   const toggleFlashlight = async () => {
@@ -587,8 +576,8 @@ export const CompassView = () => {
     const lng = location ? location.longitude.toFixed(6) : '73.920091';
     const vastu = getVastuDetails(displayHeading, language);
     const text = language === 'hi'
-      ? `🧭 डिजिटल कंपास 360°:\nदिशा: ${Math.round(displayHeading)}° (${vastu.name})\nअक्षांश/देशांतर: ${lat}°, ${lng}°\nऊंचाई: ${location?.altitude ? Math.round(location.altitude * 3.28084) : 1632} FT`
-      : `🧭 Digital Compass 360°:\nHeading: ${Math.round(displayHeading)}° (${vastu.name})\nCoordinates: ${lat}°, ${lng}°\nSea Level: ${location?.altitude ? Math.round(location.altitude * 3.28084) : 1632} FT`;
+      ? `🧭 डिजिटल कंपास 360°:\nदिशा: ${Math.round(displayHeading)}° (${vastu.name})\nअक्षांश/देशांतर: ${lat}°, ${lng}°\nऊंचाई: ${location?.altitude ? Math.round(location.altitude * 3.28084) : '—'} FT`
+      : `🧭 Digital Compass 360°:\nHeading: ${Math.round(displayHeading)}° (${vastu.name})\nCoordinates: ${lat}°, ${lng}°\nSea Level: ${location?.altitude ? Math.round(location.altitude * 3.28084) : '—'} FT`;
     
     try {
       if (navigator.share) {
@@ -1162,7 +1151,13 @@ export const CompassView = () => {
                       : ''}
                   </span>
                   <span className="text-[10px] font-mono font-bold opacity-80">
-                    {location ? `${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°` : '18.5504°, 73.9201°'}
+                    {location
+                      ? `${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°`
+                      : locationLoading
+                        ? (language === 'hi' ? 'स्थान प्राप्त हो रहा है…' : 'Locating…')
+                        : locationError === 'ip'
+                          ? (language === 'hi' ? 'अनुमानित स्थान (IP)' : 'Approx. location (IP)')
+                          : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
                   </span>
                 </div>
               </button>
@@ -1188,7 +1183,7 @@ export const CompassView = () => {
                 )}
                 <span className={cn("text-[9px] font-bold uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
                   <Mountain className={cn("w-3 h-3", theme === 'light' ? "text-stone-400" : "text-stone-500")} />
-                  <span>SEA LEVEL: {location?.altitude ? Math.round(location.altitude * 3.28084) : 1632} FT</span>
+                  <span>SEA LEVEL: {location?.altitude ? Math.round(location.altitude * 3.28084) : '—'} FT</span>
                 </span>
               </div>
               {/* Speed readout — always visible, prominent for driving. Tap to toggle live GPS tracking. */}
@@ -1254,11 +1249,11 @@ export const CompassView = () => {
               </div>
               <div className={cn("flex items-center gap-1", theme === 'light' ? "text-amber-700" : "text-amber-300")}>
                 <Sun className={cn("w-3.5 h-3.5", theme === 'light' ? "text-amber-500" : "text-yellow-400")} />
-                <span>NOON: {formatTime(times.solarNoon, '12:35 PM')}</span>
+                <span>NOON: {formatTime(times.solarNoon, '—')}</span>
               </div>
               <div className={cn("flex items-center gap-1", theme === 'light' ? "text-purple-700" : "text-purple-400")}>
                 <Sunset className="w-3.5 h-3.5" />
-                <span>SET: {formatTime(times.sunset, '06:50 PM')}</span>
+                <span>SET: {formatTime(times.sunset, '—')}</span>
               </div>
             </div>
 
@@ -1271,24 +1266,24 @@ export const CompassView = () => {
               )}
             >
               <div className="flex items-center gap-2">
-                <span className="text-sm leading-none">{weather ? (weather.conditionIcon === 'sun' ? '☀️' : weather.conditionIcon === 'cloud-sun' ? '🌤️' : weather.conditionIcon === 'cloud' ? '☁️' : weather.conditionIcon === 'rain' ? '🌧️' : '⛈️') : '☀️'}</span>
+                <span className="text-sm leading-none">{weather ? (weather.conditionIcon === 'sun' ? '☀️' : weather.conditionIcon === 'cloud-sun' ? '🌤️' : weather.conditionIcon === 'cloud' ? '☁️' : weather.conditionIcon === 'rain' ? '🌧️' : '⛈️') : '—'}</span>
                 <span className="font-mono uppercase text-[10px] font-bold">
-                  {weather ? `${weather.tempC}°C • ${weather.condition.toUpperCase()}` : '24°C • PARTLY CLOUDY'}
+                  {weather ? `${weather.tempC}°C • ${weather.condition.toUpperCase()}` : (language === 'hi' ? 'मौसम उपलब्ध नहीं' : 'WEATHER UNAVAILABLE')}
                 </span>
               </div>
 
               <div className={cn("flex items-center gap-3 font-mono text-[10px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
                 <span className="flex items-center gap-1">
                   <Droplets className={cn("w-3 h-3", theme === 'light' ? "text-sky-600" : "text-sky-400")} />
-                  {weather ? `${weather.humidity}%` : '82%'}
+                  {weather ? `${weather.humidity}%` : '—'}
                 </span>
                 <span className="flex items-center gap-1">
                   <Wind className={cn("w-3 h-3", theme === 'light' ? "text-teal-600" : "text-teal-400")} />
-                  {weather ? `${weather.windSpeedKmh} km/h` : '15 km/h'}
+                  {weather ? `${weather.windSpeedKmh} km/h` : '—'}
                 </span>
                 <span className="flex items-center gap-1">
                   <Gauge className={cn("w-3 h-3", theme === 'light' ? "text-red-600" : "text-red-400")} />
-                  {weather ? `${weather.pressureHpa} hPa` : '947 hPa'}
+                  {weather ? `${weather.pressureHpa} hPa` : '—'}
                 </span>
                 <ChevronRight className={cn("w-3 h-3", theme === 'light' ? "text-stone-400" : "text-stone-500")} />
               </div>
