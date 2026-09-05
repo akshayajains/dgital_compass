@@ -374,8 +374,11 @@ export const CompassView = () => {
     const lat = location.latitude;
     const lon = location.longitude;
     const year = new Date().getFullYear();
-    fetch(`https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?lat1=${lat}&lon1=${lon}&resultFormat=json&startYear=${year}`)
-      .then(r => r.json())
+    fetch(`https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?lat1=${lat}&lon1=${lon}&resultFormat=json&startYear=${year}&key=zNEw7`)
+      .then(r => {
+        if (!r.ok) throw new Error(`NOAA declination HTTP ${r.status}`);
+        return r.json();
+      })
       .then((data) => {
         if (cancelled) return;
         const d = data?.result?.[0]?.declination;
