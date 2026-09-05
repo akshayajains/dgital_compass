@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Language } from '@/types/compass';
 import { translations } from '@/lib/translations';
 
-const LANGUAGE_STORAGE_KEY = 'com.hcompass.app_language';
+const LANGUAGE_STORAGE_KEY = 'com.spiritual.compass.app_language';
 
 type TranslationKey = {
   [K in keyof typeof translations['hi']]: (typeof translations['hi'])[K] extends string ? K : never;

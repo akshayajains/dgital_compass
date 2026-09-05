@@ -64,8 +64,8 @@ interface Props {
 
 export type VastuSubTab = 'vastu' | 'jyotish' | 'numerology' | 'sadhana' | 'feng_shui' | 'qibla';
 
-const VASTU_TAB_STORAGE_KEY = 'com.hcompass.app_vastu_tab';
-const VASTU_ROOM_STORAGE_KEY = 'com.hcompass.app_vastu_room';
+const VASTU_TAB_STORAGE_KEY = 'com.spiritual.compass.app_vastu_tab';
+const VASTU_ROOM_STORAGE_KEY = 'com.spiritual.compass.app_vastu_room';
 
 interface SavedRoomEntry {
   id: string;
@@ -125,7 +125,7 @@ export const VastuOthersView: React.FC<Props> = ({
 
   // Saved Rooms (persisted)
   const [savedRooms, setSavedRooms] = useState<SavedRoomEntry[]>(() => {
-    try { return JSON.parse(localStorage.getItem('com.hcompass.app_saved_rooms') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('com.spiritual.compass.app_saved_rooms') || '[]'); } catch { return []; }
   });
 
   // 9-Grid Floorplan Mapper (sector keys — matches VastuPanel mapper UI + score)
@@ -198,7 +198,7 @@ export const VastuOthersView: React.FC<Props> = ({
     try { localStorage.setItem(VASTU_ROOM_STORAGE_KEY, selectedRoom); } catch {}
   }, [selectedRoom]);
   useEffect(() => {
-    try { localStorage.setItem('com.hcompass.app_saved_rooms', JSON.stringify(savedRooms)); } catch {}
+    try { localStorage.setItem('com.spiritual.compass.app_saved_rooms', JSON.stringify(savedRooms)); } catch {}
   }, [savedRooms]);
 
   const reduceToSingle = (n: number): number => {

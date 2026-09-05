@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 
-const ONBOARDING_KEY = 'com.hcompass.app_onboarded';
+const ONBOARDING_KEY = 'com.spiritual.compass.app_onboarded';
 
 interface Slide {
   icon: React.ReactNode;

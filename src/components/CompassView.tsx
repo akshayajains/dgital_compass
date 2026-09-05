@@ -65,7 +65,7 @@ const StyleSelectorModal = React.lazy(() => import('@/components/compass/StyleSe
 const WeatherModal = React.lazy(() => import('@/components/compass/WeatherModal').then(m => ({ default: m.WeatherModal })));
 import type { WeatherData } from '@/components/compass/WeatherModal';
 
-const STYLE_STORAGE_KEY = 'com.hcompass.app_style';
+const STYLE_STORAGE_KEY = 'com.spiritual.compass.app_style';
 
 export const CompassView = () => {
   const { location, times, liveTracking, toggleLiveTracking, loading: locationLoading, error: locationError } = useSunTimes();
@@ -102,7 +102,7 @@ export const CompassView = () => {
   });
 
   // Variant state for grouped themes (ios_compass → ios_white, color_palette → cp_rose)
-  const VARIANT_STORAGE_KEY = 'com.hcompass.app_variant';
+  const VARIANT_STORAGE_KEY = 'com.spiritual.compass.app_variant';
   const [selectedVariant, setSelectedVariant] = useState<string | null>(() => {
     try {
       const saved = localStorage.getItem(VARIANT_STORAGE_KEY);
@@ -140,29 +140,29 @@ export const CompassView = () => {
 
   // Persisted Preferences
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('com.hcompass.app_sound') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('com.spiritual.compass.app_sound') !== 'false'; } catch { return true; }
   });
 
   const [useTrueNorth, setUseTrueNorth] = useState<boolean>(() => {
-    try { return localStorage.getItem('com.hcompass.app_true_north') === 'true'; } catch { return false; }
+    try { return localStorage.getItem('com.spiritual.compass.app_true_north') === 'true'; } catch { return false; }
   });
 
   const [hapticEnabled, setHapticEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('com.hcompass.app_haptic') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('com.spiritual.compass.app_haptic') !== 'false'; } catch { return true; }
   });
 
   // ── Settings: units, haptics, keep-awake (feature 12) ──
   const [tempUnit, setTempUnit] = useState<'c' | 'f'>(() => {
-    try { return localStorage.getItem('com.hcompass.app_temp_unit') === 'f' ? 'f' : 'c'; } catch { return 'c'; }
+    try { return localStorage.getItem('com.spiritual.compass.app_temp_unit') === 'f' ? 'f' : 'c'; } catch { return 'c'; }
   });
   const [speedUnit, setSpeedUnit] = useState<'kmh' | 'mph'>(() => {
-    try { return localStorage.getItem('com.hcompass.app_speed_unit') === 'mph' ? 'mph' : 'kmh'; } catch { return 'kmh'; }
+    try { return localStorage.getItem('com.spiritual.compass.app_speed_unit') === 'mph' ? 'mph' : 'kmh'; } catch { return 'kmh'; }
   });
   const [timeFormat, setTimeFormat] = useState<'12' | '24'>(() => {
-    try { return localStorage.getItem('com.hcompass.app_time_format') === '24' ? '24' : '12'; } catch { return '12'; }
+    try { return localStorage.getItem('com.spiritual.compass.app_time_format') === '24' ? '24' : '12'; } catch { return '12'; }
   });
   const [keepAwake, setKeepAwake] = useState<boolean>(() => {
-    try { return localStorage.getItem('com.hcompass.app_keep_awake') === 'true'; } catch { return false; }
+    try { return localStorage.getItem('com.spiritual.compass.app_keep_awake') === 'true'; } catch { return false; }
   });
 
   // Keep screen awake while app is open (Web Wake Lock API — works in Android WebView)
@@ -188,12 +188,12 @@ export const CompassView = () => {
 
   // Always-visible (pin compass) preference
   const [alwaysVisible, setAlwaysVisible] = useState<boolean>(() => {
-    try { return localStorage.getItem('com.hcompass.always_visible') === 'true'; } catch { return false; }
+    try { return localStorage.getItem('com.spiritual.compass.always_visible') === 'true'; } catch { return false; }
   });
 
   // Vastu Grid Overlay State
   const [vastuGridEnabled, setVastuGridEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem('com.hcompass.app_vastu') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('com.spiritual.compass.app_vastu') !== 'false'; } catch { return true; }
   });
 
   // Flashlight / Torch State
@@ -362,7 +362,7 @@ export const CompassView = () => {
   // cached locally, with a rough approximation as offline fallback.
   const [declination, setDeclination] = useState<number>(() => {
     try {
-      const saved = localStorage.getItem('com.hcompass.app_declination');
+      const saved = localStorage.getItem('com.spiritual.compass.app_declination');
       if (saved !== null && !isNaN(parseFloat(saved))) return parseFloat(saved);
     } catch {}
     return -0.2;
@@ -382,7 +382,7 @@ export const CompassView = () => {
         if (typeof d === 'number' && !isNaN(d)) {
           const rounded = parseFloat(d.toFixed(1));
           setDeclination(rounded);
-          try { localStorage.setItem('com.hcompass.app_declination', rounded.toString()); } catch {}
+          try { localStorage.setItem('com.spiritual.compass.app_declination', rounded.toString()); } catch {}
         }
       })
       .catch(() => {
@@ -1168,7 +1168,7 @@ export const CompassView = () => {
                   onClick={() => {
                     const next = !alwaysVisible;
                     setAlwaysVisible(next);
-                    try { localStorage.setItem('com.hcompass.always_visible', next.toString()); } catch {}
+                    try { localStorage.setItem('com.spiritual.compass.always_visible', next.toString()); } catch {}
                     triggerHapticFeedback();
                   }}
                   className={cn(
@@ -1708,7 +1708,7 @@ export const CompassView = () => {
                   triggerHapticFeedback();
                   const next = !vastuGridEnabled;
                   setVastuGridEnabled(next);
-                  localStorage.setItem('com.hcompass.app_vastu', next.toString());
+                  localStorage.setItem('com.spiritual.compass.app_vastu', next.toString());
                 }}
                 className={cn(
                   "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
@@ -1788,7 +1788,7 @@ export const CompassView = () => {
                 onClick={() => {
                   const next = !alwaysVisible;
                   setAlwaysVisible(next);
-                  try { localStorage.setItem('com.hcompass.always_visible', next.toString()); } catch {}
+                  try { localStorage.setItem('com.spiritual.compass.always_visible', next.toString()); } catch {}
                 }}
                 className={cn(
                   "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
@@ -1810,11 +1810,11 @@ export const CompassView = () => {
               </span>
               <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
                 <button
-                  onClick={() => { setTempUnit('c'); try { localStorage.setItem('com.hcompass.app_temp_unit', 'c'); } catch {} triggerHapticFeedback(); }}
+                  onClick={() => { setTempUnit('c'); try { localStorage.setItem('com.spiritual.compass.app_temp_unit', 'c'); } catch {} triggerHapticFeedback(); }}
                   className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'c' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
                 >°C</button>
                 <button
-                  onClick={() => { setTempUnit('f'); try { localStorage.setItem('com.hcompass.app_temp_unit', 'f'); } catch {} triggerHapticFeedback(); }}
+                  onClick={() => { setTempUnit('f'); try { localStorage.setItem('com.spiritual.compass.app_temp_unit', 'f'); } catch {} triggerHapticFeedback(); }}
                   className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'f' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
                 >°F</button>
               </div>
@@ -1831,11 +1831,11 @@ export const CompassView = () => {
               </span>
               <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
                 <button
-                  onClick={() => { setSpeedUnit('kmh'); try { localStorage.setItem('com.hcompass.app_speed_unit', 'kmh'); } catch {} triggerHapticFeedback(); }}
+                  onClick={() => { setSpeedUnit('kmh'); try { localStorage.setItem('com.spiritual.compass.app_speed_unit', 'kmh'); } catch {} triggerHapticFeedback(); }}
                   className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'kmh' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
                 >km/h</button>
                 <button
-                  onClick={() => { setSpeedUnit('mph'); try { localStorage.setItem('com.hcompass.app_speed_unit', 'mph'); } catch {} triggerHapticFeedback(); }}
+                  onClick={() => { setSpeedUnit('mph'); try { localStorage.setItem('com.spiritual.compass.app_speed_unit', 'mph'); } catch {} triggerHapticFeedback(); }}
                   className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'mph' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
                 >mph</button>
               </div>
@@ -1852,11 +1852,11 @@ export const CompassView = () => {
               </span>
               <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
                 <button
-                  onClick={() => { setTimeFormat('12'); try { localStorage.setItem('com.hcompass.app_time_format', '12'); } catch {} triggerHapticFeedback(); }}
+                  onClick={() => { setTimeFormat('12'); try { localStorage.setItem('com.spiritual.compass.app_time_format', '12'); } catch {} triggerHapticFeedback(); }}
                   className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '12' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
                 >12h</button>
                 <button
-                  onClick={() => { setTimeFormat('24'); try { localStorage.setItem('com.hcompass.app_time_format', '24'); } catch {} triggerHapticFeedback(); }}
+                  onClick={() => { setTimeFormat('24'); try { localStorage.setItem('com.spiritual.compass.app_time_format', '24'); } catch {} triggerHapticFeedback(); }}
                   className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '24' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
                 >24h</button>
               </div>
@@ -1875,7 +1875,7 @@ export const CompassView = () => {
                 onClick={() => {
                   const next = !hapticEnabled;
                   setHapticEnabled(next);
-                  try { localStorage.setItem('com.hcompass.app_haptic', next.toString()); } catch {}
+                  try { localStorage.setItem('com.spiritual.compass.app_haptic', next.toString()); } catch {}
                   if (next) triggerHapticFeedback();
                 }}
                 className={cn(
@@ -1900,7 +1900,7 @@ export const CompassView = () => {
                 onClick={() => {
                   const next = !keepAwake;
                   setKeepAwake(next);
-                  try { localStorage.setItem('com.hcompass.app_keep_awake', next.toString()); } catch {}
+                  try { localStorage.setItem('com.spiritual.compass.app_keep_awake', next.toString()); } catch {}
                   triggerHapticFeedback();
                 }}
                 className={cn(

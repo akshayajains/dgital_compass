@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import SunCalc from 'suncalc';
 import { Geolocation } from '@capacitor/geolocation';
 
-const LOCATION_STORAGE_KEY = 'com.hcompass.app_location';
+const LOCATION_STORAGE_KEY = 'com.spiritual.compass.app_location';
 
 export interface Location {
   latitude: number;
@@ -54,7 +54,7 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
   // Live GPS tracking (speedometer) — off by default to save battery.
   const [liveTracking, setLiveTracking] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('com.hcompass.app_live_tracking') === 'true';
+      return localStorage.getItem('com.spiritual.compass.app_live_tracking') === 'true';
     } catch {
       return false;
     }
@@ -64,7 +64,7 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     setLiveTracking((prev) => {
       const next = !prev;
       try {
-        localStorage.setItem('com.hcompass.app_live_tracking', next.toString());
+        localStorage.setItem('com.spiritual.compass.app_live_tracking', next.toString());
       } catch (e) {
         console.warn('Failed to save live tracking pref', e);
       }

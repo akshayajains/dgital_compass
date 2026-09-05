@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.hcompass.app',
+  appId: 'com.spiritual.compass',
   appName: 'Digital Compass',
   webDir: 'dist',
   server: {

@@ -46,7 +46,7 @@ export const AdvancedLevelView: React.FC<Props> = ({
   const [angleMode, setAngleMode] = useState<'relative' | 'absolute'>('relative');
   // Sound on level toggle (persisted)
   const [soundOnLevel, setSoundOnLevel] = useState<boolean>(() => {
-    try { return localStorage.getItem('com.hcompass.app_level_sound') !== 'false'; } catch { return true; }
+    try { return localStorage.getItem('com.spiritual.compass.app_level_sound') !== 'false'; } catch { return true; }
   });
   // Reference lock: hold current as 0°
   const [referenceLock, setReferenceLock] = useState<{ pitch: number; roll: number } | null>(null);
@@ -71,7 +71,7 @@ export const AdvancedLevelView: React.FC<Props> = ({
   // ── Feature 8: reading history log (persisted) ──
   interface ReadingEntry { id: number; time: string; pitch: number; roll: number; total: number; }
   const [readings, setReadings] = useState<ReadingEntry[]>(() => {
-    try { return JSON.parse(localStorage.getItem('com.hcompass.app_readings') || '[]'); } catch { return []; }
+    try { return JSON.parse(localStorage.getItem('com.spiritual.compass.app_readings') || '[]'); } catch { return []; }
   });
 
   // Effective values (tare + reference lock applied)
@@ -206,12 +206,12 @@ export const AdvancedLevelView: React.FC<Props> = ({
     const entry: ReadingEntry = { id: Date.now(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), pitch: displayPitch, roll: displayRoll, total: displayTotal };
     const next = [entry, ...readings].slice(0, 20);
     setReadings(next);
-    try { localStorage.setItem('com.hcompass.app_readings', JSON.stringify(next)); } catch {}
+    try { localStorage.setItem('com.spiritual.compass.app_readings', JSON.stringify(next)); } catch {}
   };
   const handleClearReadings = () => {
     triggerHaptic();
     setReadings([]);
-    try { localStorage.removeItem('com.hcompass.app_readings'); } catch {}
+    try { localStorage.removeItem('com.spiritual.compass.app_readings'); } catch {}
   };
 
   // Directional guidance arrows
