@@ -30,6 +30,12 @@ import {
   Palette,
   Pin,
   Check,
+  Share2,
+  Clock,
+  Thermometer,
+  Timer,
+  Vibrate,
+  MoonStar,
 } from 'lucide-react';
 import { useSunTimes } from '@/hooks/useSunTimes';
 import SunCalc from 'suncalc';
@@ -43,12 +49,14 @@ import { CompassDialRenderer } from '@/components/compass/CompassDialRenderer';
 import { COMPASS_STYLES, getDefaultVariantId } from '@/components/compass/CompassStyles';
 import { CompassStyleId } from '@/types/compass';
 import { getVastuDetails, getWeatherDescription, translations } from '@/lib/translations';
-import { AdvancedLevelView } from '@/components/level/AdvancedLevelView';
-import { VastuOthersView } from '@/components/vastu/VastuOthersView';
 import { CreatorBanner } from '@/components/CreatorBanner';
-import { SatelliteCompassView } from '@/components/compass/SatelliteCompassView';
-import { TelescopeCameraCompass } from '@/components/compass/TelescopeCameraCompass1';
 import { get32Pada } from '@/lib/vastu32Devta';
+
+// Lazy-loaded heavy views (only fetched when their tab is first opened)
+const AdvancedLevelView = React.lazy(() => import('@/components/level/AdvancedLevelView').then(m => ({ default: m.AdvancedLevelView })));
+const VastuOthersView = React.lazy(() => import('@/components/vastu/VastuOthersView').then(m => ({ default: m.VastuOthersView })));
+const SatelliteCompassView = React.lazy(() => import('@/components/compass/SatelliteCompassView').then(m => ({ default: m.SatelliteCompassView })));
+const TelescopeCameraCompass = React.lazy(() => import('@/components/compass/TelescopeCameraCompass1').then(m => ({ default: m.TelescopeCameraCompass })));
 
 // Lazy-loaded heavy modals (only fetched when first opened)
 const CalibrationGuideModal = React.lazy(() => import('@/components/compass/CalibrationGuideModal').then(m => ({ default: m.CalibrationGuideModal })));
@@ -139,9 +147,44 @@ export const CompassView = () => {
     try { return localStorage.getItem('com.hcompass.app_true_north') === 'true'; } catch { return false; }
   });
 
-  const [hapticEnabled] = useState<boolean>(() => {
+  const [hapticEnabled, setHapticEnabled] = useState<boolean>(() => {
     try { return localStorage.getItem('com.hcompass.app_haptic') !== 'false'; } catch { return true; }
   });
+
+  // ── Settings: units, haptics, keep-awake (feature 12) ──
+  const [tempUnit, setTempUnit] = useState<'c' | 'f'>(() => {
+    try { return localStorage.getItem('com.hcompass.app_temp_unit') === 'f' ? 'f' : 'c'; } catch { return 'c'; }
+  });
+  const [speedUnit, setSpeedUnit] = useState<'kmh' | 'mph'>(() => {
+    try { return localStorage.getItem('com.hcompass.app_speed_unit') === 'mph' ? 'mph' : 'kmh'; } catch { return 'kmh'; }
+  });
+  const [timeFormat, setTimeFormat] = useState<'12' | '24'>(() => {
+    try { return localStorage.getItem('com.hcompass.app_time_format') === '24' ? '24' : '12'; } catch { return '12'; }
+  });
+  const [keepAwake, setKeepAwake] = useState<boolean>(() => {
+    try { return localStorage.getItem('com.hcompass.app_keep_awake') === 'true'; } catch { return false; }
+  });
+
+  // Keep screen awake while app is open (Web Wake Lock API — works in Android WebView)
+  useEffect(() => {
+    let wakeLock: any = null;
+    const request = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch {}
+    };
+    if (keepAwake) request();
+    const onVis = () => {
+      if (keepAwake && document.visibilityState === 'visible') request();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      document.removeEventListener('visibilitychange', onVis);
+      try { wakeLock?.release?.(); } catch {}
+    };
+  }, [keepAwake]);
 
   // Always-visible (pin compass) preference
   const [alwaysVisible, setAlwaysVisible] = useState<boolean>(() => {
@@ -202,7 +245,7 @@ export const CompassView = () => {
     const timer = window.setTimeout(() => {
       const fetchWeather = async () => {
         try {
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=6`);
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=6`);
           const data = await res.json();
           if (data && data.current) {
             const c = data.current;
@@ -211,12 +254,16 @@ export const CompassView = () => {
             const condition = getWeatherDescription(code, language);
             const now = new Date();
             const hourly = (data.hourly && data.hourly.time && data.hourly.temperature_2m)
-              ? data.hourly.time.slice(0, 4).map((t: string, i: number) => ({
-                  time: new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                  tempC: Math.round(data.hourly.temperature_2m[i]),
-                  condition: 'Forecast',
-                  icon: 'cloud-sun' as const
-                }))
+              ? data.hourly.time.slice(0, 6).map((t: string, i: number) => {
+                  const hc = data.hourly.weather_code?.[i] ?? 0;
+                  const hIcon = (hc === 0 || hc === 1 ? 'sun' : (hc === 2 ? 'cloud-sun' : (hc === 3 ? 'cloud' : (hc >= 51 && hc <= 67 ? 'rain' : (hc >= 95 ? 'thunder' : 'cloud'))))) as 'sun' | 'cloud-sun' | 'cloud' | 'rain' | 'thunder';
+                  return {
+                    time: new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    tempC: Math.round(data.hourly.temperature_2m[i]),
+                    condition: getWeatherDescription(hc, language),
+                    icon: hIcon
+                  };
+                })
               : [];
             setWeather({
               tempC: Math.round(c.temperature_2m),
@@ -311,13 +358,40 @@ export const CompassView = () => {
   const usingAbsoluteRef = useRef<boolean>(false);
   const lastRotaryTickRef = useRef<number>(0);
 
-  const declination = useMemo(() => {
-    if (!location) return -0.2;
+  // Magnetic declination — fetched from NOAA WMM when location is known,
+  // cached locally, with a rough approximation as offline fallback.
+  const [declination, setDeclination] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('com.hcompass.app_declination');
+      if (saved !== null && !isNaN(parseFloat(saved))) return parseFloat(saved);
+    } catch {}
+    return -0.2;
+  });
+
+  useEffect(() => {
+    if (!location) return;
+    let cancelled = false;
     const lat = location.latitude;
     const lon = location.longitude;
-    const calc = (28 - lat) * 0.1 + (lon - 77) * 0.05 - 0.2;
-    return parseFloat(calc.toFixed(1));
-  }, [location]);
+    const year = new Date().getFullYear();
+    fetch(`https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?lat1=${lat}&lon1=${lon}&resultFormat=json&startYear=${year}`)
+      .then(r => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const d = data?.result?.[0]?.declination;
+        if (typeof d === 'number' && !isNaN(d)) {
+          const rounded = parseFloat(d.toFixed(1));
+          setDeclination(rounded);
+          try { localStorage.setItem('com.hcompass.app_declination', rounded.toString()); } catch {}
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        const calc = (28 - lat) * 0.1 + (lon - 77) * 0.05 - 0.2;
+        setDeclination(parseFloat(calc.toFixed(1)));
+      });
+    return () => { cancelled = true; };
+  }, [location?.latitude, location?.longitude]);
 
   const triggerHapticFeedback = async (style = ImpactStyle.Light) => {
     if (!hapticEnabled) return;
@@ -411,7 +485,7 @@ export const CompassView = () => {
       if (finalHeading < 0) finalHeading += 360;
       setHeading(finalHeading);
 
-      const currentTick = Math.floor(finalHeading / 15);
+      const currentTick = Math.floor(finalHeading / 5);
       if (currentTick !== lastRotaryTickRef.current) {
         lastRotaryTickRef.current = currentTick;
         triggerHapticFeedback(ImpactStyle.Light);
@@ -535,9 +609,9 @@ export const CompassView = () => {
       smoothHeadingRef.current = next;
       setSmoothHeading(next);
 
-      // Haptic tick on cardinal crossing (every 45°)
+      // Haptic tick on every 5° crossing
       const norm = ((next % 360) + 360) % 360;
-      const cardinal = Math.round(norm / 45);
+      const cardinal = Math.round(norm / 5);
       if (cardinal !== lastCardinalRef.current && Math.abs(diff) > 0.5) {
         lastCardinalRef.current = cardinal;
         triggerHapticFeedback(ImpactStyle.Light);
@@ -572,8 +646,8 @@ export const CompassView = () => {
 
   const copyCoordinates = async () => {
     triggerHapticFeedback();
-    const lat = location ? location.latitude.toFixed(6) : '18.550434';
-    const lng = location ? location.longitude.toFixed(6) : '73.920091';
+    const lat = location ? location.latitude.toFixed(6) : '—';
+    const lng = location ? location.longitude.toFixed(6) : '—';
     const vastu = getVastuDetails(displayHeading, language);
     const text = language === 'hi'
       ? `🧭 डिजिटल कंपास 360°:\nदिशा: ${Math.round(displayHeading)}° (${vastu.name})\nअक्षांश/देशांतर: ${lat}°, ${lng}°\nऊंचाई: ${location?.altitude ? Math.round(location.altitude * 3.28084) : '—'} FT`
@@ -594,10 +668,63 @@ export const CompassView = () => {
     }
   };
 
+  // Dedicated share button — always prefers the native share sheet
+  const shareCoordinates = async () => {
+    triggerHapticFeedback();
+    const lat = location ? location.latitude.toFixed(6) : '—';
+    const lng = location ? location.longitude.toFixed(6) : '—';
+    const text = language === 'hi'
+      ? `📍 मेरा स्थान: ${lat}°, ${lng}°`
+      : `📍 My location: ${lat}°, ${lng}°`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: t.appTitle, text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        toast.success(t.copiedToast);
+      }
+    } catch {
+      try {
+        await navigator.clipboard.writeText(text);
+        toast.success(t.copiedToast);
+      } catch {}
+    }
+  };
+
   const formatTime = (date: Date | null, fallback: string) => {
     if (!date) return fallback;
-    return date.toLocaleTimeString(language === 'hi' ? 'hi-IN' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(language === 'hi' ? 'hi-IN' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: timeFormat === '12' });
   };
+
+  // Live clock tick so the sun countdown stays fresh (updates every 30s)
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 30000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Sun countdown: sunrise / sunset / next sunrise (feature 3)
+  const sunCountdown = useMemo(() => {
+    const now = new Date(nowTick);
+    const fmtDur = (ms: number) => {
+      const mins = Math.max(0, Math.round(ms / 60000));
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+    };
+    if (times.sunrise && now < times.sunrise) {
+      return { label: language === 'hi' ? 'सूर्योदय में' : 'Sunrise in', ms: times.sunrise.getTime() - now.getTime() };
+    }
+    if (times.sunset && now < times.sunset) {
+      return { label: language === 'hi' ? 'सूर्यास्त में' : 'Sunset in', ms: times.sunset.getTime() - now.getTime() };
+    }
+    if (times.sunrise) {
+      const tomorrow = new Date(times.sunrise);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return { label: language === 'hi' ? 'कल सूर्योदय में' : 'Sunrise tomorrow in', ms: tomorrow.getTime() - now.getTime() };
+    }
+    return null;
+  }, [times, nowTick, language]);
 
   const vastuInfo = useMemo(() => getVastuDetails(displayHeading, language), [displayHeading, language]);
 
@@ -817,42 +944,46 @@ export const CompassView = () => {
           {selectedStyle === 'satellite_earth' ? (
             satelliteMode === 'telescope' ? (
               <div className="w-full flex flex-col items-center">
-                <TelescopeCameraCompass
+                <React.Suspense fallback={null}>
+                  <TelescopeCameraCompass
+                    heading={displayHeading}
+                    pitch={pitch}
+                    roll={roll}
+                    location={location}
+                    language={language}
+                    onClose={() => {
+                      setSatelliteMode('satellite');
+                      triggerHapticFeedback();
+                    }}
+                  />
+                </React.Suspense>
+              </div>
+            ) : (
+              <React.Suspense fallback={null}>
+                <SatelliteCompassView
                   heading={displayHeading}
                   pitch={pitch}
                   roll={roll}
                   location={location}
                   language={language}
-                  onClose={() => {
-                    setSatelliteMode('satellite');
+                  theme={theme}
+                  magneticField={66}
+                  mode={satelliteMode}
+                  onModeChange={(m) => setSatelliteMode(m)}
+                  onOpenLevel={() => {
+                    setMainTab('level');
+                    triggerHapticFeedback();
+                  }}
+                  onOpenAR={() => {
+                    setSatelliteMode('telescope');
+                    triggerHapticFeedback();
+                  }}
+                  onOpenMap={() => {
+                    setSatelliteMode('map');
                     triggerHapticFeedback();
                   }}
                 />
-              </div>
-            ) : (
-              <SatelliteCompassView
-                heading={displayHeading}
-                pitch={pitch}
-                roll={roll}
-                location={location}
-                language={language}
-                theme={theme}
-                magneticField={66}
-                mode={satelliteMode}
-                onModeChange={(m) => setSatelliteMode(m)}
-                onOpenLevel={() => {
-                  setMainTab('level');
-                  triggerHapticFeedback();
-                }}
-                onOpenAR={() => {
-                  setSatelliteMode('telescope');
-                  triggerHapticFeedback();
-                }}
-                onOpenMap={() => {
-                  setSatelliteMode('map');
-                  triggerHapticFeedback();
-                }}
-              />
+              </React.Suspense>
             )
             ) : (
             /* Regular Dial for Other Styles */
@@ -954,6 +1085,18 @@ export const CompassView = () => {
                   title={language === 'hi' ? 'कॉपी करें' : 'Copy Coordinates'}
                 >
                   <Copy className={cn("w-4 h-4", theme === 'light' ? "text-sky-600" : "text-sky-400")} />
+                </button>
+
+                {/* Share Coordinates */}
+                <button
+                  onClick={shareCoordinates}
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title={language === 'hi' ? 'स्थान साझा करें' : 'Share Location'}
+                >
+                  <Share2 className={cn("w-4 h-4", theme === 'light' ? "text-indigo-600" : "text-indigo-400")} />
                 </button>
 
                 {/* Qibla Toggle */}
@@ -1200,7 +1343,7 @@ export const CompassView = () => {
                 )}
               >
                 <Gauge className={cn("w-3.5 h-3.5", liveTracking && "animate-pulse")} />
-                <span className="font-mono">{location?.speed != null ? Math.round(location.speed * 3.6) : 0} <span className="text-[8px] font-bold uppercase tracking-wider">km/h</span></span>
+                <span className="font-mono">{location?.speed != null ? Math.round(location.speed * (speedUnit === 'mph' ? 2.23694 : 3.6)) : 0} <span className="text-[8px] font-bold uppercase tracking-wider">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span></span>
                 {/* Clear state + affordance indicator */}
                 <span className={cn(
                   "text-[7.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded-md border",
@@ -1257,6 +1400,15 @@ export const CompassView = () => {
               </div>
             </div>
 
+            {/* Sun countdown — live sunrise/sunset timer */}
+            {sunCountdown && (
+              <div className={cn("w-full flex items-center justify-center gap-1.5 text-[9.5px] font-black uppercase tracking-wider pt-1", theme === 'light' ? "text-amber-700" : "text-amber-300/90")}>
+                <Clock className="w-3 h-3" />
+                <span>{sunCountdown.label}</span>
+                <span className="font-mono">{sunCountdown.ms > 0 ? `${Math.floor(sunCountdown.ms / 3600000)}h ${Math.round((sunCountdown.ms % 3600000) / 60000)}m` : '—'}</span>
+              </div>
+            )}
+
             {/* Weather Telemetry Row (click to open detail) */}
             <button
               onClick={() => { setShowWeatherModal(true); triggerHapticFeedback(); }}
@@ -1268,7 +1420,7 @@ export const CompassView = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm leading-none">{weather ? (weather.conditionIcon === 'sun' ? '☀️' : weather.conditionIcon === 'cloud-sun' ? '🌤️' : weather.conditionIcon === 'cloud' ? '☁️' : weather.conditionIcon === 'rain' ? '🌧️' : '⛈️') : '—'}</span>
                 <span className="font-mono uppercase text-[10px] font-bold">
-                  {weather ? `${weather.tempC}°C • ${weather.condition.toUpperCase()}` : (language === 'hi' ? 'मौसम उपलब्ध नहीं' : 'WEATHER UNAVAILABLE')}
+                  {weather ? `${tempUnit === 'f' ? weather.tempF : weather.tempC}°${tempUnit === 'f' ? 'F' : 'C'} • ${weather.condition.toUpperCase()}` : (language === 'hi' ? 'मौसम उपलब्ध नहीं' : 'WEATHER UNAVAILABLE')}
                 </span>
               </div>
 
@@ -1419,44 +1571,48 @@ export const CompassView = () => {
 
       {/* Tab 2: ADVANCED SPIRIT LEVEL VIEW */}
       {mainTab === 'level' && (
-        <AdvancedLevelView
-          pitch={pitch}
-          roll={roll}
-          tareOffset={tareOffset}
-          onToggleTare={() => {
-            if (tareOffset) setTareOffset(null);
-            else setTareOffset({ pitch, roll });
-          }}
-          theme={theme}
-          triggerHaptic={triggerHapticFeedback}
-          onCalibrate={() => { setShowCalibrationModal(true); triggerHapticFeedback(); }}
-          playSound={playBellSound}
-        />
+        <React.Suspense fallback={null}>
+          <AdvancedLevelView
+            pitch={pitch}
+            roll={roll}
+            tareOffset={tareOffset}
+            onToggleTare={() => {
+              if (tareOffset) setTareOffset(null);
+              else setTareOffset({ pitch, roll });
+            }}
+            theme={theme}
+            triggerHaptic={triggerHapticFeedback}
+            onCalibrate={() => { setShowCalibrationModal(true); triggerHapticFeedback(); }}
+            playSound={playBellSound}
+          />
+        </React.Suspense>
       )}
 
       {/* Tab 3: VASTU & OTHERS VIEW */}
       {mainTab === 'vastu' && (
-        <VastuOthersView
-          currentHeading={displayHeading}
-          pitch={pitch}
-          roll={roll}
-          sunPos={sunPos}
-          isLevel={isLevel}
-          selectedStyle={selectedStyle}
-          customAccentColor="#EF4444"
-          variantId={selectedVariant}
-          dialRef={dialRef}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          weather={weather}
-          location={location}
-          declination={declination}
-          triggerHaptic={() => triggerHapticFeedback(ImpactStyle.Light)}
-          onCopyCoordinates={copyCoordinates}
-          onToggleTorch={toggleFlashlight}
-          isTorchOn={isFlashlightOn}
-        />
+        <React.Suspense fallback={null}>
+          <VastuOthersView
+            currentHeading={displayHeading}
+            pitch={pitch}
+            roll={roll}
+            sunPos={sunPos}
+            isLevel={isLevel}
+            selectedStyle={selectedStyle}
+            customAccentColor="#EF4444"
+            variantId={selectedVariant}
+            dialRef={dialRef}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            weather={weather}
+            location={location}
+            declination={declination}
+            triggerHaptic={() => triggerHapticFeedback(ImpactStyle.Light)}
+            onCopyCoordinates={copyCoordinates}
+            onToggleTorch={toggleFlashlight}
+            isTorchOn={isFlashlightOn}
+          />
+        </React.Suspense>
       )}
 
       {/* Creator Branding Card: Shown for compass & level tabs */}
@@ -1640,6 +1796,119 @@ export const CompassView = () => {
                 )}
               >
                 {alwaysVisible ? (language === 'hi' ? 'देखते रहें' : 'Pinned') : (language === 'hi' ? 'बंद' : 'Off')}
+              </button>
+            </div>
+
+            {/* Temperature Unit */}
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
+              <span className="flex items-center gap-2">
+                <Thermometer className="w-4 h-4 text-amber-500" />
+                {language === 'hi' ? 'तापमान इकाई' : 'Temperature Unit'}
+              </span>
+              <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
+                <button
+                  onClick={() => { setTempUnit('c'); try { localStorage.setItem('com.hcompass.app_temp_unit', 'c'); } catch {} triggerHapticFeedback(); }}
+                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'c' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                >°C</button>
+                <button
+                  onClick={() => { setTempUnit('f'); try { localStorage.setItem('com.hcompass.app_temp_unit', 'f'); } catch {} triggerHapticFeedback(); }}
+                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'f' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                >°F</button>
+              </div>
+            </div>
+
+            {/* Speed Unit */}
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
+              <span className="flex items-center gap-2">
+                <Gauge className="w-4 h-4 text-emerald-500" />
+                {language === 'hi' ? 'गति इकाई' : 'Speed Unit'}
+              </span>
+              <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
+                <button
+                  onClick={() => { setSpeedUnit('kmh'); try { localStorage.setItem('com.hcompass.app_speed_unit', 'kmh'); } catch {} triggerHapticFeedback(); }}
+                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'kmh' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                >km/h</button>
+                <button
+                  onClick={() => { setSpeedUnit('mph'); try { localStorage.setItem('com.hcompass.app_speed_unit', 'mph'); } catch {} triggerHapticFeedback(); }}
+                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'mph' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                >mph</button>
+              </div>
+            </div>
+
+            {/* Time Format */}
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-sky-500" />
+                {language === 'hi' ? 'समय प्रारूप' : 'Time Format'}
+              </span>
+              <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
+                <button
+                  onClick={() => { setTimeFormat('12'); try { localStorage.setItem('com.hcompass.app_time_format', '12'); } catch {} triggerHapticFeedback(); }}
+                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '12' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                >12h</button>
+                <button
+                  onClick={() => { setTimeFormat('24'); try { localStorage.setItem('com.hcompass.app_time_format', '24'); } catch {} triggerHapticFeedback(); }}
+                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '24' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                >24h</button>
+              </div>
+            </div>
+
+            {/* Haptics Toggle */}
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
+              <span className="flex items-center gap-2">
+                <Vibrate className="w-4 h-4 text-fuchsia-500" />
+                {language === 'hi' ? 'हैप्टिक फीडबैक' : 'Haptic Feedback'}
+              </span>
+              <button
+                onClick={() => {
+                  const next = !hapticEnabled;
+                  setHapticEnabled(next);
+                  try { localStorage.setItem('com.hcompass.app_haptic', next.toString()); } catch {}
+                  if (next) triggerHapticFeedback();
+                }}
+                className={cn(
+                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                  hapticEnabled ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
+                )}
+              >
+                {hapticEnabled ? (language === 'hi' ? 'चालू' : 'ON') : (language === 'hi' ? 'बंद' : 'OFF')}
+              </button>
+            </div>
+
+            {/* Keep Screen Awake */}
+            <div className={cn(
+              "flex items-center justify-between text-xs font-bold pt-2 border-t",
+              theme === 'light' ? "border-stone-200" : "border-white/5"
+            )}>
+              <span className="flex items-center gap-2">
+                <MoonStar className="w-4 h-4 text-indigo-500" />
+                {language === 'hi' ? 'स्क्रीन जागृत रखें' : 'Keep Screen Awake'}
+              </span>
+              <button
+                onClick={() => {
+                  const next = !keepAwake;
+                  setKeepAwake(next);
+                  try { localStorage.setItem('com.hcompass.app_keep_awake', next.toString()); } catch {}
+                  triggerHapticFeedback();
+                }}
+                className={cn(
+                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                  keepAwake ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
+                )}
+              >
+                {keepAwake ? (language === 'hi' ? 'चालू' : 'ON') : (language === 'hi' ? 'बंद' : 'OFF')}
               </button>
             </div>
           </div>

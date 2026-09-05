@@ -299,25 +299,8 @@ export const VastuPanel = ({
                 <Grid className="w-3.5 h-3.5 text-amber-400" />
                 {language === 'hi' ? '9-ग्रिड संपूर्ण घर वास्तु विश्लेषक' : 'Interactive 9-Grid Floorplan Mapper'}
               </h5>
-              <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border", theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40")}>
-                {(() => {
-                  let score = 1;
-                  const ideal: Record<string, string[]> = {
-                    NW: ['bathroom', 'guest', 'kitchen'],
-                    N: ['entrance', 'cash', 'business', 'naukari', 'study'],
-                    NE: ['pooja', 'water_underground', 'study'],
-                    W: ['study', 'bathroom', 'water_overhead'],
-                    CENTER: ['open'],
-                    E: ['entrance', 'study', 'pooja'],
-                    SW: ['master_bedroom', 'staircase', 'water_overhead'],
-                    S: ['staircase', 'naukari'],
-                    SE: ['kitchen']
-                  };
-                  Object.keys(house9Grid).forEach(sector => {
-                    if (ideal[sector]?.includes(house9Grid[sector])) score += 11;
-                  });
-                  return `Vastu Score: ${Math.min(100, score)}%`;
-                })()}
+              <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border", vastuScore !== null ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40") : (theme === 'light' ? "bg-stone-100 text-stone-500 border-stone-300" : "bg-white/5 text-stone-500 border-white/10"))}>
+                {vastuScore !== null ? `${language === 'hi' ? 'वास्तु स्कोर: ' : 'Vastu Score: '}${vastuScore}%` : '—'}
               </span>
             </div>
 

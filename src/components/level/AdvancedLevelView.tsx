@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Target, Layers, RotateCcw, AlertTriangle, CheckCircle2, Lock, Unlock, TrendingUp, Ruler, Volume2, VolumeX, Crosshair, Copy, Check, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, RefreshCw, Hand } from 'lucide-react';
+import { Target, Layers, RotateCcw, AlertTriangle, CheckCircle2, Lock, Unlock, TrendingUp, Ruler, Volume2, VolumeX, Crosshair, Copy, Check, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, RefreshCw, Hand, History, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { translations } from '@/lib/translations';
@@ -60,6 +60,20 @@ export const AdvancedLevelView: React.FC<Props> = ({
   // Haptic-on-level guard
   const wasLevelRef = useRef(false);
 
+  // ── Feature 6: dead-center celebration ──
+  const [celebrate, setCelebrate] = useState(false);
+  const celebrateTimerRef = useRef<number | null>(null);
+
+  // ── Feature 7: target angle mode ──
+  const [targetMode, setTargetMode] = useState(false);
+  const [targetAngle, setTargetAngle] = useState(30);
+
+  // ── Feature 8: reading history log (persisted) ──
+  interface ReadingEntry { id: number; time: string; pitch: number; roll: number; total: number; }
+  const [readings, setReadings] = useState<ReadingEntry[]>(() => {
+    try { return JSON.parse(localStorage.getItem('com.hcompass.app_readings') || '[]'); } catch { return []; }
+  });
+
   // Effective values (tare + reference lock applied)
   const tarePitch = tareOffset?.pitch || 0;
   const tareRoll = tareOffset?.roll || 0;
@@ -103,11 +117,14 @@ export const AdvancedLevelView: React.FC<Props> = ({
     });
   }, [totalTilt]);
 
-  // Haptic + sound feedback when reaching level
+  // Haptic + sound feedback when reaching level (+ celebration burst)
   useEffect(() => {
     if (isLevel && !wasLevelRef.current) {
       triggerHaptic();
       if (soundOnLevel && playSound) playSound('chime');
+      setCelebrate(true);
+      if (celebrateTimerRef.current) window.clearTimeout(celebrateTimerRef.current);
+      celebrateTimerRef.current = window.setTimeout(() => setCelebrate(false), 1400);
     }
     wasLevelRef.current = isLevel;
   }, [isLevel, soundOnLevel, triggerHaptic, playSound]);
@@ -171,6 +188,32 @@ export const AdvancedLevelView: React.FC<Props> = ({
   const displayLevel = isLocked ? lockedTotal < 1.0 : isHeld ? heldTotal < 1.0 : isLevel;
   const displayHigh = isLocked ? lockedTotal >= 3.0 : isHeld ? heldTotal >= 3.0 : isHighTilt;
 
+  // ── Feature 7: target angle mode derived state ──
+  const targetDelta = Math.abs(displayTotal - targetAngle);
+  const onTarget = targetMode && targetDelta < 1.0;
+  const bannerLevel = targetMode ? onTarget : displayLevel;
+  const bannerHigh = targetMode ? false : displayHigh;
+  const bannerTitle = targetMode
+    ? (onTarget ? (isHi ? 'लक्ष्य प्राप्त' : 'ON TARGET') : (isHi ? `लक्ष्य ${targetAngle}°` : `TARGET ${targetAngle}°`))
+    : (displayLevel ? t.levelAchieved : displayHigh ? t.highTilt : t.tilt);
+  const bannerSub = targetMode
+    ? `${isHi ? 'अंतर' : 'OFF'} ${targetDelta.toFixed(1)}°`
+    : `${t.totalTilt}: ${displayTotal.toFixed(1)}°`;
+
+  // ── Feature 8: log current reading ──
+  const handleLogReading = () => {
+    triggerHaptic();
+    const entry: ReadingEntry = { id: Date.now(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), pitch: displayPitch, roll: displayRoll, total: displayTotal };
+    const next = [entry, ...readings].slice(0, 20);
+    setReadings(next);
+    try { localStorage.setItem('com.hcompass.app_readings', JSON.stringify(next)); } catch {}
+  };
+  const handleClearReadings = () => {
+    triggerHaptic();
+    setReadings([]);
+    try { localStorage.removeItem('com.hcompass.app_readings'); } catch {}
+  };
+
   // Directional guidance arrows
   const guidance = (() => {
     if (displayLevel) return null;
@@ -208,8 +251,8 @@ export const AdvancedLevelView: React.FC<Props> = ({
             {isLocked ? <Lock className="w-2.5 h-2.5" /> : <Unlock className="w-2.5 h-2.5" />}
             {isLocked ? (isHi ? 'लॉक' : 'Lock') : (isHi ? 'अनलॉक' : 'Open')}
           </button>
-          <span className={cn("rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider", displayLevel ? (theme === 'light' ? "border-emerald-500 bg-emerald-100 text-emerald-800" : "border-emerald-400/50 bg-emerald-400/10 text-emerald-300") : (theme === 'light' ? "border-amber-500 bg-amber-100 text-amber-800" : "border-amber-400/40 bg-amber-400/10 text-amber-300"))}>
-            {displayLevel ? (isHi ? 'सपाट' : 'Flat') : (isHi ? 'खोज' : 'Searching')}
+          <span className={cn("rounded-full border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider", bannerLevel ? (theme === 'light' ? "border-emerald-500 bg-emerald-100 text-emerald-800" : "border-emerald-400/50 bg-emerald-400/10 text-emerald-300") : (theme === 'light' ? "border-amber-500 bg-amber-100 text-amber-800" : "border-amber-400/40 bg-amber-400/10 text-amber-300"))}>
+            {bannerLevel ? (targetMode ? (isHi ? 'लक्ष्य पर' : 'On Target') : (isHi ? 'सपाट' : 'Flat')) : (targetMode ? (isHi ? 'लक्ष्य' : 'Target') : (isHi ? 'खोज' : 'Searching'))}
           </span>
         </div>
       </div>
@@ -217,27 +260,28 @@ export const AdvancedLevelView: React.FC<Props> = ({
       {/* ── NEW: Large glanceable LEVEL status banner with directional guidance ── */}
       <div className={cn(
         "w-full rounded-2xl p-2.5 mb-1.5 border flex items-center justify-between transition-all duration-300",
-        displayLevel
+        celebrate && "scale-[1.02]",
+        bannerLevel
           ? (theme === 'light' ? "bg-emerald-500 text-white border-emerald-600 shadow-[0_0_20px_rgba(16,185,129,0.4)]" : "bg-emerald-500 text-stone-950 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.5)]")
-          : displayHigh
+          : bannerHigh
           ? (theme === 'light' ? "bg-red-500 text-white border-red-600 shadow-[0_0_20px_rgba(239,68,68,0.4)]" : "bg-red-600 text-white border-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)]")
           : (theme === 'light' ? "bg-amber-500 text-white border-amber-600 shadow-[0_0_20px_rgba(245,158,11,0.4)]" : "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)]")
       )}>
         <div className="flex items-center gap-2">
-          {displayLevel
+          {bannerLevel
             ? <CheckCircle2 className="w-6 h-6 shrink-0 animate-pulse" />
-            : <AlertTriangle className={cn("w-6 h-6 shrink-0", displayHigh && "animate-pulse")} />}
+            : <AlertTriangle className={cn("w-6 h-6 shrink-0", bannerHigh && "animate-pulse")} />}
           <div className="flex flex-col text-left leading-tight">
             <span className="text-sm font-black uppercase tracking-wide">
-              {displayLevel ? t.levelAchieved : displayHigh ? t.highTilt : t.tilt}
+              {bannerTitle}
             </span>
             <span className="text-[10px] font-bold opacity-90">
-              {displayLevel ? `${t.totalTilt}: ${displayTotal.toFixed(1)}°` : `${t.totalTilt}: ${displayTotal.toFixed(1)}°`}
+              {bannerSub}
             </span>
           </div>
         </div>
         {/* Directional guidance arrows */}
-        {!displayLevel && guidance && guidance.length > 0 && (
+        {!bannerLevel && guidance && guidance.length > 0 && (
           <div className="flex items-center gap-1.5">
             {guidance.map((g, i) => (
               <span key={i} className="flex items-center gap-0.5 text-[9px] font-black uppercase tracking-wider bg-white/20 rounded-lg px-1.5 py-1">
@@ -357,6 +401,36 @@ export const AdvancedLevelView: React.FC<Props> = ({
         </button>
       </div>
 
+      {/* ── Feature 7: Target angle control row ── */}
+      <div className={cn("w-full flex items-center justify-between gap-1 p-1 rounded-xl border mb-1.5", targetMode ? (theme === 'light' ? "bg-sky-50 border-sky-400" : "bg-sky-500/10 border-sky-500/40") : (theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-900/90 border-white/10"))}>
+        <button
+          onClick={() => { setTargetMode(!targetMode); triggerHaptic(); }}
+          title={isHi ? 'लक्ष्य कोण मोड' : 'Target angle mode'}
+          className={cn(
+            "flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all active:scale-95",
+            targetMode ? "bg-sky-500 text-white" : (theme === 'light' ? "text-stone-600 hover:text-stone-900" : "text-stone-400 hover:text-white")
+          )}
+        >
+          <Crosshair className="w-3 h-3" />
+          {isHi ? 'लक्ष्य कोण' : 'Target Angle'}
+        </button>
+        {targetMode && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => { setTargetAngle(Math.max(0, targetAngle - 5)); triggerHaptic(); }}
+              className={cn("w-7 h-7 rounded-lg border flex items-center justify-center text-sm font-black transition-all active:scale-95", theme === 'light' ? "bg-white border-stone-300 text-stone-700" : "bg-white/5 border-white/10 text-stone-300")}
+            >−</button>
+            <span className={cn("px-2 py-0.5 rounded-lg text-[10px] font-black font-mono border", theme === 'light' ? "bg-white border-sky-300 text-sky-700" : "bg-black/40 border-sky-500/40 text-sky-300")}>
+              {targetAngle}°
+            </span>
+            <button
+              onClick={() => { setTargetAngle(Math.min(90, targetAngle + 5)); triggerHaptic(); }}
+              className={cn("w-7 h-7 rounded-lg border flex items-center justify-center text-sm font-black transition-all active:scale-95", theme === 'light' ? "bg-white border-stone-300 text-stone-700" : "bg-white/5 border-white/10 text-stone-300")}
+            >+</button>
+          </div>
+        )}
+      </div>
+
       {/* Main visualization */}
       {subMode === 'bullseye' ? (
         <div className={cn(
@@ -376,6 +450,18 @@ export const AdvancedLevelView: React.FC<Props> = ({
           <div className={cn("w-9 h-9 rounded-full border-2 flex items-center justify-center transition-all duration-300 pointer-events-none z-10", displayLevel ? "border-emerald-500 bg-emerald-500/20 shadow-[0_0_25px_#10b981]" : "border-amber-400/80 bg-amber-400/5 shadow-[0_0_12px_rgba(245,158,11,0.3)]")}>
             <div className={cn("w-1.5 h-1.5 rounded-full transition-colors", displayLevel ? "bg-emerald-500 shadow-[0_0_10px_#10b981]" : "bg-amber-400/60")} />
           </div>
+
+          {/* ── Feature 6: dead-center celebration pulse rings ── */}
+          {celebrate && (
+            <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+              <div className="absolute w-14 h-14 rounded-full border-2 border-emerald-400 animate-ping" />
+              <div className="absolute w-24 h-24 rounded-full border border-emerald-300/80 animate-ping" style={{ animationDelay: '150ms' }} />
+              <div className="absolute w-36 h-36 rounded-full border border-emerald-200/60 animate-ping" style={{ animationDelay: '300ms' }} />
+              <span className={cn("absolute -top-1 text-[10px] font-black uppercase tracking-widest animate-bounce", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
+                {isHi ? 'सपाट!' : 'LEVEL!'}
+              </span>
+            </div>
+          )}
 
           {/* Bubble */}
           <div
@@ -512,6 +598,46 @@ export const AdvancedLevelView: React.FC<Props> = ({
           <span className={cn("text-[7px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-500")}>{isHi ? 'अस्थिर' : 'Unstable'}</span>
           <span className={cn("text-[7px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-500")}>{isHi ? 'सपाट' : 'Flat'}</span>
         </div>
+      </div>
+
+      {/* ── Feature 8: Reading history log ── */}
+      <div className={cn("w-full rounded-xl p-2 border my-0.5", theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/80 border-white/10")}>
+        <div className="flex items-center justify-between mb-1">
+          <span className={cn("text-[8px] font-black uppercase tracking-wider flex items-center gap-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+            <History className="w-2.5 h-2.5" />{isHi ? 'रीडिंग लॉग' : 'Reading Log'} ({readings.length})
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleLogReading}
+              className={cn("text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border flex items-center gap-0.5 transition-all active:scale-95", theme === 'light' ? "bg-stone-100 border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-400 hover:text-white")}
+            >
+              <Plus className="w-2 h-2" />{isHi ? 'लॉग' : 'Log'}
+            </button>
+            {readings.length > 0 && (
+              <button
+                onClick={handleClearReadings}
+                className={cn("text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md border flex items-center gap-0.5 transition-all active:scale-95", theme === 'light' ? "bg-stone-100 border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-400 hover:text-white")}
+              >
+                <Trash2 className="w-2 h-2" />{isHi ? 'साफ़' : 'Clear'}
+              </button>
+            )}
+          </div>
+        </div>
+        {readings.length > 0 ? (
+          <div className="flex flex-col gap-0.5 max-h-24 overflow-y-auto">
+            {readings.map((r) => (
+              <div key={r.id} className={cn("flex items-center justify-between text-[8px] font-mono px-1.5 py-0.5 rounded-md", theme === 'light' ? "bg-stone-100" : "bg-white/5")}>
+                <span className={theme === 'light' ? "text-stone-500" : "text-stone-500"}>{r.time}</span>
+                <span className={theme === 'light' ? "text-stone-700" : "text-stone-300"}>P {r.pitch.toFixed(1)}° R {r.roll.toFixed(1)}°</span>
+                <span className={r.total < 1 ? "text-emerald-400 font-black" : "text-amber-400 font-black"}>{r.total.toFixed(1)}°</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className={cn("text-[8px] font-bold text-center py-1", theme === 'light' ? "text-stone-400" : "text-stone-500")}>
+            {isHi ? 'कोई रीडिंग नहीं — + लॉग दबाएं' : 'No readings yet — tap + Log'}
+          </p>
+        )}
       </div>
 
       {/* Figure-8 calibration — compact */}

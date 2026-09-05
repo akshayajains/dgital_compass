@@ -323,18 +323,23 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
                 <span className="text-[10px] font-black uppercase tracking-wider text-stone-400 block mb-2">
                   NEXT HOURS
                 </span>
-                <div className="grid grid-cols-4 gap-1.5 overflow-x-auto pb-1">
-                  {(current.hourly && current.hourly.length > 0 ? current.hourly : []).slice(0, 4).map((h, i) => (
-                    <div key={i} className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 border border-white/5 text-center">
+                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  {(current.hourly && current.hourly.length > 0 ? current.hourly : []).slice(0, 6).map((h, i) => (
+                    <div key={i} className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 border border-white/5 text-center min-w-[68px] shrink-0">
                       <span className="text-[10px] text-stone-400 font-mono">{h.time}</span>
                       <span className="text-xs font-black text-white font-mono my-1">{h.tempC}°C</span>
                       <div className="w-6 h-6 flex items-center justify-center">
-                        <CloudSun className="w-5 h-5 text-amber-400" />
+                        {h.icon === 'sun' ? <Sun className="w-5 h-5 text-amber-400" /> :
+                         h.icon === 'cloud-sun' ? <CloudSun className="w-5 h-5 text-amber-300" /> :
+                         h.icon === 'rain' ? <CloudRain className="w-5 h-5 text-sky-400" /> :
+                         h.icon === 'thunder' ? <CloudLightning className="w-5 h-5 text-yellow-400" /> :
+                         <Cloud className="w-5 h-5 text-stone-400" />}
                       </div>
+                      <span className="text-[7px] text-stone-500 font-bold mt-0.5 truncate max-w-[64px]">{h.condition}</span>
                     </div>
                   ))}
                   {(!current.hourly || current.hourly.length === 0) && (
-                    <div className="col-span-4 text-center text-[10px] text-stone-500 py-2">
+                    <div className="w-full text-center text-[10px] text-stone-500 py-2">
                       {language === 'hi' ? 'घंटेवार पूर्वानुमान उपलब्ध नहीं' : 'Hourly forecast unavailable'}
                     </div>
                   )}

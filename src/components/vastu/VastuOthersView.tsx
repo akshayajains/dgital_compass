@@ -123,19 +123,21 @@ export const VastuOthersView: React.FC<Props> = ({
     return currentHeading !== null ? Math.round(((currentHeading % 360) + 360) % 360) : 0;
   });
 
-  // Saved Rooms
-  const [savedRooms, setSavedRooms] = useState<SavedRoomEntry[]>([]);
+  // Saved Rooms (persisted)
+  const [savedRooms, setSavedRooms] = useState<SavedRoomEntry[]>(() => {
+    try { return JSON.parse(localStorage.getItem('com.hcompass.app_saved_rooms') || '[]'); } catch { return []; }
+  });
 
-  // 9-Grid Floorplan Mapper
-  const [gridAssignments, setGridAssignments] = useState<Record<string, string>>({
+  // 9-Grid Floorplan Mapper (sector keys — matches VastuPanel mapper UI + score)
+  const [house9Grid, setHouse9Grid] = useState<Record<string, string>>({
     NW: 'bathroom',
-    N: 'main_entrance',
-    NE: 'pooja_mandir',
-    W: 'study_room',
-    Center: 'open_space',
-    E: 'cash_locker',
+    N: 'entrance',
+    NE: 'pooja',
+    W: 'study',
+    CENTER: 'open',
+    E: 'entrance',
     SW: 'master_bedroom',
-    S: 'open_space',
+    S: 'staircase',
     SE: 'kitchen'
   });
 
@@ -171,10 +173,6 @@ export const VastuOthersView: React.FC<Props> = ({
     const h = currentHeading ?? 0;
     return Math.round(((h % 360) + 360) % 360);
   });
-  const [house9Grid, setHouse9Grid] = useState<Record<string, string>>({
-    '1': 'wealth', '2': 'health', '3': 'knowledge', '4': 'family', '5': 'center',
-    '6': 'children', '7': 'marriage', '8': 'career', '9': 'spirituality'
-  });
   const [jainActivity, setJainActivity] = useState<string>('dhyan');
   const [jainChecklist, setJainChecklist] = useState<Record<string, boolean>>({
     'meditation': true, 'prayer': true, 'charity': false, 'study': false, 'fasting': false
@@ -199,6 +197,9 @@ export const VastuOthersView: React.FC<Props> = ({
   useEffect(() => {
     try { localStorage.setItem(VASTU_ROOM_STORAGE_KEY, selectedRoom); } catch {}
   }, [selectedRoom]);
+  useEffect(() => {
+    try { localStorage.setItem('com.hcompass.app_saved_rooms', JSON.stringify(savedRooms)); } catch {}
+  }, [savedRooms]);
 
   const reduceToSingle = (n: number): number => {
     let sum = n;
@@ -395,20 +396,25 @@ export const VastuOthersView: React.FC<Props> = ({
     }
   }, [targetActivity]);
 
-  // 9-grid score
-  const floorplanScore = useMemo(() => {
-    let score = 0;
-    if (gridAssignments.NW === 'bathroom' || gridAssignments.NW === 'guest_room') score += 11;
-    if (gridAssignments.N === 'main_entrance' || gridAssignments.N === 'cash_locker') score += 12;
-    if (gridAssignments.NE === 'pooja_mandir') score += 15;
-    if (gridAssignments.W === 'study_room') score += 11;
-    if (gridAssignments.Center === 'open_space') score += 12;
-    if (gridAssignments.E === 'cash_locker' || gridAssignments.E === 'living_room') score += 11;
-    if (gridAssignments.SW === 'master_bedroom') score += 15;
-    if (gridAssignments.S === 'open_space') score += 8;
-    if (gridAssignments.SE === 'kitchen') score += 15;
-    return Math.max(30, Math.min(100, score));
-  }, [gridAssignments]);
+  // 9-grid score — single source of truth (drives dashboard card + VastuPanel header/badge)
+  const houseGridScore = useMemo(() => {
+    const ideal: Record<string, string[]> = {
+      NW: ['bathroom', 'guest', 'kitchen'],
+      N: ['entrance', 'cash', 'business', 'naukari', 'study'],
+      NE: ['pooja', 'water_underground', 'study'],
+      W: ['study', 'bathroom', 'water_overhead'],
+      CENTER: ['open'],
+      E: ['entrance', 'study', 'pooja'],
+      SW: ['master_bedroom', 'staircase', 'water_overhead'],
+      S: ['staircase', 'naukari'],
+      SE: ['kitchen']
+    };
+    let correct = 0;
+    Object.keys(house9Grid).forEach(sector => {
+      if (ideal[sector]?.includes(house9Grid[sector])) correct += 1;
+    });
+    return Math.round((correct / 9) * 100);
+  }, [house9Grid]);
 
   const premiumInsight = useMemo(() => {
     if (activeTab === 'qibla') return 'Compass, tilt, and sacred-direction guidance are aligned in one calibrated view.';
@@ -416,16 +422,25 @@ export const VastuOthersView: React.FC<Props> = ({
     return `Current heading is better avoided for ${liveHeadingAdvice.avoidFor.toLowerCase()}; use the reverse finder below.`;
   }, [activeTab, livePada, liveHeadingAdvice]);
 
-  const handleSaveRoom = () => {
+  const handleSaveRoom = (name?: string) => {
     const newEntry: SavedRoomEntry = {
       id: Date.now().toString(),
-      roomType: analyzerRoomType,
+      roomType: name || analyzerRoomType,
       degrees: analyzerDegrees,
       padaCode: analyzerPada.code,
       isAuspicious: analyzerPada.isAuspicious,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setSavedRooms(prev => [newEntry, ...prev]);
+    triggerHaptic();
+  };
+
+  const handleLoadRoom = (id: string) => {
+    const room = savedRooms.find(r => r.id === id);
+    if (!room) return;
+    setAnalyzerRoomType(room.roomType);
+    setAnalyzerDegrees(room.degrees);
+    setSelectedRoom(room.roomType);
     triggerHaptic();
   };
 
@@ -588,7 +603,7 @@ export const VastuOthersView: React.FC<Props> = ({
               <MapPinned className="w-3 h-3 text-amber-400" />
               <span>Score</span>
             </div>
-            <div className={cn("mt-1 text-sm font-black", theme === 'light' ? "text-stone-900" : "text-white")}>{floorplanScore}%</div>
+            <div className={cn("mt-1 text-sm font-black", theme === 'light' ? "text-stone-900" : "text-white")}>{houseGridScore}%</div>
           </div>
         </div>
 
@@ -637,7 +652,7 @@ export const VastuOthersView: React.FC<Props> = ({
           <VastuPanel
             language={language}
             theme={theme}
-            vastuScore={floorplanScore}
+            vastuScore={houseGridScore}
             selectedRoom={selectedRoom}
             setSelectedRoom={setSelectedRoom}
             doorDegree={doorDegree}
@@ -647,8 +662,8 @@ export const VastuOthersView: React.FC<Props> = ({
             onHaptic={triggerHaptic}
             currentDir={liveZone.code}
             savedRooms={savedRooms.map(r => ({ id: r.id, room: r.roomType, door: r.degrees, grid: {} }))}
-            onSaveRoom={(name) => handleSaveRoom()}
-            onLoadRoom={(id) => {}}
+            onSaveRoom={(name) => handleSaveRoom(name)}
+            onLoadRoom={handleLoadRoom}
             onDeleteRoom={(id) => setSavedRooms(prev => prev.filter(r => r.id !== id))}
           />
 
