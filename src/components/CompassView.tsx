@@ -1018,6 +1018,7 @@ export const CompassView = () => {
               isLevel={isLevel}
               dialRef={dialRef}
               customAccentColor="#EF4444"
+              declination={declination}
               variantId={selectedVariant}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}

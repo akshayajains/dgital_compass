@@ -20,6 +20,8 @@ interface Props {
   isLevel: boolean;
   dialRef: React.RefObject<HTMLDivElement>;
   customAccentColor?: string;
+  /** Magnetic declination in degrees (from NOAA WMM) */
+  declination?: number;
   /** Variant id for grouped themes (ios_compass, color_palette) */
   variantId?: string | null;
   onPointerDown: (e: React.PointerEvent) => void;
@@ -49,6 +51,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   isLevel,
   dialRef,
   customAccentColor,
+  declination = 0,
   variantId,
   onPointerDown,
   onPointerMove,
@@ -56,6 +59,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 }: Props) {
   const isHi = language === 'hi';
   const displayAngle = displayHeading !== null ? Math.round(displayHeading) : 0;
+  // Format magnetic declination for μ label
+  const declinationLabel = declination === 0 ? 'μ 0.0°' : declination > 0 ? `μ +${Math.abs(declination).toFixed(1)}°` : `μ −${Math.abs(declination).toFixed(1)}°`;
 
   // Resolve active variant for grouped themes (ios_compass, color_palette)
   const activeVariant: CompassStyleVariant | null = variantId ? getVariant(styleId, variantId) : null;
@@ -191,16 +196,32 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
   return (
     <div className="relative my-2 flex flex-col items-center justify-center">
-      {/* Shared compact two-tone heading needle.
-          Hidden for styles that render their own center needle to avoid duplicates. */}
+      {/* Precision stationary needle — overlaid perfectly centered on the dial using inset-0.
+          The needle SVG pivot is at (100,100) in 200×200 viewbox = exact geometric center.
+          This div uses absolute inset-0 so it never shifts regardless of bezel border width. */}
       {!hasCenterNeedle && (
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-30 h-[4.25rem] w-[3.4rem] pointer-events-none drop-shadow-[0_3px_8px_rgba(0,0,0,0.9)]">
-          <svg viewBox="0 0 54 68" className="h-full w-full">
-            <polygon points="27,6 3,50 27,41" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="1.5" />
-            <polygon points="27,6 51,50 27,41" fill="#EF233C" stroke="#B91C1C" strokeWidth="1.5" />
-            <path d="M27 8 L27 38" stroke="#FFFFFF" strokeWidth="2.8" strokeLinecap="round" opacity="0.9" />
-            <circle cx="27" cy="46" r="5.2" fill="#FFFFFF" stroke="#B91C1C" strokeWidth="2" />
-          </svg>
+        <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+          {/* w-full h-full fills the same bounding box as the rotating dial exactly */}
+          <div className="w-full h-full relative flex items-center justify-center">
+            <svg
+              className="absolute inset-0 w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]"
+              viewBox="0 0 200 200"
+              style={{ pointerEvents: 'none' }}
+            >
+              {/* North half — red/crimson with 3D facet: pivot exactly at (100,100) */}
+              <polygon points="100,26 87,100 100,95" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.8" strokeLinejoin="round" />
+              <polygon points="100,26 113,100 100,95" fill="#EF233C" stroke="#B91C1C" strokeWidth="0.8" strokeLinejoin="round" />
+              {/* Center spinal line — white ridge for 3D depth */}
+              <line x1="100" y1="28" x2="100" y2="94" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity="0.85" />
+              {/* South half — white/silver */}
+              <polygon points="100,174 87,100 100,106" fill="#D1D5DB" stroke="#9CA3AF" strokeWidth="0.8" strokeLinejoin="round" />
+              <polygon points="100,174 113,100 100,106" fill="#6B7280" stroke="#4B5563" strokeWidth="0.8" strokeLinejoin="round" />
+              {/* Center pivot — jewel bearing ring */}
+              <circle cx="100" cy="100" r="9" fill="#111827" stroke="#E5E7EB" strokeWidth="2.5" />
+              <circle cx="100" cy="100" r="4.5" fill="#EF233C" />
+              <circle cx="100" cy="100" r="2" fill="#FDE047" />
+            </svg>
+          </div>
         </div>
       )}
       
@@ -1089,41 +1110,51 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           )}
         </div>
 
-        {/* Center angle readout */}
+        {/* Center angle readout — every variant now shows degree, wind name, and μ (magnetic declination) */}
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           {styleId === 'satellite_earth' ? (
-            <div className="flex flex-col items-center justify-center pointer-events-none">
-              <div className="grid h-14 w-14 place-items-center rounded-full border-[4px] border-emerald-300 bg-emerald-950/90 text-sm font-black text-emerald-100 shadow-[0_0_20px_rgba(52,211,153,0.75),inset_0_0_12px_rgba(0,0,0,0.95)]">
-                {displayAngle}°
+            <div className="flex flex-col items-center justify-center pointer-events-none gap-1.5">
+              <div className="flex flex-col items-center justify-center h-[3.75rem] w-[3.75rem] rounded-full border-[3.5px] border-emerald-300 bg-emerald-950/95 shadow-[0_0_20px_rgba(52,211,153,0.75),inset_0_0_12px_rgba(0,0,0,0.95)]">
+                <span className="text-[13px] font-black font-mono text-emerald-100 leading-none">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-400 mt-0.5">{get16WindName(displayHeading)}</span>
+                <span className="text-[6px] font-mono font-bold text-cyan-400/80 mt-px leading-none">{declinationLabel}</span>
               </div>
-              <div className="mt-2 text-center select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+              <div className="text-center select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                 <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
                   {displayHeading !== null ? Math.round(displayHeading) : 78}° {get16WindName(displayHeading)}
                 </span>
               </div>
             </div>
           ) : styleId === 'royal_gold' ? (
-            <div className="grid h-[4.25rem] w-[4.25rem] place-items-center rounded-full border-[3px] border-[#D4AF37] bg-[#15100A]/95 text-base font-black text-[#F7E8A0] shadow-[0_0_24px_rgba(212,175,55,0.7),inset_0_0_12px_rgba(212,175,55,0.15)]" style={{ borderStyle: 'double' }}>
-              {displayAngle}°
+            <div className="flex flex-col items-center justify-center h-[4.25rem] w-[4.25rem] rounded-full border-[3px] border-[#D4AF37] bg-[#15100A]/95 text-[#F7E8A0] shadow-[0_0_24px_rgba(212,175,55,0.7),inset_0_0_12px_rgba(212,175,55,0.15)]" style={{ borderStyle: 'double' }}>
+              <span className="text-sm font-black leading-none">{displayAngle}°</span>
+              <span className="text-[6px] font-bold uppercase tracking-widest text-[#D4AF37] mt-0.5">{get16WindName(displayHeading)}</span>
+              <span className="text-[5.5px] font-mono font-bold text-amber-400/70 mt-px leading-none">{declinationLabel}</span>
             </div>
           ) : isGraphite ? (
-            <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-slate-400 bg-[#0B0F14]/95 text-sm font-black text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]">
-              {displayAngle}°
+            <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]">
+              <span className="text-sm font-black leading-none">{displayAngle}°</span>
+              <span className="text-[6px] font-bold uppercase tracking-widest text-slate-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <span className="text-[5.5px] font-mono font-bold text-slate-400/70 mt-px leading-none">{declinationLabel}</span>
             </div>
           ) : styleId === 'vedic_mandala' || styleId === 'sandalwood' ? (
-            <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-emerald-300 bg-emerald-950/85 text-sm font-black text-emerald-100 shadow-[0_0_18px_rgba(52,211,153,0.72)]">
-              {displayAngle}°
+            <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-emerald-300 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.72)]">
+              <span className="text-sm font-black text-emerald-100 leading-none">{displayAngle}°</span>
+              <span className="text-[6px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <span className="text-[5.5px] font-mono font-bold text-emerald-400/70 mt-px leading-none">{declinationLabel}</span>
             </div>
           ) : isGrouped ? (
             /* Grouped theme (ios_compass / color_palette) — use variant cardinalColor for styling */
-            <div className="w-14 h-14 rounded-full relative overflow-hidden flex flex-col items-center justify-center border-2 border-emerald-300/60 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.5)]">
-              <span className="text-base font-black text-emerald-100">{displayAngle}°</span>
-              <span className="mt-0.5 text-[7px] font-bold uppercase tracking-widest text-emerald-300">{get16WindName(displayHeading)}</span>
+            <div className="w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 border-emerald-300/60 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.5)]">
+              <span className="text-[13px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
+              <span className="text-[6px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <span className="text-[5.5px] font-mono font-bold text-emerald-400/60 mt-px leading-none">{declinationLabel}</span>
             </div>
           ) : (
-            <div className="w-14 h-14 rounded-full relative overflow-hidden flex flex-col items-center justify-center border-2 border-emerald-300 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.72)]">
-              <span className="text-base font-black text-emerald-100">{displayAngle}°</span>
-              <span className="mt-0.5 text-[7px] font-bold uppercase tracking-widest text-emerald-300">{get16WindName(displayHeading)}</span>
+            <div className="w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 border-emerald-300 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.72)]">
+              <span className="text-[13px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
+              <span className="text-[6px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <span className="text-[5.5px] font-mono font-bold text-emerald-400/60 mt-px leading-none">{declinationLabel}</span>
             </div>
           )}
         </div>
