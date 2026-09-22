@@ -213,7 +213,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         className={cn(
-          "w-[21.5rem] h-[21.5rem] sm:w-[23.5rem] sm:h-[23.5rem] rounded-full flex items-center justify-center relative transition-transform duration-75 ease-out select-none cursor-grab active:cursor-grabbing touch-none",
+          "w-[21.5rem] h-[21.5rem] sm:w-[23.5rem] sm:h-[23.5rem] rounded-full flex items-center justify-center relative select-none cursor-grab active:cursor-grabbing touch-none",
           getBezelClass()
         )}
         style={{
@@ -850,13 +850,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
         </div>
       )}
 
-      {/* Stationary Center Needle Overlay (enabled: show style-specific center needles) */}
-      <div 
-        className="absolute inset-0 rounded-full pointer-events-none flex items-center justify-center overflow-visible z-20"
-        style={{
-          transform: `translate3d(${roll * 0.15}px, ${-pitch * 0.15}px, 0px)`
-        }}
-      >
+      {/* Stationary Center Needle Overlay — permanently fixed at central pivot with zero drift */}
+      <div className="absolute inset-0 rounded-full pointer-events-none flex items-center justify-center overflow-visible z-20">
         <div className="absolute inset-0 pointer-events-none items-center justify-center">
           
           {/* 1. Ornate Spear Needle (Nautical) */}

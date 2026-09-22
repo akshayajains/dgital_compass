@@ -475,33 +475,46 @@ export const CompassView = () => {
 
       if (!smoothedVectorRef.current) {
         smoothedVectorRef.current = targetVec;
+        setHeading(compassHeading);
       } else {
-        const factor = 0.15;
-        smoothedVectorRef.current = {
-          x: smoothedVectorRef.current.x + (targetVec.x - smoothedVectorRef.current.x) * factor,
-          y: smoothedVectorRef.current.y + (targetVec.y - smoothedVectorRef.current.y) * factor
-        };
-      }
+        const prevHeading = ((Math.atan2(smoothedVectorRef.current.x, smoothedVectorRef.current.y) * (180 / Math.PI)) + 360) % 360;
+        const deltaDeg = Math.abs(((compassHeading - prevHeading + 540) % 360) - 180);
 
-      const smoothedRad = Math.atan2(smoothedVectorRef.current.x, smoothedVectorRef.current.y);
-      let finalHeading = smoothedRad * (180 / Math.PI);
-      if (finalHeading < 0) finalHeading += 360;
-      setHeading(finalHeading);
+        // Sub-0.35 degree deadband to completely eliminate sensor thermal jitter when held still
+        if (deltaDeg >= 0.35) {
+          // Dynamic adaptive filter: heavy smoothing for micro-movements, instant tracking for fast turns
+          const factor = Math.min(0.55, Math.max(0.09, deltaDeg * 0.05));
+          smoothedVectorRef.current = {
+            x: smoothedVectorRef.current.x + (targetVec.x - smoothedVectorRef.current.x) * factor,
+            y: smoothedVectorRef.current.y + (targetVec.y - smoothedVectorRef.current.y) * factor
+          };
 
-      const currentTick = Math.floor(finalHeading / 5);
-      if (currentTick !== lastRotaryTickRef.current) {
-        lastRotaryTickRef.current = currentTick;
-        triggerHapticFeedback(ImpactStyle.Light);
+          const smoothedRad = Math.atan2(smoothedVectorRef.current.x, smoothedVectorRef.current.y);
+          let finalHeading = (smoothedRad * (180 / Math.PI) + 360) % 360;
+          setHeading(finalHeading);
+
+          const currentTick = Math.floor(finalHeading / 5);
+          if (currentTick !== lastRotaryTickRef.current) {
+            lastRotaryTickRef.current = currentTick;
+            triggerHapticFeedback(ImpactStyle.Light);
+          }
+        }
       }
     }
 
     if (event.beta !== null && event.beta !== undefined) {
-      smoothedPitchRef.current += (event.beta - smoothedPitchRef.current) * 0.2;
-      setPitch(smoothedPitchRef.current);
+      const diffBeta = Math.abs(event.beta - smoothedPitchRef.current);
+      if (diffBeta >= 0.3) {
+        smoothedPitchRef.current += (event.beta - smoothedPitchRef.current) * 0.2;
+        setPitch(smoothedPitchRef.current);
+      }
     }
     if (event.gamma !== null && event.gamma !== undefined) {
-      smoothedRollRef.current += (event.gamma - smoothedRollRef.current) * 0.2;
-      setRoll(smoothedRollRef.current);
+      const diffGamma = Math.abs(event.gamma - smoothedRollRef.current);
+      if (diffGamma >= 0.3) {
+        smoothedRollRef.current += (event.gamma - smoothedRollRef.current) * 0.2;
+        setRoll(smoothedRollRef.current);
+      }
     }
   };
 

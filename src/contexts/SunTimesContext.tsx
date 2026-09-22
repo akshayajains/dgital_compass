@@ -210,25 +210,64 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     fetchCurrentLocation();
   }, []);
 
+  // Haversine distance calculator for GPS noise deadbanding
+  const calculateDistanceMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3;
+    const p1 = (lat1 * Math.PI) / 180;
+    const p2 = (lat2 * Math.PI) / 180;
+    const dp = ((lat2 - lat1) * Math.PI) / 180;
+    const dl = ((lon2 - lon1) * Math.PI) / 180;
+    const a = Math.sin(dp / 2) * Math.sin(dp / 2) +
+              Math.cos(p1) * Math.cos(p2) *
+              Math.sin(dl / 2) * Math.sin(dl / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
   // Continuous GPS watch for live speed/heading while driving.
   // Only runs when liveTracking is enabled (toggleable to save battery).
-  // Only updates speed + coordinates (no reverse-geocode spam) to keep it light.
+  // Applies a 10m deadband so stationary devices never suffer coordinate drifting/jitter.
   useEffect(() => {
     if (!liveTracking) return;
     if (typeof window === 'undefined' || !navigator.geolocation) return;
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setLocationState((prev) => {
+          if (!prev) {
+            const initial: Location = {
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              city: '',
+              altitude: pos.coords.altitude ?? null,
+              accuracy: pos.coords.accuracy ?? null,
+              speed: pos.coords.speed ?? null,
+            };
+            return initial;
+          }
+
+          const dist = calculateDistanceMeters(
+            prev.latitude,
+            prev.longitude,
+            pos.coords.latitude,
+            pos.coords.longitude
+          );
+
+          // If device moved less than 10 meters and speed is near 0 (< 1 m/s),
+          // it is indoor / stationary GPS bounce. Lock coordinates fixed!
+          const isStationary = dist < 10 && (pos.coords.speed === null || pos.coords.speed < 1.0);
+          const nextLat = isStationary ? prev.latitude : pos.coords.latitude;
+          const nextLng = isStationary ? prev.longitude : pos.coords.longitude;
+
           const next: Location = {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            city: prev?.city || '',
-            state: prev?.state,
-            cityEn: prev?.cityEn,
-            stateEn: prev?.stateEn,
-            altitude: pos.coords.altitude ?? prev?.altitude ?? null,
-            accuracy: pos.coords.accuracy ?? prev?.accuracy ?? null,
-            speed: pos.coords.speed ?? prev?.speed ?? null,
+            latitude: nextLat,
+            longitude: nextLng,
+            city: prev.city || '',
+            state: prev.state,
+            cityEn: prev.cityEn,
+            stateEn: prev.stateEn,
+            altitude: pos.coords.altitude ?? prev.altitude ?? null,
+            accuracy: pos.coords.accuracy ?? prev.accuracy ?? null,
+            speed: pos.coords.speed ?? prev.speed ?? null,
           };
           try {
             localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(next));
@@ -241,7 +280,7 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
       () => {
         // Ignore watch errors — the initial getCurrentPosition already gave us a fix.
       },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [liveTracking]);
