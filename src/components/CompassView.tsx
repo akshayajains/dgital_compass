@@ -89,6 +89,23 @@ export const CompassView = () => {
   const [isMagneticInterference, setIsMagneticInterference] = useState<boolean>(false);
   const lastCardinalSoundTimeRef = useRef<number>(0);
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const userInteractedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const markInteracted = () => {
+      userInteractedRef.current = true;
+    };
+    window.addEventListener('pointerdown', markInteracted, { passive: true });
+    window.addEventListener('touchstart', markInteracted, { passive: true });
+    window.addEventListener('keydown', markInteracted, { passive: true });
+    window.addEventListener('click', markInteracted, { passive: true });
+    return () => {
+      window.removeEventListener('pointerdown', markInteracted);
+      window.removeEventListener('touchstart', markInteracted);
+      window.removeEventListener('keydown', markInteracted);
+      window.removeEventListener('click', markInteracted);
+    };
+  }, []);
 
   // Satellite Earth Mode States
   // New SatelliteCompassView mode state
@@ -430,21 +447,39 @@ export const CompassView = () => {
 
   const triggerHapticFeedback = async (style = ImpactStyle.Light) => {
     if (!hapticEnabled) return;
+    // Chromium User Activation guard: prevent "[Intervention] Blocked call to navigator.vibrate"
+    const hasActivation = typeof navigator !== 'undefined' && (
+      Boolean((navigator as any).userActivation?.hasBeenActive) ||
+      userInteractedRef.current
+    );
+    if (!hasActivation) return;
+
     try {
       await Haptics.impact({ style });
     } catch {
-      if (navigator.vibrate) {
-        navigator.vibrate(style === ImpactStyle.Medium ? 50 : 25);
-      }
+      try {
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate(style === ImpactStyle.Medium ? 50 : 25);
+        }
+      } catch {}
     }
   };
 
   const playBellSound = (type: 'bell' | 'chime' | 'singingBowl' = 'bell') => {
     if (!soundEnabled) return;
+    const hasActivation = typeof navigator !== 'undefined' && (
+      Boolean((navigator as any).userActivation?.hasBeenActive) ||
+      userInteractedRef.current
+    );
+    if (!hasActivation) return;
+
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
       const audioCtx = new AudioContextClass();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
       if (type === 'singingBowl') {
         // Tibetan Singing Bowl Harmonic Tone: 432 Hz root, 864 Hz harmonic octave, 1296 Hz shimmer
         // Micro-detuned dual sine waves create authentic acoustic beating (wah-wah resonance)
@@ -562,12 +597,6 @@ export const CompassView = () => {
           const smoothedRad = Math.atan2(smoothedVectorRef.current.x, smoothedVectorRef.current.y);
           let finalHeading = (smoothedRad * (180 / Math.PI) + 360) % 360;
           setHeading(finalHeading);
-
-          const currentTick = Math.floor(finalHeading / 5);
-          if (currentTick !== lastRotaryTickRef.current) {
-            lastRotaryTickRef.current = currentTick;
-            triggerHapticFeedback(ImpactStyle.Light);
-          }
         }
       }
     }
