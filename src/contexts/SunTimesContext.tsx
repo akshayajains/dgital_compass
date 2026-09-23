@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import SunCalc from 'suncalc';
 import { Geolocation } from '@capacitor/geolocation';
 
@@ -51,14 +51,19 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Live GPS tracking (speedometer) — off by default to save battery.
+  // Live GPS tracking (speedometer) — active by default for instant speed telemetry.
   const [liveTracking, setLiveTracking] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('com.spiritual.compass.app_live_tracking') === 'true';
+      const saved = localStorage.getItem('com.spiritual.compass.app_live_tracking');
+      if (saved !== null) return saved === 'true';
+      return true;
     } catch {
-      return false;
+      return true;
     }
   });
+
+  const lastFixRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+  const smoothedSpeedRef = useRef<number>(0);
 
   const toggleLiveTracking = () => {
     setLiveTracking((prev) => {
@@ -224,39 +229,86 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     return R * c;
   };
 
-  // Continuous GPS watch for live speed/heading while driving.
-  // Only runs when liveTracking is enabled (toggleable to save battery).
-  // Applies a 10m deadband so stationary devices never suffer coordinate drifting/jitter.
+  // Continuous GPS watch for live speed and position.
+  // Computes real-time speed from Doppler hardware + distance/time delta fallback.
+  // maximumAge: 0 forces real-time hardware polling without 3s cache delays.
   useEffect(() => {
-    if (!liveTracking) return;
+    if (!liveTracking) {
+      lastFixRef.current = null;
+      smoothedSpeedRef.current = 0;
+      return;
+    }
     if (typeof window === 'undefined' || !navigator.geolocation) return;
+
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
+        const now = pos.timestamp || Date.now();
+        const rawLat = pos.coords.latitude;
+        const rawLng = pos.coords.longitude;
+        const rawSpeed = pos.coords.speed; // hardware speed in m/s (null on many mobile web browsers)
+
+        let calculatedSpeed = 0;
+        let dist = 0;
+
+        if (lastFixRef.current) {
+          const dt = Math.max(0.1, (now - lastFixRef.current.time) / 1000); // seconds
+          dist = calculateDistanceMeters(
+            lastFixRef.current.lat,
+            lastFixRef.current.lng,
+            rawLat,
+            rawLng
+          );
+          if (dt >= 0.4 && dt <= 10) {
+            calculatedSpeed = dist / dt; // m/s
+          }
+        }
+        lastFixRef.current = { lat: rawLat, lng: rawLng, time: now };
+
+        // Determine final instantaneous speed:
+        let instantSpeed = 0;
+        if (typeof rawSpeed === 'number' && !isNaN(rawSpeed) && rawSpeed >= 0) {
+          // Hardware GPS Doppler speed from chip
+          instantSpeed = rawSpeed;
+        } else if (dist >= 1.2 && calculatedSpeed >= 0.3) {
+          // Derived from distance / time
+          instantSpeed = calculatedSpeed;
+        } else {
+          // Stationary
+          instantSpeed = 0;
+        }
+
+        // Noise deadband: speeds < 0.28 m/s (~1 km/h) are stationary noise
+        if (instantSpeed < 0.28) {
+          instantSpeed = 0;
+        }
+
+        // Smooth speed with fast-decay EMA:
+        if (instantSpeed === 0) {
+          smoothedSpeedRef.current = 0;
+        } else {
+          smoothedSpeedRef.current = smoothedSpeedRef.current * 0.25 + instantSpeed * 0.75;
+        }
+
+        const effectiveSpeed = smoothedSpeedRef.current;
+
         setLocationState((prev) => {
           if (!prev) {
             const initial: Location = {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
+              latitude: rawLat,
+              longitude: rawLng,
               city: '',
               altitude: pos.coords.altitude ?? null,
               accuracy: pos.coords.accuracy ?? null,
-              speed: pos.coords.speed ?? null,
+              speed: effectiveSpeed,
             };
             return initial;
           }
 
-          const dist = calculateDistanceMeters(
-            prev.latitude,
-            prev.longitude,
-            pos.coords.latitude,
-            pos.coords.longitude
-          );
-
-          // If device moved less than 10 meters and speed is near 0 (< 1 m/s),
-          // it is indoor / stationary GPS bounce. Lock coordinates fixed!
-          const isStationary = dist < 10 && (pos.coords.speed === null || pos.coords.speed < 1.0);
-          const nextLat = isStationary ? prev.latitude : pos.coords.latitude;
-          const nextLng = isStationary ? prev.longitude : pos.coords.longitude;
+          // Subtle coordinate deadband: only update coordinates if moved > 2.0 meters
+          // This keeps table coordinate displays rock-solid while walking/driving updates smoothly
+          const isCoordStationary = dist < 2.0 && effectiveSpeed === 0;
+          const nextLat = isCoordStationary ? prev.latitude : rawLat;
+          const nextLng = isCoordStationary ? prev.longitude : rawLng;
 
           const next: Location = {
             latitude: nextLat,
@@ -267,7 +319,7 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
             stateEn: prev.stateEn,
             altitude: pos.coords.altitude ?? prev.altitude ?? null,
             accuracy: pos.coords.accuracy ?? prev.accuracy ?? null,
-            speed: pos.coords.speed ?? prev.speed ?? null,
+            speed: effectiveSpeed,
           };
           try {
             localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(next));
@@ -277,10 +329,10 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           return next;
         });
       },
-      () => {
-        // Ignore watch errors — the initial getCurrentPosition already gave us a fix.
+      (err) => {
+        console.warn('GPS watch error:', err);
       },
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 6000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
   }, [liveTracking]);

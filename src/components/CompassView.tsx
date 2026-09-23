@@ -1402,7 +1402,12 @@ export const CompassView = () => {
                 )}
               >
                 <Gauge className={cn("w-3.5 h-3.5", liveTracking && "animate-pulse")} />
-                <span className="font-mono">{location?.speed != null ? Math.round(location.speed * (speedUnit === 'mph' ? 2.23694 : 3.6)) : '—'} <span className="text-[8px] font-bold uppercase tracking-wider">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span></span>
+                <span className="font-mono">
+                  {liveTracking
+                    ? (location?.speed != null ? Math.round(location.speed * (speedUnit === 'mph' ? 2.23694 : 3.6)) : 0)
+                    : '—'}{' '}
+                  <span className="text-[8px] font-bold uppercase tracking-wider">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span>
+                </span>
                 {/* Clear state + affordance indicator */}
                 <span className={cn(
                   "text-[7.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded-md border",
