@@ -53,8 +53,16 @@ All approved features from the implementation plan have been implemented, tested
 
 ---
 
+### 6. Layout Space Optimization & Telemetry Cleanup
+- **Sea Level in Heading Box**: Moved the Sea Level (Altitude) badge into the top Heading Card alongside the `[MAGNETIC / TRUE NORTH]` toggle button. This utilizes the formerly empty space next to `उत्तर (N)` and relieves the crowded bottom row.
+- **Uncluttered Bottom GPS Strip**: Removed Sea Level from the bottom strip so city/state, high-precision coordinates, the accuracy badge pill (`HIGH ACC ±10m`), and the speedometer button each have generous breathing room without truncation.
+- **Solar NOON Removal & Single-Row Consolidation**: Removed the redundant `NOON: —` timestamp and merged the live countdown directly between `RISE` and `SET` (`RISE: 06:21 AM` | `⏱️ Sunset in 4h 12m` | `SET: 06:45 PM`), saving an entire vertical line of screen space on mobile.
+
+---
+
 ## Verification & Deployment
-- **TypeScript & Vite Build**: Passed cleanly with 0 errors (`tsc -b && vite build` built in 7.02s).
+- **TypeScript & Vite Build**: Passed cleanly with 0 errors (`tsc -b && vite build` built in 7.22s).
 - **Preview Server**: Active and responding at **`http://localhost:8081/`** (HTTP 200 OK).
 - **Git Commit & Push**: Committed and pushed to `main` branch:
-  - Commit [`dd5b9e6`](https://github.com/akshayajains/dgital_compass/commit/dd5b9e6).
+  - Commit [`115ceea`](https://github.com/akshayajains/dgital_compass/commit/115ceea).
+
