@@ -1710,30 +1710,24 @@ export const CompassView = () => {
               </button>
             </div>
 
-            {/* Solar Cycle Times: RISE | NOON | SET */}
+            {/* Solar Cycle Times: RISE | LIVE COUNTDOWN | SET */}
             <div className={cn("w-full flex items-center justify-between text-[10px] font-bold px-1 font-mono", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
               <div className={cn("flex items-center gap-1", theme === 'light' ? "text-amber-700" : "text-amber-400")}>
-                <Sunrise className="w-3.5 h-3.5" />
+                <Sunrise className="w-3.5 h-3.5 shrink-0" />
                 <span>RISE: {formatTime(times.sunrise, '06:21 AM')}</span>
               </div>
-              <div className={cn("flex items-center gap-1", theme === 'light' ? "text-amber-700" : "text-amber-300")}>
-                <Sun className={cn("w-3.5 h-3.5", theme === 'light' ? "text-amber-500" : "text-yellow-400")} />
-                <span>NOON: {formatTime(times.solarNoon, '—')}</span>
-              </div>
+              {sunCountdown && (
+                <div className={cn("flex items-center gap-1 text-[9px] font-black uppercase tracking-wider", theme === 'light' ? "text-amber-800" : "text-amber-300/90")}>
+                  <Clock className="w-3 h-3 shrink-0" />
+                  <span>{sunCountdown.label}</span>
+                  <span className="font-mono">{sunCountdown.ms > 0 ? `${Math.floor(sunCountdown.ms / 3600000)}h ${Math.round((sunCountdown.ms % 3600000) / 60000)}m` : '—'}</span>
+                </div>
+              )}
               <div className={cn("flex items-center gap-1", theme === 'light' ? "text-purple-700" : "text-purple-400")}>
-                <Sunset className="w-3.5 h-3.5" />
+                <Sunset className="w-3.5 h-3.5 shrink-0" />
                 <span>SET: {formatTime(times.sunset, '—')}</span>
               </div>
             </div>
-
-            {/* Sun countdown — live sunrise/sunset timer */}
-            {sunCountdown && (
-              <div className={cn("w-full flex items-center justify-center gap-1.5 text-[9.5px] font-black uppercase tracking-wider pt-1", theme === 'light' ? "text-amber-700" : "text-amber-300/90")}>
-                <Clock className="w-3 h-3" />
-                <span>{sunCountdown.label}</span>
-                <span className="font-mono">{sunCountdown.ms > 0 ? `${Math.floor(sunCountdown.ms / 3600000)}h ${Math.round((sunCountdown.ms % 3600000) / 60000)}m` : '—'}</span>
-              </div>
-            )}
 
             {/* Weather Telemetry Row (click to open detail) */}
             <button
