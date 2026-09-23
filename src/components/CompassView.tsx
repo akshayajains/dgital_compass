@@ -1513,15 +1513,36 @@ export const CompassView = () => {
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        setUseTrueNorth(!useTrueNorth);
-                        triggerHapticFeedback();
-                      }}
-                      className={cn("px-2.5 py-1 rounded-full border text-[9.5px] font-black uppercase tracking-wider transition-colors shadow-sm", box.btn)}
-                    >
-                      {useTrueNorth ? 'True North' : 'Magnetic'}
-                    </button>
+                    <div className="flex items-center gap-1.5 sm:gap-2">
+                      {/* Sea Level / Altitude in Heading Box */}
+                      <div className={cn(
+                        "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border backdrop-blur-sm transition-all",
+                        theme === 'light'
+                          ? "bg-white/80 border-stone-300 text-stone-800 shadow-sm"
+                          : "bg-white/5 border-white/10 text-stone-200"
+                      )}>
+                        <Mountain className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <div className="flex flex-col text-left leading-none">
+                          <span className="text-[7.5px] uppercase font-bold text-stone-400 tracking-wider">
+                            {language === 'hi' ? 'समुद्र तल' : 'SEA LEVEL'}
+                          </span>
+                          <span className="text-[11px] font-mono font-black mt-0.5">
+                            {location?.altitude ? Math.round(location.altitude * 3.28084) : '—'}{' '}
+                            <span className="text-[8px] font-sans font-normal opacity-70">FT</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setUseTrueNorth(!useTrueNorth);
+                          triggerHapticFeedback();
+                        }}
+                        className={cn("px-2.5 py-1.5 rounded-full border text-[9.5px] font-black uppercase tracking-wider transition-colors shadow-sm shrink-0", box.btn)}
+                      >
+                        {useTrueNorth ? 'True North' : 'Magnetic'}
+                      </button>
+                    </div>
                   </div>
                 );
               })()
@@ -1609,29 +1630,25 @@ export const CompassView = () => {
                 </div>
               </button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {location?.accuracy != null ? (
                   <span className={cn(
-                    "text-[9px] font-black uppercase tracking-wider flex items-center gap-1",
+                    "text-[9px] font-black uppercase tracking-wider flex items-center gap-1 px-2 py-1 rounded-xl border shadow-sm",
                     location.accuracy <= 15
-                      ? (theme === 'light' ? "text-emerald-700" : "text-emerald-400")
+                      ? (theme === 'light' ? "bg-emerald-50 text-emerald-800 border-emerald-300" : "bg-emerald-950/50 text-emerald-300 border-emerald-500/40")
                       : location.accuracy <= 50
-                      ? (theme === 'light' ? "text-amber-700" : "text-amber-400")
-                      : "text-red-400"
+                      ? (theme === 'light' ? "bg-amber-50 text-amber-800 border-amber-300" : "bg-amber-950/50 text-amber-300 border-amber-500/40")
+                      : (theme === 'light' ? "bg-rose-50 text-rose-800 border-rose-300" : "bg-rose-950/50 text-rose-300 border-rose-500/40")
                   )}>
-                    <Crosshair className="w-3 h-3" />
-                    <span>{location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±{Math.round(location.accuracy)}m</span>
+                    <Crosshair className="w-3 h-3 shrink-0" />
+                    <span>{location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ±{Math.round(location.accuracy)}m</span>
                   </span>
                 ) : (
-                  <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
-                    <Crosshair className="w-3 h-3" />
+                  <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1 px-2 py-1 rounded-xl border", theme === 'light' ? "bg-stone-50 border-stone-200 text-stone-500" : "bg-white/5 border-white/10 text-stone-400")}>
+                    <Crosshair className="w-3 h-3 shrink-0" />
                     <span>{locationError === 'ip' ? 'IP LOC' : 'ACC —'}</span>
                   </span>
                 )}
-                <span className={cn("text-[9px] font-bold uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
-                  <Mountain className={cn("w-3 h-3", theme === 'light' ? "text-stone-400" : "text-stone-500")} />
-                  <span>SEA LEVEL: {location?.altitude ? Math.round(location.altitude * 3.28084) : '—'} FT</span>
-                </span>
               </div>
               {/* Speed readout — always visible, prominent for driving. Tap to toggle live GPS tracking. */}
               <button
