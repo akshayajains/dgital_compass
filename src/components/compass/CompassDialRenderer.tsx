@@ -1122,7 +1122,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               </div>
               <div className="text-center select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                 <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
-                  {displayHeading !== null ? Math.round(displayHeading) : 78}° {get16WindName(displayHeading)}
+                  {displayHeading !== null ? Math.round(displayHeading) : 0}° {get16WindName(displayHeading)}
                 </span>
               </div>
             </div>

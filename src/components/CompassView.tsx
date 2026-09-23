@@ -357,6 +357,19 @@ export const CompassView = () => {
   const smoothedRollRef = useRef<number>(0);
   const usingAbsoluteRef = useRef<boolean>(false);
   const lastRotaryTickRef = useRef<number>(0);
+  // Ref-based callback for handleOrientation — avoids stale closure re-registration on every render
+  const handleOrientationRef = useRef<((event: any, isAbsolute: boolean) => void) | null>(null);
+  // iOS compass accuracy (degrees of uncertainty; >25 means figure-8 calibration needed)
+  const [compassAccuracy, setCompassAccuracy] = useState<number | null>(null);
+  // NOAA throttle: track last fetch location to avoid redundant API calls
+  const lastDeclinationFetchRef = useRef<{ lat: number; lon: number; time: number } | null>(null);
+
+  // Live clock tick so the sun position and solar countdown stay fresh (updates every 30s)
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 30000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // Magnetic declination — fetched from NOAA WMM when location is known,
   // cached locally, with a rough approximation as offline fallback.
@@ -370,9 +383,23 @@ export const CompassView = () => {
 
   useEffect(() => {
     if (!location) return;
-    let cancelled = false;
     const lat = location.latitude;
     const lon = location.longitude;
+    const now = Date.now();
+
+    // Throttle: don't refetch NOAA declination if fetched within 5 minutes and moved < 25km
+    if (lastDeclinationFetchRef.current) {
+      const prev = lastDeclinationFetchRef.current;
+      const timeDiff = now - prev.time;
+      const dLat = Math.abs(lat - prev.lat);
+      const dLon = Math.abs(lon - prev.lon);
+      if (timeDiff < 300000 && dLat < 0.25 && dLon < 0.25) {
+        return;
+      }
+    }
+    lastDeclinationFetchRef.current = { lat, lon, time: now };
+
+    let cancelled = false;
     const year = new Date().getFullYear();
     fetch(`https://www.ngdc.noaa.gov/geomag-web/calculators/calculateDeclination?lat1=${lat}&lon1=${lon}&resultFormat=json&startYear=${year}&key=zNEw7`)
       .then(r => {
@@ -440,12 +467,16 @@ export const CompassView = () => {
     } catch {
       return 135;
     }
-  }, [location]);
+  }, [location, nowTick]);
 
   const handleOrientation = (event: any, isAbsolute: boolean) => {
     if (isHeadingLocked) return;
     if (!isAbsolute && usingAbsoluteRef.current) return;
     let compassHeading: number | null = null;
+
+    if (event.webkitCompassAccuracy !== undefined && event.webkitCompassAccuracy !== null) {
+      setCompassAccuracy(event.webkitCompassAccuracy);
+    }
 
     if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
       compassHeading = event.webkitCompassHeading;
@@ -461,9 +492,13 @@ export const CompassView = () => {
       const gRad = gamma * toRad;
       const aRad = alpha * toRad;
 
-      const Xh = Math.cos(aRad) * Math.sin(gRad) + Math.sin(aRad) * Math.sin(bRad) * Math.cos(gRad);
-      const Yh = Math.sin(aRad) * Math.sin(gRad) - Math.cos(aRad) * Math.sin(bRad) * Math.cos(gRad);
-      let head = Math.atan2(Xh, Yh) * (180 / Math.PI);
+      // Screen-frame tilt compensation:
+      const cA = Math.cos(aRad), sA = Math.sin(aRad);
+      const cB = Math.cos(bRad), sB = Math.sin(bRad);
+      const cG = Math.cos(gRad), sG = Math.sin(gRad);
+      const xH = -cA * sG - sA * sB * cG;
+      const yH = -sA * sG + cA * sB * cG;
+      let head = Math.atan2(yH, xH) * (180 / Math.PI);
       if (head < 0) head += 360;
       compassHeading = (head + 360) % 360;
     }
@@ -517,6 +552,7 @@ export const CompassView = () => {
       }
     }
   };
+  handleOrientationRef.current = handleOrientation;
 
   useEffect(() => {
     let removeListener: (() => void) | null = null;
@@ -528,8 +564,8 @@ export const CompassView = () => {
         } catch {}
       }
 
-      const onAbsolute = (e: any) => handleOrientation(e, true);
-      const onStandard = (e: any) => handleOrientation(e, false);
+      const onAbsolute = (e: any) => handleOrientationRef.current?.(e, true);
+      const onStandard = (e: any) => handleOrientationRef.current?.(e, false);
 
       window.addEventListener('deviceorientationabsolute' as any, onAbsolute, true);
       window.addEventListener('deviceorientation', onStandard, true);
@@ -544,7 +580,7 @@ export const CompassView = () => {
     return () => {
       if (removeListener) removeListener();
     };
-  }, [isHeadingLocked]);
+  }, []);
 
   const updateHeadingFromPointer = useCallback((clientX: number, clientY: number) => {
     if (isHeadingLocked || !dialRef.current) return;
@@ -599,7 +635,7 @@ export const CompassView = () => {
 
   const displayHeading = useMemo(() => {
     if (targetHeading !== null) return targetHeading;
-    if (heading === null) return 76;
+    if (heading === null) return 0;
     if (!useTrueNorth) return heading;
     return ((heading + declination) % 360 + 360) % 360;
   }, [heading, useTrueNorth, declination, targetHeading]);
@@ -625,12 +661,15 @@ export const CompassView = () => {
       smoothHeadingRef.current = next;
       setSmoothHeading(next);
 
-      // Haptic tick on every 5° crossing
+      // Haptic tick on every 5° crossing only when manually dragging the dial
+      // (Sensor updates already provide haptic feedback via handleOrientation to prevent double-haptics)
       const norm = ((next % 360) + 360) % 360;
       const cardinal = Math.round(norm / 5);
       if (cardinal !== lastCardinalRef.current && Math.abs(diff) > 0.5) {
         lastCardinalRef.current = cardinal;
-        triggerHapticFeedback(ImpactStyle.Light);
+        if (isDraggingDialRef.current) {
+          triggerHapticFeedback(ImpactStyle.Light);
+        }
       }
 
       if (Math.abs(diff) > 0.05) {
@@ -711,13 +750,6 @@ export const CompassView = () => {
     if (!date) return fallback;
     return date.toLocaleTimeString(language === 'hi' ? 'hi-IN' : 'en-US', { hour: '2-digit', minute: '2-digit', hour12: timeFormat === '12' });
   };
-
-  // Live clock tick so the sun countdown stays fresh (updates every 30s)
-  const [nowTick, setNowTick] = useState<number>(Date.now());
-  useEffect(() => {
-    const id = window.setInterval(() => setNowTick(Date.now()), 30000);
-    return () => window.clearInterval(id);
-  }, []);
 
   // Sun countdown: sunrise / sunset / next sunrise (feature 3)
   const sunCountdown = useMemo(() => {
@@ -869,7 +901,10 @@ export const CompassView = () => {
             theme === 'light' ? 'text-stone-700' : 'text-stone-300'
           )}>
             <span>{language === 'hi' ? 'कंपास थीम शैली' : 'COMPASS THEME STYLE'}</span>
-            <span className={theme === 'light' ? 'text-stone-600' : 'text-stone-400'}>{language === 'hi' ? 'अधिक के लिए स्क्रॉल करें' : 'SCROLL FOR MORE'}</span>
+            <span className={cn("flex items-center gap-0.5 text-[9px] font-bold", theme === 'light' ? 'text-stone-600' : 'text-stone-400')}>
+              <span>{language === 'hi' ? 'स्वाइप करें' : 'SWIPE'}</span>
+              <span className="text-amber-400 font-bold">›</span>
+            </span>
           </div>
 
           {/* Horizontal Theme Pill Chips */}
@@ -1027,8 +1062,8 @@ export const CompassView = () => {
           )}
           </div>
 
-          {/* Inline Calibration Nudge — shown when no sensor heading is available */}
-          {heading === null && (
+          {/* Inline Calibration Nudge — shown when no sensor heading is available or accuracy > 25° */}
+          {(heading === null || (compassAccuracy !== null && compassAccuracy > 25)) && (
             <button
               onClick={() => {
                 triggerHapticFeedback();
@@ -1045,7 +1080,11 @@ export const CompassView = () => {
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 {language === 'hi' ? 'कैलिब्रेट करने के लिए टैप करें' : 'TAP TO CALIBRATE'}
               </span>
-              <span className="text-[9px] opacity-70">{language === 'hi' ? 'सेंसर नहीं मिला' : 'NO SENSOR FIX'}</span>
+              <span className="text-[9px] opacity-70">
+                {heading === null
+                  ? (language === 'hi' ? 'सेंसर नहीं मिला' : 'NO SENSOR FIX')
+                  : (language === 'hi' ? `अशुद्धि ±${Math.round(compassAccuracy!)}°` : `POOR ACC ±${Math.round(compassAccuracy!)}°`)}
+              </span>
             </button>
           )}
 
@@ -1277,7 +1316,7 @@ export const CompassView = () => {
                   <div className={cn("w-full p-2.5 rounded-2xl border flex items-center justify-between shadow-md my-1", box.bg, box.border)}>
                     <div className="flex items-center gap-2">
                       <span className={cn("text-3xl sm:text-4xl font-black font-serif animate-heading-glow", box.heading)}>
-                        {displayHeading !== null ? Math.round(displayHeading) : 80}°
+                        {displayHeading !== null ? Math.round(displayHeading) : 0}°
                       </span>
                       <span className={cn("text-sm sm:text-base font-black font-serif", box.dir)}>
                         {dirName} ({vastuInfo.code})
@@ -1336,9 +1375,9 @@ export const CompassView = () => {
                     <span>{location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±{Math.round(location.accuracy)}m</span>
                   </span>
                 ) : (
-                  <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>
+                  <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
                     <Crosshair className="w-3 h-3" />
-                    <span>HIGH ACC</span>
+                    <span>{locationError === 'ip' ? 'IP LOC' : 'ACC —'}</span>
                   </span>
                 )}
                 <span className={cn("text-[9px] font-bold uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
@@ -1360,7 +1399,7 @@ export const CompassView = () => {
                 )}
               >
                 <Gauge className={cn("w-3.5 h-3.5", liveTracking && "animate-pulse")} />
-                <span className="font-mono">{location?.speed != null ? Math.round(location.speed * (speedUnit === 'mph' ? 2.23694 : 3.6)) : 0} <span className="text-[8px] font-bold uppercase tracking-wider">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span></span>
+                <span className="font-mono">{location?.speed != null ? Math.round(location.speed * (speedUnit === 'mph' ? 2.23694 : 3.6)) : '—'} <span className="text-[8px] font-bold uppercase tracking-wider">{speedUnit === 'mph' ? 'mph' : 'km/h'}</span></span>
                 {/* Clear state + affordance indicator */}
                 <span className={cn(
                   "text-[7.5px] font-black uppercase tracking-wider px-1 py-0.5 rounded-md border",
@@ -1806,6 +1845,7 @@ export const CompassView = () => {
                   const next = !alwaysVisible;
                   setAlwaysVisible(next);
                   try { localStorage.setItem('com.spiritual.compass.always_visible', next.toString()); } catch {}
+                  triggerHapticFeedback();
                 }}
                 className={cn(
                   "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
