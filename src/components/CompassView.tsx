@@ -1036,6 +1036,21 @@ export const CompassView = () => {
                     triggerHapticFeedback();
                   }}
                 />
+                <div className="flex items-center justify-center gap-2 mt-1 pointer-events-none select-none">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                    <span className="text-[11px] font-black font-mono text-cyan-400 tracking-tight leading-none">μ</span>
+                    <span className="text-[11px] font-black font-mono text-white/90 leading-none tracking-tight">
+                      {declination === 0 ? '0.0°' : declination > 0 ? `+${declination.toFixed(1)}°` : `−${Math.abs(declination).toFixed(1)}°`}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/40 leading-none">
+                      {declination > 0 ? 'E' : declination < 0 ? 'W' : '—'}
+                    </span>
+                    <span className="text-white/20 text-[10px] leading-none">|</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/80 leading-none">
+                      {useTrueNorth ? 'TRUE' : 'MAG'}
+                    </span>
+                  </div>
+                </div>
               </React.Suspense>
             )
             ) : (
@@ -1317,13 +1332,21 @@ export const CompassView = () => {
 
                 return (
                   <div className={cn("w-full p-2.5 rounded-2xl border flex items-center justify-between shadow-md my-1", box.bg, box.border)}>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                       <span className={cn("text-3xl sm:text-4xl font-black font-serif animate-heading-glow", box.heading)}>
                         {displayHeading !== null ? Math.round(displayHeading) : 0}°
                       </span>
-                      <span className={cn("text-sm sm:text-base font-black font-serif", box.dir)}>
-                        {dirName} ({vastuInfo.code})
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={cn("text-sm sm:text-base font-black font-serif leading-tight", box.dir)}>
+                          {dirName} ({vastuInfo.code})
+                        </span>
+                        {/* Magnetic Declination μ indicator */}
+                        <span className="text-[10px] font-mono font-bold text-cyan-400 opacity-90 flex items-center gap-1 mt-0.5">
+                          <span className="text-[11px] font-black text-cyan-300">μ</span>
+                          <span>{declination === 0 ? '0.0°' : declination > 0 ? `+${declination.toFixed(1)}°` : `−${Math.abs(declination).toFixed(1)}°`}</span>
+                          <span className="text-[8.5px] text-white/50 font-sans uppercase font-bold">{declination > 0 ? 'E' : declination < 0 ? 'W' : ''}</span>
+                        </span>
+                      </div>
                     </div>
                     <button
                       onClick={() => {
