@@ -18,11 +18,24 @@ import {
   ScanSearch,
   ShieldCheck,
   Gauge,
-  MapPinned
+  MapPinned,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
+
+export const VASTU_ACTIVITIES = [
+  { id: 'study', labelEn: 'Study', labelHi: 'अध्ययन', icon: '📚' },
+  { id: 'work', labelEn: 'Work', labelHi: 'ऑफिस', icon: '💼' },
+  { id: 'sleep', labelEn: 'Sleep', labelHi: 'शयन', icon: '🛏️' },
+  { id: 'mandir', labelEn: 'Mandir', labelHi: 'मंदिर', icon: '🪔' },
+  { id: 'kitchen', labelEn: 'Kitchen', labelHi: 'रसोई', icon: '🍳' },
+  { id: 'cash', labelEn: 'Cash', labelHi: 'तिजोरी', icon: '💰' },
+  { id: 'toilet', labelEn: 'Toilet', labelHi: 'शौचालय', icon: '🚻' },
+] as const;
 import { CompassStyleId } from '@/types/compass';
 import { CompassDialRenderer } from '@/components/compass/CompassDialRenderer';
 import { VASTU_16_ZONES } from '@/data/vastuKnowledgeBase';
@@ -379,23 +392,91 @@ export const VastuOthersView: React.FC<Props> = ({
   const activityDirections = useMemo(() => {
     switch (targetActivity) {
       case 'study':
-        return { title: 'Study & Competitive Exams', bestZones: ['WSW (236°-258°)', 'NE (34°-56°)', 'East (79°-101°)'], facing: 'Face East (Retention) or North (Analytical focus).', targetDeg: 247.5, color: 'text-indigo-400' };
+        return {
+          title: language === 'hi' ? 'अध्ययन एवं प्रतियोगी परीक्षाएं' : 'Study & Competitive Exams',
+          bestCodes: ['WSW', 'NE', 'E', 'N'],
+          bestZones: ['WSW (236°-258°)', 'NE (34°-56°)', 'East (79°-101°)'],
+          facing: language === 'hi' ? 'पूर्व या उत्तर दिशा की ओर मुख करके अध्ययन करें।' : 'Face East (Retention) or North (Analytical focus).',
+          targetDeg: 247.5,
+          color: 'text-indigo-400'
+        };
       case 'work':
-        return { title: 'Work From Home & Office', bestZones: ['North (349°-11°)', 'West (259°-281°)', 'East (79°-101°)'], facing: 'Sit facing North (Career opportunities) or East.', targetDeg: 0, color: 'text-sky-400' };
+        return {
+          title: language === 'hi' ? 'घर से कार्य एवं कार्यालय' : 'Work From Home & Office',
+          bestCodes: ['N', 'W', 'E', 'NE'],
+          bestZones: ['North (349°-11°)', 'West (259°-281°)', 'East (79°-101°)'],
+          facing: language === 'hi' ? 'उत्तर (करियर अवसर) या पूर्व की ओर मुख करके बैठें।' : 'Sit facing North (Career opportunities) or East.',
+          targetDeg: 0,
+          color: 'text-sky-400'
+        };
       case 'sleep':
-        return { title: 'Master Bedroom & Sleep', bestZones: ['SW (214°-236°)', 'South (169°-191°)', 'West (259°-281°)'], facing: 'Head towards South (Best) or East. Never North.', targetDeg: 225, color: 'text-amber-400' };
+        return {
+          title: language === 'hi' ? 'मास्टर बेडरूम एवं शयन' : 'Master Bedroom & Sleep',
+          bestCodes: ['SW', 'S', 'W'],
+          bestZones: ['SW (214°-236°)', 'South (169°-191°)', 'West (259°-281°)'],
+          facing: language === 'hi' ? 'सिर दक्षिण (सर्वोत्तम) या पूर्व की ओर रखें। उत्तर में कभी नहीं।' : 'Head towards South (Best) or East. Never North.',
+          targetDeg: 225,
+          color: 'text-amber-400'
+        };
       case 'mandir':
-        return { title: 'Pooja Mandir & Spiritual Space', bestZones: ['NE (34°-56°)', 'East (79°-101°)', 'North (349°-11°)'], facing: 'Devotee faces East or North during prayer.', targetDeg: 45, color: 'text-yellow-400' };
+        return {
+          title: language === 'hi' ? 'पूजा मंदिर एवं ध्यान' : 'Pooja Mandir & Spiritual Space',
+          bestCodes: ['NE', 'E', 'N'],
+          bestZones: ['NE (34°-56°)', 'East (79°-101°)', 'North (349°-11°)'],
+          facing: language === 'hi' ? 'प्रार्थना के समय मुख पूर्व या उत्तर की ओर होना चाहिए।' : 'Devotee faces East or North during prayer.',
+          targetDeg: 45,
+          color: 'text-yellow-400'
+        };
       case 'kitchen':
-        return { title: 'Kitchen & Gas Stove', bestZones: ['SE (124°-146°)', 'SSE (146°-169°)', 'NW (304°-326°)'], facing: 'Cook must face East while cooking.', targetDeg: 135, color: 'text-orange-400' };
+        return {
+          title: language === 'hi' ? 'रसोई एवं गैस चूल्हा' : 'Kitchen & Gas Stove',
+          bestCodes: ['SE', 'SSE', 'NW'],
+          bestZones: ['SE (124°-146°)', 'SSE (146°-169°)', 'NW (304°-326°)'],
+          facing: language === 'hi' ? 'खाना बनाते समय मुख पूर्व की ओर होना चाहिए।' : 'Cook must face East while cooking.',
+          targetDeg: 135,
+          color: 'text-orange-400'
+        };
       case 'cash':
-        return { title: 'Cash Vault & Wealth Safe', bestZones: ['North (349°-11°)', 'SW (214°-236°)', 'West (259°-281°)'], facing: 'Locker door must open towards North (Lord Kuber).', targetDeg: 0, color: 'text-emerald-400' };
+        return {
+          title: language === 'hi' ? 'तिजोरी एवं धन लॉकर' : 'Cash Vault & Wealth Safe',
+          bestCodes: ['N', 'SW', 'W'],
+          bestZones: ['North (349°-11°)', 'SW (214°-236°)', 'West (259°-281°)'],
+          facing: language === 'hi' ? 'तिजोरी का दरवाजा उत्तर (कुबेर स्थान) की ओर खुलना चाहिए।' : 'Locker door must open towards North (Lord Kuber).',
+          targetDeg: 0,
+          color: 'text-emerald-400'
+        };
       case 'toilet':
-        return { title: 'Toilet & Septic Tank', bestZones: ['SSW (191°-214°)', 'WNW (281°-304°)', 'ESE (101°-124°)'], facing: 'Commode user should face North or South.', targetDeg: 202.5, color: 'text-purple-400' };
+        return {
+          title: language === 'hi' ? 'शौचालय एवं सेप्टिक टैंक' : 'Toilet & Septic Tank',
+          bestCodes: ['SSW', 'WNW', 'ESE'],
+          bestZones: ['SSW (191°-214°)', 'WNW (281°-304°)', 'ESE (101°-124°)'],
+          facing: language === 'hi' ? 'शौच करते समय मुख उत्तर या दक्षिण की ओर होना चाहिए।' : 'Commode user should face North or South.',
+          targetDeg: 202.5,
+          color: 'text-purple-400'
+        };
       default:
-        return { title: 'Study Room', bestZones: ['WSW', 'NE', 'East'], facing: 'Face East or North.', targetDeg: 247.5, color: 'text-indigo-400' };
+        return {
+          title: language === 'hi' ? 'अध्ययन कक्ष' : 'Study Room',
+          bestCodes: ['WSW', 'NE', 'E'],
+          bestZones: ['WSW', 'NE', 'East'],
+          facing: language === 'hi' ? 'पूर्व या उत्तर की ओर मुख करें।' : 'Face East or North.',
+          targetDeg: 247.5,
+          color: 'text-indigo-400'
+        };
     }
-  }, [targetActivity]);
+  }, [targetActivity, language]);
+
+  const isActivityMatched = useMemo(() => {
+    return activityDirections.bestCodes.includes(liveZone.code);
+  }, [activityDirections.bestCodes, liveZone.code]);
+
+  const isAuspiciousDirection = useMemo(() => {
+    return ['NE', 'N', 'E', 'SE', 'SW'].includes(liveZone.code);
+  }, [liveZone.code]);
+
+  const headingDeviation = useMemo(() => {
+    return ((displayDeg - activityDirections.targetDeg + 540) % 360) - 180;
+  }, [displayDeg, activityDirections.targetDeg]);
 
   // 9-grid score — single source of truth (drives dashboard card + VastuPanel header/badge)
   const houseGridScore = useMemo(() => {
@@ -651,6 +732,114 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {activeTab === 'vastu' && (
         <div className="w-full flex flex-col gap-3">
+          {/* Live Best Direction Match & Interactive Activity Matcher Card */}
+          <div className={cn(
+            "w-full rounded-[26px] p-4 border flex flex-col gap-3 transition-all duration-300 shadow-xl",
+            isActivityMatched
+              ? (theme === 'light'
+                  ? "border-emerald-400 bg-gradient-to-br from-emerald-50 via-teal-50 to-white shadow-[0_10px_35px_rgba(16,185,129,0.15)]"
+                  : "border-emerald-500/50 bg-gradient-to-br from-[#062016] via-[#05150e] to-[#020805] shadow-[0_10px_35px_rgba(16,185,129,0.25)]")
+              : (theme === 'light'
+                  ? "border-stone-200 bg-white"
+                  : "border-white/10 bg-stone-950/80")
+          )}>
+            {/* Top Row: Auspicious Status & Target Degree */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                {isActivityMatched ? (
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-stone-950 shadow-md animate-pulse">
+                    <Sparkles className="w-3 h-3 text-stone-950 fill-stone-950" />
+                    {language === 'hi' ? '⭐ सर्वोत्तम दिशा सुमेलित' : '⭐ BEST DIRECTION MATCH'}
+                  </span>
+                ) : isAuspiciousDirection ? (
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 border border-amber-500/50 text-amber-300">
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    {language === 'hi' ? `शुभ वास्तु क्षेत्र (${liveZone.code})` : `AUSPICIOUS ZONE (${liveZone.code})`}
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-stone-800 border border-stone-700 text-stone-300">
+                    {language === 'hi' ? `दिशा क्षेत्र: ${liveZone.code}` : `ZONE: ${liveZone.code}`}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-[10px] font-mono font-bold">
+                <span>{language === 'hi' ? 'लक्ष्य' : 'Target'}:</span>
+                <span className="font-black text-cyan-300">{Math.round(activityDirections.targetDeg)}°</span>
+              </div>
+            </div>
+
+            {/* Quick Activity Selector Chips */}
+            <div className="w-full flex flex-col gap-1.5">
+              <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-stone-400">
+                <span>{language === 'hi' ? 'उद्देश्य अनुसार दिशा जांचें' : 'Check Alignment For:'}</span>
+                <span className="text-amber-400 font-bold">{activityDirections.title}</span>
+              </div>
+              <div className="w-full flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                {VASTU_ACTIVITIES.map(act => {
+                  const isSelected = targetActivity === act.id;
+                  return (
+                    <button
+                      key={act.id}
+                      onClick={() => {
+                        setTargetActivity(act.id);
+                        triggerHaptic();
+                      }}
+                      className={cn(
+                        "px-2.5 py-1 rounded-xl text-[10px] font-black whitespace-nowrap flex items-center gap-1 transition-all active:scale-95 shrink-0 border",
+                        isSelected
+                          ? "bg-amber-500 text-stone-950 border-amber-400 shadow-md font-extrabold"
+                          : (theme === 'light'
+                              ? "bg-stone-100 border-stone-200 text-stone-700 hover:bg-stone-200"
+                              : "bg-stone-900 border-white/10 text-stone-300 hover:bg-stone-800")
+                      )}
+                    >
+                      <span>{act.icon}</span>
+                      <span>{language === 'hi' ? act.labelHi : act.labelEn}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Direction Match Live Feedback & Turn Guidance */}
+            <div className={cn(
+              "w-full rounded-2xl p-2.5 border text-xs flex flex-col gap-1.5",
+              isActivityMatched
+                ? (theme === 'light' ? "border-emerald-300 bg-emerald-100/60 text-emerald-950" : "border-emerald-500/30 bg-emerald-950/40 text-emerald-200")
+                : (theme === 'light' ? "border-stone-200 bg-stone-50 text-stone-800" : "border-white/10 bg-white/5 text-stone-200")
+            )}>
+              <div className="flex items-center justify-between font-bold">
+                <span className="flex items-center gap-1.5">
+                  {isActivityMatched ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <Target className="w-4 h-4 text-amber-400 shrink-0" />
+                  )}
+                  <span>
+                    {language === 'hi' ? 'वर्तमान मुख:' : 'Facing:'} {displayDeg}° {liveZone.nameHi.split(' ')[0]} ({liveZone.code})
+                  </span>
+                </span>
+                <span className={cn("text-[10px] font-mono font-bold", isActivityMatched ? "text-emerald-400" : "text-amber-400")}>
+                  {isActivityMatched
+                    ? '✓ 100% MATCH'
+                    : `${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'Left' : 'Right'}`}
+                </span>
+              </div>
+              <p className="text-[11px] leading-relaxed opacity-90">
+                {isActivityMatched
+                  ? (language === 'hi' ? `अत्यंत शुभ! ${activityDirections.facing}` : `Perfect alignment! ${activityDirections.facing}`)
+                  : (language === 'hi'
+                      ? `${activityDirections.title} के लिए ${Math.round(activityDirections.targetDeg)}° की ओर ${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'बाएं ↶' : 'दाएं ↷'} घूमें। ${activityDirections.facing}`
+                      : `Turn ${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'Left ↶' : 'Right ↷'} towards ${Math.round(activityDirections.targetDeg)}° for optimal energy. ${activityDirections.facing}`)}
+              </p>
+              <div className="text-[10px] pt-1 border-t border-current/15 flex flex-col gap-0.5">
+                <div><span className="font-black">{language === 'hi' ? 'आदर्श:' : 'Ideal:'}</span> {liveHeadingAdvice.idealFor}</div>
+                <div><span className="font-black text-rose-400">{language === 'hi' ? 'वर्जित:' : 'Avoid:'}</span> {liveHeadingAdvice.avoidFor}</div>
+              </div>
+            </div>
+          </div>
+
           <VastuPanel
             language={language}
             theme={theme}
@@ -701,20 +890,6 @@ export const VastuOthersView: React.FC<Props> = ({
               <Sun className="w-3.5 h-3.5" />
               <span>Weather</span>
             </button>
-          </div>
-
-          <div className={cn("w-full rounded-2xl border px-3.5 py-2.5 shadow-xl", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-stone-950/70")}>
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <div className={cn("text-[9px] font-black uppercase tracking-[0.2em]", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>Best Direction Live</div>
-                <div className={cn("mt-0.5 text-[13px] font-black truncate", theme === 'light' ? "text-stone-900" : "text-white")}>{activityDirections.title}</div>
-                <div className={cn("mt-0.5 text-[10px] font-bold truncate", activityDirections.color)}>{activityDirections.facing}</div>
-              </div>
-              <div className={cn("rounded-xl border px-2.5 py-1.5 text-center shrink-0", theme === 'light' ? "border-cyan-500/30 bg-cyan-500/10" : "border-cyan-500/20 bg-cyan-500/10")}>
-                <div className="text-[8px] uppercase tracking-[0.18em] text-stone-500">Target</div>
-                <div className={cn("text-base font-black font-mono", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>{Math.round(activityDirections.targetDeg)}°</div>
-              </div>
-            </div>
           </div>
 
           {/* Vastu Enhancements: 8-zone map, lookup, dosha, muhurat, share */}

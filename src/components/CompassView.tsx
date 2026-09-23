@@ -36,6 +36,7 @@ import {
   Timer,
   Vibrate,
   MoonStar,
+  AlertTriangle,
 } from 'lucide-react';
 import { useSunTimes } from '@/hooks/useSunTimes';
 import SunCalc from 'suncalc';
@@ -84,6 +85,10 @@ export const CompassView = () => {
   const [tareOffset, setTareOffset] = useState<{ pitch: number; roll: number } | null>(null);
   const [isHeadingLocked, setIsHeadingLocked] = useState<boolean>(false);
   const [targetHeading, setTargetHeading] = useState<number | null>(null);
+  const [magneticFlux, setMagneticFlux] = useState<number | null>(null);
+  const [isMagneticInterference, setIsMagneticInterference] = useState<boolean>(false);
+  const lastCardinalSoundTimeRef = useRef<number>(0);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
 
   // Satellite Earth Mode States
   // New SatelliteCompassView mode state
@@ -434,12 +439,37 @@ export const CompassView = () => {
     }
   };
 
-  const playBellSound = (type: 'bell' | 'chime' = 'bell') => {
+  const playBellSound = (type: 'bell' | 'chime' | 'singingBowl' = 'bell') => {
     if (!soundEnabled) return;
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioContextClass) return;
       const audioCtx = new AudioContextClass();
+      if (type === 'singingBowl') {
+        // Tibetan Singing Bowl Harmonic Tone: 432 Hz root, 864 Hz harmonic octave, 1296 Hz shimmer
+        // Micro-detuned dual sine waves create authentic acoustic beating (wah-wah resonance)
+        const harmonics = [
+          { freq: 432.0, gain: 0.20, decay: 2.8, delay: 0 },
+          { freq: 433.2, gain: 0.16, decay: 2.6, delay: 0.01 }, // micro-detuning for acoustic beating
+          { freq: 864.0, gain: 0.10, decay: 2.0, delay: 0.02 }, // 2nd harmonic
+          { freq: 1296.0, gain: 0.05, decay: 1.5, delay: 0.03 }, // 3rd harmonic shimmer
+        ];
+        harmonics.forEach(h => {
+          const osc = audioCtx.createOscillator();
+          const gainNode = audioCtx.createGain();
+          osc.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+          osc.frequency.value = h.freq;
+          osc.type = 'sine';
+          const startTime = audioCtx.currentTime + h.delay;
+          gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+          gainNode.gain.linearRampToValueAtTime(h.gain, startTime + 0.04);
+          gainNode.gain.exponentialRampToValueAtTime(0.0005, startTime + h.decay);
+          osc.start(startTime);
+          osc.stop(startTime + h.decay + 0.1);
+        });
+        return;
+      }
       const frequencies = type === 'bell' ? [523.25, 659.25, 783.99] : [587.33, 739.99, 880.00];
       frequencies.forEach((freq, idx) => {
         const osc = audioCtx.createOscillator();
@@ -476,6 +506,11 @@ export const CompassView = () => {
 
     if (event.webkitCompassAccuracy !== undefined && event.webkitCompassAccuracy !== null) {
       setCompassAccuracy(event.webkitCompassAccuracy);
+      if (event.webkitCompassAccuracy < 0 || event.webkitCompassAccuracy > 25) {
+        setIsMagneticInterference(true);
+      } else if (magneticFlux === null) {
+        setIsMagneticInterference(false);
+      }
     }
 
     if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
@@ -570,9 +605,31 @@ export const CompassView = () => {
       window.addEventListener('deviceorientationabsolute' as any, onAbsolute, true);
       window.addEventListener('deviceorientation', onStandard, true);
 
+      // Raw Magnetometer API for direct metal / magnetic interference detection (Chromium / Android)
+      let magSensor: any = null;
+      if (typeof window !== 'undefined' && 'Magnetometer' in window) {
+        try {
+          magSensor = new (window as any).Magnetometer({ frequency: 10 });
+          magSensor.addEventListener('reading', () => {
+            const { x, y, z } = magSensor;
+            if (x !== undefined && y !== undefined && z !== undefined) {
+              const flux = Math.round(Math.sqrt(x * x + y * y + z * z));
+              setMagneticFlux(flux);
+              // Earth natural magnetic flux is 30 - 65 uT. Strong local metal / EMI causes > 75 uT or near-zero collapse
+              setIsMagneticInterference(flux > 75 || (flux < 20 && flux > 0));
+            }
+          });
+          magSensor.addEventListener('error', () => {});
+          magSensor.start();
+        } catch {}
+      }
+
       removeListener = () => {
         window.removeEventListener('deviceorientationabsolute' as any, onAbsolute, true);
         window.removeEventListener('deviceorientation', onStandard, true);
+        if (magSensor) {
+          try { magSensor.stop(); } catch {}
+        }
       };
     };
 
@@ -591,7 +648,15 @@ export const CompassView = () => {
     const dy = clientY - centerY;
     let angle = (Math.atan2(dy, dx) * 180 / Math.PI) + 90;
     if (angle < 0) angle += 360;
-    setHeading(Math.round(angle));
+    const newAngle = Math.round(angle);
+    setHeading(newAngle);
+
+    // Rotary click wheel feel on every 5° crossing during touch dragging
+    const currentTick = Math.floor(newAngle / 5);
+    if (currentTick !== lastRotaryTickRef.current) {
+      lastRotaryTickRef.current = currentTick;
+      triggerHapticFeedback(ImpactStyle.Light);
+    }
   }, [isHeadingLocked]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -634,11 +699,10 @@ export const CompassView = () => {
   }, []);
 
   const displayHeading = useMemo(() => {
-    if (targetHeading !== null) return targetHeading;
     if (heading === null) return 0;
     if (!useTrueNorth) return heading;
     return ((heading + declination) % 360 + 360) % 360;
-  }, [heading, useTrueNorth, declination, targetHeading]);
+  }, [heading, useTrueNorth, declination]);
 
   // ── Smooth dial rotation: ease the rendered heading toward the live heading ──
   const [smoothHeading, setSmoothHeading] = useState<number>(displayHeading);
@@ -674,6 +738,18 @@ export const CompassView = () => {
         }
       }
 
+      // Tibetan Singing Bowl chime on cardinal & sacred alignments (0° North, 45° NE Ishanya, 90° East, 180° South, 270° West)
+      const cardinalSacredAngles = [0, 45, 90, 180, 270];
+      const isAlignedWithCardinal = cardinalSacredAngles.some(a => {
+        const d = Math.abs(norm - a);
+        return d <= 0.8 || Math.abs(d - 360) <= 0.8;
+      });
+      if (isAlignedWithCardinal && Date.now() - lastCardinalSoundTimeRef.current > 3500) {
+        lastCardinalSoundTimeRef.current = Date.now();
+        playBellSound('singingBowl');
+        triggerHapticFeedback(ImpactStyle.Medium);
+      }
+
       if (Math.abs(diff) > 0.05) {
         rafRef.current = requestAnimationFrame(step);
       } else {
@@ -689,7 +765,16 @@ export const CompassView = () => {
     };
   }, [displayHeading]);
 
-  const renderedHeading = targetHeading !== null ? targetHeading : smoothHeading;
+  const renderedHeading = smoothHeading;
+
+  const courseDeviation = useMemo(() => {
+    if (targetHeading === null) return 0;
+    return ((renderedHeading - targetHeading + 540) % 360) - 180;
+  }, [renderedHeading, targetHeading]);
+
+  const isOnCourse = useMemo(() => {
+    return targetHeading !== null && Math.abs(courseDeviation) <= 3;
+  }, [targetHeading, courseDeviation]);
 
   const isFacingQibla = useMemo(() => {
     if (displayHeading === null) return false;
@@ -778,13 +863,49 @@ export const CompassView = () => {
 
   const vastuInfo = useMemo(() => getVastuDetails(displayHeading, language), [displayHeading, language]);
 
+  // Mobile swipe gestures between main tabs (compass ↔ level ↔ vastu)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now()
+      };
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || e.changedTouches.length === 0) return;
+    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+    const dt = Date.now() - touchStartRef.current.time;
+    touchStartRef.current = null;
+
+    if (isDraggingDialRef.current) return;
+    if (Math.abs(dx) > 60 && Math.abs(dy) < 50 && dt < 500) {
+      const tabs: ('compass' | 'level' | 'vastu')[] = ['compass', 'level', 'vastu'];
+      const currentIndex = tabs.indexOf(mainTab);
+      if (dx < 0 && currentIndex < tabs.length - 1) {
+        setMainTab(tabs[currentIndex + 1]);
+        triggerHapticFeedback(ImpactStyle.Light);
+      } else if (dx > 0 && currentIndex > 0) {
+        setMainTab(tabs[currentIndex - 1]);
+        triggerHapticFeedback(ImpactStyle.Light);
+      }
+    }
+  };
+
   return (
-    <div className={cn(
-      "w-full min-h-screen flex flex-col items-center pt-3 pb-8 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
-      theme === 'light' 
-        ? "bg-[radial-gradient(circle_at_50%_-10%,#fff7df_0%,#f6ead2_35%,#e8edf0_100%)] text-stone-900" 
-        : "bg-[radial-gradient(circle_at_50%_-10%,#3a1420_0%,#180a10_36%,#07090e_100%)] text-white"
-    )}>
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className={cn(
+        "w-full min-h-screen flex flex-col items-center pt-3 pb-8 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
+        theme === 'light' 
+          ? "bg-[radial-gradient(circle_at_50%_-10%,#fff7df_0%,#f6ead2_35%,#e8edf0_100%)] text-stone-900" 
+          : "bg-[radial-gradient(circle_at_50%_-10%,#3a1420_0%,#180a10_36%,#07090e_100%)] text-white"
+      )}
+    >
       {/* Layered ambient color keeps the home surface premium without hurting contrast. */}
       <div className="absolute -top-16 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-amber-300/30 dark:bg-red-600/14 blur-3xl pointer-events-none" />
       <div className="absolute top-[32rem] -left-24 h-64 w-64 rounded-full bg-cyan-300/20 dark:bg-cyan-500/10 blur-3xl pointer-events-none" />
@@ -1020,7 +1141,7 @@ export const CompassView = () => {
                   location={location}
                   language={language}
                   theme={theme}
-                  magneticField={66}
+                  magneticField={magneticFlux ?? 66}
                   mode={satelliteMode}
                   onModeChange={(m) => setSatelliteMode(m)}
                   onOpenLevel={() => {
@@ -1072,6 +1193,7 @@ export const CompassView = () => {
               customAccentColor="#EF4444"
               declination={declination}
               useTrueNorth={useTrueNorth}
+              targetBearing={targetHeading}
               variantId={selectedVariant}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -1080,26 +1202,41 @@ export const CompassView = () => {
           )}
           </div>
 
-          {/* Inline Calibration Nudge — shown when no sensor heading is available or accuracy > 25° */}
-          {(heading === null || (compassAccuracy !== null && compassAccuracy > 25)) && (
+          {/* Inline Calibration Nudge & Magnetic Interference HUD */}
+          {(heading === null || (compassAccuracy !== null && compassAccuracy > 25) || isMagneticInterference) && (
             <button
               onClick={() => {
                 triggerHapticFeedback();
                 setShowCalibrationModal(true);
               }}
               className={cn(
-                "w-full max-w-sm flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border text-[10px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] my-1",
-                theme === 'light'
+                "w-full max-w-sm flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl border text-[10px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] my-1 shadow-lg",
+                isMagneticInterference
+                  ? "bg-rose-950/80 text-rose-200 border-rose-500/70 shadow-[0_0_20px_rgba(244,63,94,0.35)] animate-pulse"
+                  : theme === 'light'
                   ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
                   : "bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
               )}
             >
               <span className="flex items-center gap-2">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                {language === 'hi' ? 'कैलिब्रेट करने के लिए टैप करें' : 'TAP TO CALIBRATE'}
+                {isMagneticInterference ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span className="font-black text-rose-300">
+                      {language === 'hi' ? 'चुंबकीय हस्तक्षेप (धातु / EMI)' : 'MAGNETIC INTERFERENCE DETECTED'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>{language === 'hi' ? 'कैलिब्रेट करने के लिए टैप करें' : 'TAP TO CALIBRATE'}</span>
+                  </>
+                )}
               </span>
-              <span className="text-[9px] opacity-70">
-                {heading === null
+              <span className="text-[9px] font-mono opacity-80">
+                {isMagneticInterference
+                  ? (magneticFlux ? `${magneticFlux} μT (HIGH)` : (language === 'hi' ? '8 आकार में घुमाएं' : 'MOVE IN 8'))
+                  : heading === null
                   ? (language === 'hi' ? 'सेंसर नहीं मिला' : 'NO SENSOR FIX')
                   : (language === 'hi' ? `अशुद्धि ±${Math.round(compassAccuracy!)}°` : `POOR ACC ±${Math.round(compassAccuracy!)}°`)}
               </span>
@@ -1212,17 +1349,16 @@ export const CompassView = () => {
                   {isHeadingLocked ? <Lock className="w-4 h-4" /> : <Unlock className={cn("w-4 h-4", theme === 'light' ? "text-rose-600" : "text-rose-400")} />}
                 </button>
 
-                {/* Set Target + Lock */}
+                {/* Set Target Course (CDI) */}
                 <button
                   onClick={() => {
                     if (targetHeading !== null) {
                       setTargetHeading(null);
-                      setIsHeadingLocked(false);
                       toast.info(language === 'hi' ? 'लक्ष्य हटाया गया' : 'Target Cleared');
                     } else {
-                      setTargetHeading(displayHeading);
-                      setIsHeadingLocked(true);
-                      toast.success(language === 'hi' ? `लक्ष्य ${Math.round(displayHeading)}° पर सेट` : `Target set at ${Math.round(displayHeading)}°`);
+                      const tgt = Math.round(renderedHeading);
+                      setTargetHeading(tgt);
+                      toast.success(language === 'hi' ? `लक्ष्य ${tgt}° पर सेट (कोर्स ट्रैकिंग)` : `Target Course set at ${tgt}°`);
                     }
                     triggerHapticFeedback(ImpactStyle.Medium);
                   }}
@@ -1232,7 +1368,7 @@ export const CompassView = () => {
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]"
                       : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
-                  title={language === 'hi' ? 'लक्ष्य सेट करें' : 'Set Target'}
+                  title={language === 'hi' ? 'लक्ष्य कोर्स सेट करें' : 'Set Target Course'}
                 >
                   <Target className={cn("w-4 h-4", targetHeading === null && (theme === 'light' ? "text-orange-600" : "text-orange-400"))} />
                 </button>
@@ -1360,6 +1496,63 @@ export const CompassView = () => {
                   </div>
                 );
               })()
+            )}
+
+            {/* Target Bearing & Course Deviation Indicator (CDI) HUD */}
+            {targetHeading !== null && (
+              <div className={cn(
+                "w-full p-2.5 rounded-2xl border flex items-center justify-between transition-all duration-300 my-1 shadow-md",
+                isOnCourse
+                  ? "bg-emerald-950/80 border-emerald-500/70 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                  : "bg-amber-950/70 border-amber-500/60 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+              )}>
+                <div className="flex items-center gap-2.5">
+                  <div className={cn(
+                    "w-8 h-8 rounded-xl flex items-center justify-center border shrink-0",
+                    isOnCourse
+                      ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 animate-pulse"
+                      : "bg-amber-500/20 border-amber-400 text-amber-300"
+                  )}>
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-stone-300">
+                        {language === 'hi' ? 'लक्ष्य कोर्स:' : 'Target Course:'}
+                      </span>
+                      <span className="text-xs font-mono font-black text-amber-300">
+                        {Math.round(targetHeading)}°
+                      </span>
+                    </div>
+                    <div className="text-xs font-black tracking-tight mt-0.5">
+                      {isOnCourse ? (
+                        <span className="text-emerald-400 font-black flex items-center gap-1">
+                          ✓ {language === 'hi' ? 'कोर्स पर हैं (0° विचलन)' : 'ON COURSE (0° DEVIATION)'}
+                        </span>
+                      ) : courseDeviation > 0 ? (
+                        <span className="text-amber-300 font-bold">
+                          ↶ {language === 'hi' ? `बाएं घूमें ${Math.abs(Math.round(courseDeviation))}°` : `TURN LEFT ${Math.abs(Math.round(courseDeviation))}°`}
+                        </span>
+                      ) : (
+                        <span className="text-amber-300 font-bold">
+                          {language === 'hi' ? `दाएं घूमें ${Math.abs(Math.round(courseDeviation))}° ↷` : `TURN RIGHT ${Math.abs(Math.round(courseDeviation))}° ↷`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setTargetHeading(null);
+                    triggerHapticFeedback();
+                    toast.info(language === 'hi' ? 'लक्ष्य हटाया गया' : 'Target Cleared');
+                  }}
+                  className="p-1.5 rounded-xl hover:bg-white/10 text-stone-400 hover:text-white transition-colors border border-white/10"
+                  title={language === 'hi' ? 'लक्ष्य हटाएं' : 'Clear Target'}
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
 
             {/* GPS Coordinates & Accuracy */}

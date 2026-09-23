@@ -24,6 +24,8 @@ interface Props {
   declination?: number;
   /** Whether True North mode is active (adjusts declination) */
   useTrueNorth?: boolean;
+  /** Target bearing for Course Deviation Indicator (CDI) */
+  targetBearing?: number | null;
   /** Variant id for grouped themes (ios_compass, color_palette) */
   variantId?: string | null;
   onPointerDown: (e: React.PointerEvent) => void;
@@ -55,6 +57,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   customAccentColor,
   declination = 0,
   useTrueNorth = false,
+  targetBearing,
   variantId,
   onPointerDown,
   onPointerMove,
@@ -811,6 +814,18 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     </span>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Target Bearing Reticle on Dial */}
+          {targetBearing !== null && targetBearing !== undefined && !isQiblaMode && (
+            <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${targetBearing}deg)` }}>
+              <div className="flex flex-col items-center mt-3 z-30 animate-pulse">
+                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[9px] border-t-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.9)]" />
+                <span className="px-1.5 py-0.5 mt-0.5 rounded-full text-[7.5px] font-black bg-amber-500 text-stone-950 shadow-md">
+                  {Math.round(targetBearing)}°
+                </span>
               </div>
             </div>
           )}

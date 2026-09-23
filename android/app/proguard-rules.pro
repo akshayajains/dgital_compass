@@ -5,17 +5,57 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# ── Capacitor / WebView ──
+# Capacitor bridges JS to native via reflection; keep all Capacitor classes.
+-keep class com.getcapacitor.** { *; }
+-keep class com.getcapacitor.plugin.** { *; }
+-keep class com.getcapacitor.community.** { *; }
+-keep class com.capacitorjs.** { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep all plugin classes (they are loaded reflectively by Capacitor).
+-keep class * extends com.getcapacitor.Plugin { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Keep the JavaScript interface methods used by the WebView.
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# ── Cordova plugins ──
+-keep class org.apache.cordova.** { *; }
+-keep class * extends org.apache.cordova.CordovaPlugin { *; }
+
+# ── AndroidX / AppCompat ──
+-keep class androidx.appcompat.** { *; }
+-keep class androidx.core.** { *; }
+-keep class androidx.coordinatorlayout.** { *; }
+-keep class androidx.fragment.** { *; }
+
+# ── Splash Screen ──
+-keep class androidx.core.splashscreen.** { *; }
+
+# ── Keep line numbers for debugging stack traces ──
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
+
+# ── Keep annotations (needed by some libraries) ──
+-keepattributes *Annotation*
+-keepattributes JavascriptInterface
+-keepattributes Signature
+-keepattributes InnerClasses,EnclosingMethod
+
+# ── Gson / JSON (used by Capacitor) ──
+-keep class com.google.gson.** { *; }
+-keep class * implements com.google.gson.JsonSerializer { *; }
+-keep class * implements com.google.gson.JsonDeserializer { *; }
+
+# ── OkHttp (used by some plugins) ──
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+-keep class okio.** { *; }
+
+# ── Avoid warnings for missing optional dependencies ──
+-dontwarn com.google.errorprone.annotations.**
+-dontwarn javax.annotation.**
+-dontwarn org.codehaus.mojo.animal_sniffer.**
+-dontwarn com.squareup.okhttp.**
