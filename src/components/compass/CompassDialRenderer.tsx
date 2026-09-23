@@ -22,6 +22,8 @@ interface Props {
   customAccentColor?: string;
   /** Magnetic declination in degrees (from NOAA WMM) */
   declination?: number;
+  /** Whether True North mode is active (adjusts declination) */
+  useTrueNorth?: boolean;
   /** Variant id for grouped themes (ios_compass, color_palette) */
   variantId?: string | null;
   onPointerDown: (e: React.PointerEvent) => void;
@@ -52,6 +54,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   dialRef,
   customAccentColor,
   declination = 0,
+  useTrueNorth = false,
   variantId,
   onPointerDown,
   onPointerMove,
@@ -875,7 +878,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
       {/* Stationary Center Needle Overlay — permanently fixed at central pivot with zero drift */}
       <div className="absolute inset-0 rounded-full pointer-events-none flex items-center justify-center overflow-visible z-20">
-        <div className="absolute inset-0 pointer-events-none items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
           
           {/* 1. Ornate Spear Needle (Nautical) */}
           {activeVariant?.needleType === 'ornate_spear' && (
@@ -918,7 +921,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {/* 4. Minimal Stealth Pointer */}
           {styleId === 'minimal_onyx' && (
-            <div className="absolute top-4 flex flex-col items-center z-30">
+            <div className="absolute inset-x-0 top-4 flex flex-col items-center pointer-events-none z-30">
               <div className="w-[4px] h-10 bg-gradient-to-b from-red-500 to-orange-500 rounded-full shadow-[0_0_14px_#ef4444]" />
               <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_#ffffff] -mt-1" />
             </div>
@@ -1176,8 +1179,10 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           </span>
           {/* separator */}
           <span className="text-white/20 text-[10px] leading-none">|</span>
-          {/* MAG label */}
-          <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/80 leading-none">MAG</span>
+          {/* MAG / TRUE label */}
+          <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/80 leading-none">
+            {useTrueNorth ? 'TRUE' : 'MAG'}
+          </span>
         </div>
       </div>
     </div>

@@ -657,7 +657,9 @@ export const CompassView = () => {
       let diff = (target - current) % 360;
       if (diff > 180) diff -= 360;
       if (diff < -180) diff += 360;
-      const next = current + diff * 0.18; // ease factor
+      // Dynamic responsiveness: 0.75 for direct touch drag, 0.35 for snappy sensor tracking with zero lag
+      const easeFactor = isDraggingDialRef.current ? 0.75 : 0.35;
+      const next = current + diff * easeFactor;
       smoothHeadingRef.current = next;
       setSmoothHeading(next);
 
@@ -1054,6 +1056,7 @@ export const CompassView = () => {
               dialRef={dialRef}
               customAccentColor="#EF4444"
               declination={declination}
+              useTrueNorth={useTrueNorth}
               variantId={selectedVariant}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
