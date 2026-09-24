@@ -1173,33 +1173,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           )}
         </div>
       </div>
-
-      {/* ── μ Magnetic Declination Badge — rendered BELOW the dial, never inside it ── */}
-      <div className="flex items-center justify-center gap-2 mt-1 pointer-events-none select-none">
-        {/* True North / Magnetic toggle indicator */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-          {/* μ label */}
-          <span className="text-[11px] font-black font-mono text-cyan-400 tracking-tight leading-none">μ</span>
-          {/* declination value */}
-          <span className="text-[11px] font-black font-mono text-white/90 leading-none tracking-tight">
-            {declination === 0
-              ? '0.0°'
-              : declination > 0
-                ? `+${declination.toFixed(1)}°`
-                : `−${Math.abs(declination).toFixed(1)}°`}
-          </span>
-          {/* E/W label */}
-          <span className="text-[9px] font-bold uppercase tracking-widest text-white/40 leading-none">
-            {declination > 0 ? 'E' : declination < 0 ? 'W' : '—'}
-          </span>
-          {/* separator */}
-          <span className="text-white/20 text-[10px] leading-none">|</span>
-          {/* MAG / TRUE label */}
-          <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/80 leading-none">
-            {useTrueNorth ? 'TRUE' : 'MAG'}
-          </span>
-        </div>
-      </div>
     </div>
   );
 });
