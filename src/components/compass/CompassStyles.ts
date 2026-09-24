@@ -261,9 +261,9 @@ export const COMPASS_STYLES: CompassStyleInfo[] = [
   },
   {
     id: 'royal_gold',
-    nameHi: 'शाही स्वर्ण',
-    nameEn: 'Royal Gold',
-    tagHi: 'शाही महाराजाओं का स्वर्णिल कंपास — माणिक्य (रूबी) व 24K स्वर्ण नक्काशी',
+    nameHi: 'शाही',
+    nameEn: 'Shahi',
+    tagHi: 'शाही कंपास — माणिक्य (रूबी) व 24K स्वर्ण नक्काशी',
     tagEn: 'Imperial 24K gold compass with royal ruby gemstone needle & filigree',
     category: 'luxury',
     primaryColor: '#F59E0B',

@@ -155,7 +155,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
       case 'sandalwood':
         return 'border-[20px] sm:border-[24px] border-[#C9A67E] shadow-[0_20px_60px_rgba(78,53,36,0.7),inset_0_3px_8px_rgba(255,255,255,0.7),inset_0_-8px_16px_rgba(78,53,36,0.95)] bg-gradient-to-br from-[#E8D7C2] via-[#C9A67E] to-[#8C6239]';
       case 'royal_gold':
-        return 'border-[18px] sm:border-[22px] border-transparent shadow-[0_25px_70px_rgba(0,0,0,0.98),0_0_45px_rgba(212,175,55,0.45),0_0_20px_rgba(225,29,72,0.3),inset_0_2px_8px_rgba(255,245,210,0.85),inset_0_-8px_20px_rgba(45,20,5,0.95)] bg-[linear-gradient(135deg,#5A3E1B_0%,#B8860B_15%,#FDE047_32%,#FFFBEB_42%,#D4AF37_55%,#85581A_72%,#3D240E_100%)] bg-origin-border';
+        return 'border-[18px] sm:border-[22px] border-transparent shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_55px_rgba(212,175,55,0.65),inset_0_2px_8px_rgba(255,255,230,0.95),inset_0_-8px_20px_rgba(60,35,10,0.95)] bg-[linear-gradient(135deg,#5C380C_0%,#A87818_15%,#FFE680_35%,#FFFDF5_46%,#D4AF37_60%,#9E6C18_80%,#4A2A08_100%)] bg-origin-border';
       case 'cyberpunk':
         return 'border-[14px] sm:border-[18px] border-[#0F172A] shadow-[0_0_40px_rgba(0,240,255,0.4),inset_0_0_20px_rgba(0,240,255,0.3)] bg-gradient-to-tr from-[#020617] via-[#0b1329] to-[#020617]';
       case 'vedic_mandala':
@@ -178,7 +178,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
       case 'sandalwood':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FAF3E8] via-[#EFE2CE] to-[#DCBF9E]';
       case 'royal_gold':
-        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#321217] via-[#1E110A] to-[#080302]';
+        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FFFDF0] via-[#FCE38A] 35%, via-[#E5B53A] 70%, to-[#9E6E18] shadow-[inset_0_0_40px_rgba(90,55,10,0.5)]';
       case 'cyberpunk':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#081226] via-[#040914] to-[#010308]';
       case 'vedic_mandala':
@@ -325,118 +325,110 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {styleId === 'royal_gold' && (
             <>
-              {/* Outer circular 24K gold astrolabe and filigree rings */}
-              <div className="absolute inset-1 rounded-full pointer-events-none flex items-center justify-center">
+              {/* Luxury 24K Gold Guilloché & Astrolabe Dial Background */}
+              <div className="absolute inset-0 rounded-full pointer-events-none flex items-center justify-center">
                 <svg viewBox="0 0 200 200" className="w-full h-full pointer-events-none">
                   <defs>
-                    {/* Rich metallic 24K gold gradient */}
-                    <linearGradient id="rg-gold-shine" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FFFDF0" />
-                      <stop offset="25%" stopColor="#FDE047" />
-                      <stop offset="50%" stopColor="#D4AF37" />
-                      <stop offset="75%" stopColor="#B45309" />
-                      <stop offset="100%" stopColor="#78350F" />
+                    {/* Metallic 24K Gold Gradients */}
+                    <radialGradient id="shahi-gold-dial" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#FFFDF5" />
+                      <stop offset="25%" stopColor="#FFF2B8" />
+                      <stop offset="55%" stopColor="#F5D061" />
+                      <stop offset="82%" stopColor="#C99427" />
+                      <stop offset="100%" stopColor="#8C5C0E" />
+                    </radialGradient>
+                    <linearGradient id="shahi-gold-rim" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#FFFFFF" />
+                      <stop offset="30%" stopColor="#FFE680" />
+                      <stop offset="60%" stopColor="#D4AF37" />
+                      <stop offset="85%" stopColor="#925E10" />
+                      <stop offset="100%" stopColor="#5A3205" />
                     </linearGradient>
-                    <linearGradient id="rg-gold-dark" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#92400E" />
-                      <stop offset="50%" stopColor="#5A2E0B" />
-                      <stop offset="100%" stopColor="#2D1405" />
-                    </linearGradient>
-                    {/* Faceted ruby gemstone gradients */}
-                    <radialGradient id="rg-ruby-bright" cx="35%" cy="30%" r="70%">
-                      <stop offset="0%" stopColor="#FFA4B6" />
-                      <stop offset="35%" stopColor="#E11D48" />
-                      <stop offset="75%" stopColor="#9F1239" />
+                    {/* Pigeon-Blood Ruby Gemstone Gradient */}
+                    <radialGradient id="shahi-ruby-gem" cx="35%" cy="30%" r="70%">
+                      <stop offset="0%" stopColor="#FF7597" />
+                      <stop offset="25%" stopColor="#E11D48" />
+                      <stop offset="70%" stopColor="#9F1239" />
                       <stop offset="100%" stopColor="#4C0519" />
                     </radialGradient>
-                    {/* Deep velvet imperial ruby-obsidian core */}
-                    <radialGradient id="rg-core-rich" cx="50%" cy="50%" r="65%">
-                      <stop offset="0%" stopColor="#3B1219" stopOpacity="0.85" />
-                      <stop offset="45%" stopColor="#221008" stopOpacity="0.9" />
-                      <stop offset="100%" stopColor="#0B0403" stopOpacity="0.98" />
-                    </radialGradient>
-                    {/* Petal gold gradients */}
-                    <linearGradient id="rg-petal-light" x1="0%" y1="100%" x2="0%" y2="0%">
+                    {/* Petal Chiseled Gradients */}
+                    <linearGradient id="shahi-petal-light" x1="0%" y1="100%" x2="0%" y2="0%">
                       <stop offset="0%" stopColor="#D4AF37" />
-                      <stop offset="50%" stopColor="#FDE047" />
-                      <stop offset="100%" stopColor="#FFFDF0" />
+                      <stop offset="55%" stopColor="#FDE047" />
+                      <stop offset="100%" stopColor="#FFFFFF" />
                     </linearGradient>
-                    <linearGradient id="rg-petal-shade" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <linearGradient id="shahi-petal-shade" x1="0%" y1="0%" x2="0%" y2="100%">
                       <stop offset="0%" stopColor="#D4AF37" />
-                      <stop offset="60%" stopColor="#92400E" />
-                      <stop offset="100%" stopColor="#451A03" />
+                      <stop offset="50%" stopColor="#9E6C18" />
+                      <stop offset="100%" stopColor="#5A3205" />
                     </linearGradient>
                   </defs>
 
-                  {/* Circular Core Dial Background */}
-                  <circle cx="100" cy="100" r="97" fill="url(#rg-core-rich)" stroke="url(#rg-gold-shine)" strokeWidth="1.2" />
+                  {/* Gold Sunburst Base Dial Face */}
+                  <circle cx="100" cy="100" r="98" fill="url(#shahi-gold-dial)" />
 
-                  {/* Concentric 24K Gold Beaded & Astrolabe Rings */}
-                  <circle cx="100" cy="100" r="93" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.75" />
-                  <circle cx="100" cy="100" r="90" fill="none" stroke="#D4AF37" strokeWidth="0.6" strokeDasharray="1 3" opacity="0.6" />
-                  <circle cx="100" cy="100" r="82" fill="none" stroke="url(#rg-gold-shine)" strokeWidth="1" opacity="0.7" />
-                  <circle cx="100" cy="100" r="68" fill="none" stroke="#E8C547" strokeWidth="0.5" strokeDasharray="2 4" opacity="0.5" />
-                  <circle cx="100" cy="100" r="54" fill="none" stroke="url(#rg-gold-shine)" strokeWidth="0.8" opacity="0.6" />
-                  <circle cx="100" cy="100" r="38" fill="none" stroke="#FDE047" strokeWidth="0.6" opacity="0.45" />
-
-                  {/* 16-Ray Imperial Celestial Sunburst */}
-                  {[0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5].map((angle, idx) => (
+                  {/* 36-Ray Precision Guilloché Sunburst Rays */}
+                  {Array.from({ length: 36 }).map((_, idx) => (
                     <line
-                      key={angle}
+                      key={idx}
                       x1="100"
-                      y1={idx % 2 === 0 ? "24" : "36"}
+                      y1="10"
                       x2="100"
                       y2="100"
-                      stroke={idx % 2 === 0 ? "url(#rg-gold-shine)" : "#D4AF37"}
-                      strokeWidth={idx % 2 === 0 ? "0.6" : "0.35"}
-                      strokeDasharray={idx % 2 === 0 ? "4 3" : undefined}
-                      opacity={idx % 2 === 0 ? "0.45" : "0.25"}
-                      transform={`rotate(${angle} 100 100)`}
+                      stroke="#8C5C0E"
+                      strokeWidth={idx % 4 === 0 ? "0.65" : "0.25"}
+                      opacity={idx % 4 === 0 ? "0.4" : "0.18"}
+                      transform={`rotate(${idx * 10} 100 100)`}
                     />
                   ))}
 
-                  {/* 8-Point Ornate Royal Gold Compass Rose / Star */}
+                  {/* Concentric Engine-Turned Horology Guilloché Rings */}
+                  <circle cx="100" cy="100" r="95" fill="none" stroke="#4A2A08" strokeWidth="0.8" opacity="0.65" />
+                  <circle cx="100" cy="100" r="92" fill="none" stroke="#FFFDF0" strokeWidth="0.5" strokeDasharray="1 2" opacity="0.85" />
+                  <circle cx="100" cy="100" r="85" fill="none" stroke="#6E440A" strokeWidth="0.7" opacity="0.5" />
+                  <circle cx="100" cy="100" r="70" fill="none" stroke="#8C5C0E" strokeWidth="0.4" strokeDasharray="2 3" opacity="0.4" />
+                  <circle cx="100" cy="100" r="54" fill="none" stroke="#5A3205" strokeWidth="0.6" opacity="0.4" />
+                  <circle cx="100" cy="100" r="36" fill="none" stroke="#4A2A08" strokeWidth="0.8" opacity="0.45" />
+
+                  {/* 8-Point Chiseled 24K Gold Compass Star */}
                   {/* 4 Major Cardinal Petals */}
-                  <polygon points="100,24 100,100 93,100" fill="url(#rg-petal-light)" opacity="0.95" />
-                  <polygon points="100,24 100,100 107,100" fill="url(#rg-petal-shade)" opacity="0.9" />
-                  <polygon points="176,100 100,100 100,93" fill="url(#rg-petal-light)" opacity="0.9" />
-                  <polygon points="176,100 100,100 100,107" fill="url(#rg-petal-shade)" opacity="0.95" />
-                  <polygon points="100,176 100,100 107,100" fill="url(#rg-petal-light)" opacity="0.9" />
-                  <polygon points="100,176 100,100 93,100" fill="url(#rg-petal-shade)" opacity="0.95" />
-                  <polygon points="24,100 100,100 100,107" fill="url(#rg-petal-light)" opacity="0.9" />
-                  <polygon points="24,100 100,100 100,93" fill="url(#rg-petal-shade)" opacity="0.95" />
+                  <polygon points="100,20 100,100 93,100" fill="url(#shahi-petal-light)" opacity="0.95" />
+                  <polygon points="100,20 100,100 107,100" fill="url(#shahi-petal-shade)" opacity="0.9" />
+                  <polygon points="180,100 100,100 100,93" fill="url(#shahi-petal-light)" opacity="0.9" />
+                  <polygon points="180,100 100,100 100,107" fill="url(#shahi-petal-shade)" opacity="0.95" />
+                  <polygon points="100,180 100,100 107,100" fill="url(#shahi-petal-light)" opacity="0.9" />
+                  <polygon points="100,180 100,100 93,100" fill="url(#shahi-petal-shade)" opacity="0.95" />
+                  <polygon points="20,100 100,100 100,107" fill="url(#shahi-petal-light)" opacity="0.9" />
+                  <polygon points="20,100 100,100 100,93" fill="url(#shahi-petal-shade)" opacity="0.95" />
 
-                  {/* 4 Diagonal Secondary Petals */}
-                  <polygon points="152,48 100,100 95,95" fill="#FDE047" opacity="0.8" />
-                  <polygon points="152,48 100,100 105,105" fill="#92400E" opacity="0.85" />
-                  <polygon points="152,152 100,100 105,95" fill="#FDE047" opacity="0.8" />
-                  <polygon points="152,152 100,100 95,105" fill="#92400E" opacity="0.85" />
-                  <polygon points="48,152 100,100 105,105" fill="#FDE047" opacity="0.8" />
-                  <polygon points="48,152 100,100 95,95" fill="#92400E" opacity="0.85" />
-                  <polygon points="48,48 100,100 95,105" fill="#FDE047" opacity="0.8" />
-                  <polygon points="48,48 100,100 105,95" fill="#92400E" opacity="0.85" />
+                  {/* 4 Diagonal Petals */}
+                  <polygon points="154,46 100,100 96,96" fill="#FDE047" opacity="0.75" />
+                  <polygon points="154,46 100,100 104,104" fill="#78350F" opacity="0.85" />
+                  <polygon points="154,154 100,100 104,96" fill="#FDE047" opacity="0.75" />
+                  <polygon points="154,154 100,100 96,104" fill="#78350F" opacity="0.85" />
+                  <polygon points="46,154 100,100 104,104" fill="#FDE047" opacity="0.75" />
+                  <polygon points="46,154 100,100 96,96" fill="#78350F" opacity="0.85" />
+                  <polygon points="46,46 100,100 96,104" fill="#FDE047" opacity="0.75" />
+                  <polygon points="46,46 100,100 104,96" fill="#78350F" opacity="0.85" />
 
-                  {/* 8 Inlaid Royal Ruby Gemstones at Cardinal and Diagonal Points */}
+                  {/* 8 Inlaid Genuine Pigeon-Blood Ruby Gemstones in 24K Gold Bezel Collets */}
                   {[
-                    { cx: 100, cy: 19, isMajor: true },
-                    { cx: 157, cy: 43, isMajor: false },
-                    { cx: 181, cy: 100, isMajor: true },
-                    { cx: 157, cy: 157, isMajor: false },
-                    { cx: 100, cy: 181, isMajor: true },
-                    { cx: 43, cy: 157, isMajor: false },
-                    { cx: 19, cy: 100, isMajor: true },
-                    { cx: 43, cy: 43, isMajor: false },
+                    { cx: 100, cy: 16, isMajor: true },
+                    { cx: 160, cy: 40, isMajor: false },
+                    { cx: 184, cy: 100, isMajor: true },
+                    { cx: 160, cy: 160, isMajor: false },
+                    { cx: 100, cy: 184, isMajor: true },
+                    { cx: 40, cy: 160, isMajor: false },
+                    { cx: 16, cy: 100, isMajor: true },
+                    { cx: 40, cy: 40, isMajor: false },
                   ].map((gem, gIdx) => (
-                    <g key={gIdx} className="drop-shadow-[0_0_8px_rgba(225,29,72,0.8)]">
-                      <circle cx={gem.cx} cy={gem.cy} r={gem.isMajor ? "4.5" : "3.5"} fill="#FDE047" stroke="#78350F" strokeWidth="0.8" />
-                      <circle cx={gem.cx} cy={gem.cy} r={gem.isMajor ? "3.2" : "2.4"} fill="url(#rg-ruby-bright)" />
-                      <ellipse cx={gem.cx - (gem.isMajor ? 0.9 : 0.7)} cy={gem.cy - (gem.isMajor ? 0.9 : 0.7)} rx={gem.isMajor ? "1" : "0.7"} ry={gem.isMajor ? "0.6" : "0.4"} fill="#FFFFFF" opacity="0.9" />
+                    <g key={gIdx} className="drop-shadow-[0_2px_6px_rgba(60,25,5,0.75)]">
+                      <circle cx={gem.cx} cy={gem.cy} r={gem.isMajor ? "5.5" : "4.2"} fill="#4A2A08" />
+                      <circle cx={gem.cx} cy={gem.cy} r={gem.isMajor ? "4.5" : "3.4"} fill="#FDE047" stroke="#92400E" strokeWidth="0.6" />
+                      <circle cx={gem.cx} cy={gem.cy} r={gem.isMajor ? "3.2" : "2.4"} fill="url(#shahi-ruby-gem)" />
+                      <ellipse cx={gem.cx - (gem.isMajor ? 0.9 : 0.6)} cy={gem.cy - (gem.isMajor ? 0.9 : 0.6)} rx={gem.isMajor ? "1" : "0.7"} ry={gem.isMajor ? "0.6" : "0.4"} fill="#FFFFFF" opacity="0.9" />
                     </g>
                   ))}
-
-                  {/* Inner Royal Astrolabe Medallion */}
-                  <circle cx="100" cy="100" r="30" fill="url(#rg-core-rich)" stroke="url(#rg-gold-shine)" strokeWidth="0.8" />
-                  <circle cx="100" cy="100" r="27" fill="none" stroke="#E8C547" strokeWidth="0.4" strokeDasharray="1 2" opacity="0.7" />
                 </svg>
               </div>
             </>
@@ -458,9 +450,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {styleId === 'vedic_mandala' && (
             <>
-              {/* Inner Circle Border */}
-              <div className="absolute inset-16 rounded-full border border-amber-400/40 pointer-events-none shadow-[0_0_15px_rgba(245,158,11,0.2)]" />
-              <div className="absolute inset-24 rounded-full border border-white/10 pointer-events-none" />
+              {/* Inner Circle Ambient Rings */}
+              <div className="absolute inset-16 rounded-full border border-amber-400/30 pointer-events-none shadow-[0_0_15px_rgba(245,158,11,0.25)]" />
+              <div className="absolute inset-24 rounded-full border border-amber-500/20 pointer-events-none" />
 
               <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
                 {/* 32 Vastu Devta Outer Annular Ring Sectors */}
@@ -469,10 +461,10 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     {/* Sector Arc Background */}
                     <path
                       d="M 90.69,5.46 A 95,95 0 0,1 109.31,5.46 L 106.57,33.32 A 67,67 0 0,0 93.43,33.32 Z"
-                      fill={pada.isAuspicious ? '#00F0FF' : pada.color}
-                      stroke="#F59E0B"
-                      strokeWidth="0.4"
-                      opacity={pada.isAuspicious ? 0.95 : 0.85}
+                      fill={pada.isAuspicious ? '#047857' : pada.color}
+                      stroke={pada.isAuspicious ? '#FCD34D' : '#92400E'}
+                      strokeWidth={pada.isAuspicious ? '0.75' : '0.35'}
+                      opacity={pada.isAuspicious ? 0.98 : 0.88}
                     />
 
                     {/* Pada Code: N3*, E1, etc. */}
@@ -480,8 +472,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                       x="100"
                       y="11.5"
                       textAnchor="middle"
-                      fill={pada.isAuspicious ? '#020617' : '#FDE047'}
-                      fontSize="3.6"
+                      fill={pada.isAuspicious ? '#FEF08A' : '#FDE047'}
+                      fontSize="3.5"
                       fontWeight="900"
                     >
                       {pada.code}
@@ -492,9 +484,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                       x="100"
                       y="18.5"
                       textAnchor="middle"
-                      fill={pada.isAuspicious ? '#020617' : '#FFFFFF'}
-                      fontSize="4"
-                      fontWeight="900"
+                      fill={pada.isAuspicious ? '#FFFFFF' : '#F8FAFC'}
+                      fontSize="4.2"
+                      fontWeight="800"
                     >
                       {pada.nameHi}
                     </text>
@@ -502,21 +494,63 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     {/* English Deity Name */}
                     <text
                       x="100"
-                      y="25.5"
+                      y="25.2"
                       textAnchor="middle"
-                      fill={pada.isAuspicious ? '#020617' : '#94A3B8'}
-                      fontSize="3"
-                      fontWeight="700"
+                      fill={pada.isAuspicious ? '#A7F3D0' : '#94A3B8'}
+                      fontSize="2.7"
+                      fontWeight="600"
                     >
                       {pada.nameEn}
                     </text>
                   </g>
                 ))}
 
-                {/* Inner Concentric Circles */}
-                <circle cx="100" cy="100" r="67" fill="none" stroke="#F59E0B" strokeWidth="0.8" />
-                <circle cx="100" cy="100" r="48" fill="none" stroke="#00F0FF" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.5" />
-                <circle cx="100" cy="100" r="28" fill="none" stroke="#F59E0B" strokeWidth="0.6" opacity="0.6" />
+                {/* Inner Double Boundary Ring with Beaded Accents */}
+                <circle cx="100" cy="100" r="67" fill="none" stroke="#F59E0B" strokeWidth="0.9" />
+                <circle cx="100" cy="100" r="65" fill="none" stroke="#D97706" strokeWidth="0.4" strokeDasharray="1.2 2.2" />
+
+                {/* 16-Petal Shodasha Dala Padma (16 Vastu Directions / Kalas) */}
+                {Array.from({ length: 16 }).map((_, i) => (
+                  <path
+                    key={`lotus16-${i}`}
+                    d="M 100,35 C 95,46 95,54 100,64 C 105,54 105,46 100,35 Z"
+                    fill="rgba(245, 158, 11, 0.05)"
+                    stroke="#F59E0B"
+                    strokeWidth="0.45"
+                    transform={`rotate(${i * 22.5}, 100, 100)`}
+                  />
+                ))}
+
+                {/* 8-Petal Ashta Dala Padma (Ashta Dikpalas) */}
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <path
+                    key={`lotus8-${i}`}
+                    d="M 100,52 C 94,62 94,70 100,76 C 106,70 106,62 100,52 Z"
+                    fill="rgba(254, 240, 138, 0.08)"
+                    stroke="#FDE047"
+                    strokeWidth="0.55"
+                    transform={`rotate(${i * 45}, 100, 100)`}
+                  />
+                ))}
+
+                {/* Sanskrit Cardinal Direction Labels inside the Sacred Lotus */}
+                <text x="100" y="46" textAnchor="middle" fill="#EF4444" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_#ef4444]">उत्तर</text>
+                <text x="154" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">पूर्व</text>
+                <text x="100" y="157" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">दक्षिण</text>
+                <text x="46" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">पश्चिम</text>
+
+                {/* Central Sacred Sri Yantra Concentric Rings & Interlocking Triangles */}
+                <circle cx="100" cy="100" r="26" fill="rgba(11, 19, 27, 0.85)" stroke="#F59E0B" strokeWidth="0.75" />
+                <circle cx="100" cy="100" r="23" fill="none" stroke="#FDE047" strokeWidth="0.35" strokeDasharray="1 1.5" />
+                {/* Shiva Triangles (Upward) */}
+                <polygon points="100,78 82,111 118,111" fill="none" stroke="#F59E0B" strokeWidth="0.5" />
+                <polygon points="100,83 87,108 113,108" fill="none" stroke="#FBBF24" strokeWidth="0.4" />
+                {/* Shakti Triangles (Downward) */}
+                <polygon points="100,122 82,89 118,89" fill="none" stroke="#EF4444" strokeWidth="0.5" />
+                <polygon points="100,117 87,92 113,92" fill="none" stroke="#F87171" strokeWidth="0.4" />
+                {/* Inner Bindu Ring */}
+                <circle cx="100" cy="100" r="5" fill="none" stroke="#FDE047" strokeWidth="0.45" />
+                <circle cx="100" cy="100" r="1.8" fill="#FDE047" />
               </svg>
             </>
           )}
@@ -583,33 +617,33 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               <>
               <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(45deg)' }}>
                 <div className="flex flex-col items-center mt-14 select-none">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mb-0.5 shadow-[0_0_6px_#f59e0b]" />
-                  <span className="text-[9px] font-black text-amber-400 leading-none">{isHi ? 'ईशान' : 'NE'}</span>
-                  <span className="text-[7.5px] font-bold text-amber-300/90 tracking-wide leading-none mt-0.5">{isHi ? 'मंदिर' : 'Temple'}</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-amber-400 shadow-[0_0_6px_#f59e0b]")} />
+                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-amber-400")}>{isHi ? 'ईशान' : 'NE'}</span>
+                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-amber-300/90")}>{isHi ? 'मंदिर' : 'Temple'}</span>
                 </div>
               </div>
 
               <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(135deg)' }}>
                 <div className="flex flex-col items-center mt-14 select-none">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 mb-0.5 shadow-[0_0_6px_#f97316]" />
-                  <span className="text-[9px] font-black text-orange-400 leading-none">{isHi ? 'आग्नेय' : 'SE'}</span>
-                  <span className="text-[7.5px] font-bold text-orange-300/90 tracking-wide leading-none mt-0.5">{isHi ? 'रसोई' : 'Kitchen'}</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-orange-400 shadow-[0_0_6px_#f97316]")} />
+                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-orange-400")}>{isHi ? 'आग्नेय' : 'SE'}</span>
+                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-orange-300/90")}>{isHi ? 'रसोई' : 'Kitchen'}</span>
                 </div>
               </div>
 
               <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(225deg)' }}>
                 <div className="flex flex-col items-center mt-14 select-none">
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-400 mb-0.5 shadow-[0_0_6px_#eab308]" />
-                  <span className="text-[9px] font-black text-yellow-400 leading-none">{isHi ? 'नैऋत्य' : 'SW'}</span>
-                  <span className="text-[7.5px] font-bold text-yellow-300/90 tracking-wide leading-none mt-0.5">{isHi ? 'शयन' : 'Master'}</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-yellow-400 shadow-[0_0_6px_#eab308]")} />
+                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-yellow-400")}>{isHi ? 'नैऋत्य' : 'SW'}</span>
+                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-yellow-300/90")}>{isHi ? 'शयन' : 'Master'}</span>
                 </div>
               </div>
 
               <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(315deg)' }}>
                 <div className="flex flex-col items-center mt-14 select-none">
-                  <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mb-0.5 shadow-[0_0_6px_#38bdf8]" />
-                  <span className="text-[9px] font-black text-sky-400 leading-none">{isHi ? 'वायव्य' : 'NW'}</span>
-                  <span className="text-[7.5px] font-bold text-sky-300/90 tracking-wide leading-none mt-0.5">{isHi ? 'अतिथि' : 'Guest'}</span>
+                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-sky-400 shadow-[0_0_6px_#38bdf8]")} />
+                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-sky-400")}>{isHi ? 'वायव्य' : 'NW'}</span>
+                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-sky-300/90")}>{isHi ? 'अतिथि' : 'Guest'}</span>
                 </div>
               </div>
               </>
@@ -637,7 +671,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                         ? `w-[2.5px] h-3.5`
                         : styleId === 'cyberpunk' ? "w-[2.5px] h-3.5 bg-cyan-400 shadow-[0_0_6px_#00F0FF]"
                         : isNautical ? "w-[2.5px] h-3.5 bg-[#8C5824]"
-                        : styleId === 'royal_gold' ? "w-[2.5px] h-4 bg-[#D4AF37] shadow-[0_0_6px_rgba(212,175,55,0.6)]"
+                        : styleId === 'royal_gold' ? "w-[2.5px] h-4 bg-[#3E2205] shadow-[0_0_3px_rgba(255,255,255,0.6)]"
                         : styleId === 'sandalwood' ? "w-[2.5px] h-3.5 bg-[#8C6239] shadow-[0_0_4px_rgba(140,98,57,0.4)]"
                         : isGraphite ? "w-[2.5px] h-3.5 bg-[#D1D5DB] shadow-[0_0_5px_rgba(209,213,219,0.5)]"
                         : "w-[2.5px] h-3.5 bg-[#EF4444] shadow-sm")
@@ -645,7 +679,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     ? (vTickMid
                         ? "w-[1.8px] h-2.5"
                         : styleId === 'cyberpunk' ? "w-[1.8px] h-3 bg-magenta-400/80"
-                        : styleId === 'royal_gold' ? "w-[1.8px] h-3 bg-amber-400/90 shadow-[0_0_4px_rgba(245,158,11,0.5)]"
+                        : styleId === 'royal_gold' ? "w-[1.8px] h-3 bg-[#5C360A]"
                         : isNautical ? "w-[1.5px] h-2.5 bg-[#8C5824]"
                         : styleId === 'sandalwood' ? "w-[1.8px] h-2.5 bg-[#8C6239]/60"
                         : isGraphite ? "w-[1.8px] h-2.5 bg-[#9CA3AF]/80"
@@ -654,7 +688,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                         ? "w-[1px] h-1.5"
                         : styleId === 'cyberpunk' ? "w-[1px] h-1.5 bg-cyan-400/30"
                         : isNautical ? "w-[1px] h-1.5 bg-[#8C5824]/40"
-                        : styleId === 'royal_gold' ? "w-[1px] h-1.5 bg-amber-400/35"
+                        : styleId === 'royal_gold' ? "w-[1px] h-1.5 bg-[#78470E]/70"
                         : styleId === 'sandalwood' ? "w-[1px] h-1.5 bg-[#8C6239]/30"
                         : isGraphite ? "w-[1px] h-1.5 bg-[#6B7280]/40"
                         : "w-[1px] h-1.5 bg-white/25")
@@ -666,15 +700,14 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           })}
 
           {/* 30-Degree Numerical Labels */}
-          {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+          {styleId !== 'vedic_mandala' && [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
             <div key={deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${deg}deg)` }}>
               <div className="flex flex-col items-center select-none mt-1">
                 <span className={cn(
                   "font-mono font-bold text-[0.52rem] drop-shadow-md",
                   styleId === 'cyberpunk' ? "text-cyan-300 font-mono" :
-                  styleId === 'vedic_mandala' ? "text-amber-200" :
                   styleId === 'cosmic_galaxy' ? "text-indigo-200" :
-                  styleId === 'royal_gold' ? "text-[#E8C547]/85 font-semibold" :
+                  styleId === 'royal_gold' ? "text-[#3B1F05] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" :
                   isGraphite ? "text-slate-300 font-semibold" :
                   activeVariant?.degreeColor ? activeVariant.degreeColor : "text-stone-300 font-semibold"
                 )}>
@@ -685,7 +718,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           ))}
 
           {/* Cardinal Badges */}
-          {styleId === 'sandalwood' ? (
+          {styleId === 'vedic_mandala' ? null : styleId === 'sandalwood' ? (
             [
               { en: 'N', hi: 'उत्तर', deg: 0, isCardinal: true },
               { en: 'NE', hi: 'ईशान्य', deg: 45, isCardinal: false },
@@ -721,25 +754,17 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           ) : (
             cardinalPoints.map((pt) => (
               <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
-                <div className={cn(
-                  "flex flex-col items-center select-none",
-                  styleId === 'vedic_mandala' ? "mt-2" : "mt-5"
-                )}>
-                  {styleId === 'vedic_mandala' && pt.isNorth && (
-                    <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-red-600 drop-shadow-[0_0_8px_#ef4444] mb-0.5" />
-                  )}
+                <div className="flex flex-col items-center select-none mt-5">
                   <span className={cn(
                     "font-black tracking-tight",
                     pt.isNorth
                       ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444] animate-pulse-subtle"
-                      : styleId === 'vedic_mandala'
-                      ? "text-white text-base font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                       : styleId === 'satellite_earth'
                       ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
                       : styleId === 'cyberpunk'
                       ? "text-cyan-300 text-sm"
                       : styleId === 'royal_gold'
-                      ? (pt.isNorth ? "text-[#F7E8A0] text-base font-black drop-shadow-[0_0_8px_rgba(212,175,55,0.7)]" : "text-[#D4AF37] text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]")
+                      ? (pt.isNorth ? "text-[#990024] text-base font-black drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)] scale-110" : "text-[#2D1603] text-sm font-black drop-shadow-[0_1px_2px_rgba(255,255,255,0.7)]")
                       : isGraphite
                       ? "text-slate-200 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                       : activeVariant?.cardinalColor
@@ -926,18 +951,79 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 8. Vedic 32 Devta Chakra Needle — compact, high-visibility */}
+          {/* 8. Vedic 32 Devta Sacred Surya Trishul & Sudarshana Lance Needle */}
           {styleId === 'vedic_mandala' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
-              {/* North compact crimson spear with gold tip */}
-              <polygon points={`100,${apexY} 88,100 100,94`} fill="#EF4444" className="drop-shadow-[0_0_14px_rgba(239,68,68,0.9)]" />
-              <polygon points={`100,${apexY} 112,100 100,94`} fill="#B91C1C" />
-              {/* Gold tip finial */}
-              <polygon points={`100,${apexY} 96,${apexY + 7} 104,${apexY + 7}`} fill="#F59E0B" stroke="#B45309" strokeWidth="0.5" />
-              {/* Sacred geometry center — glowing gold ring with om dot */}
-              <circle cx="100" cy="100" r="16" fill="none" stroke="#F59E0B" strokeWidth="2" className="drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
-              <circle cx="100" cy="100" r="12" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.8" />
-              <circle cx="100" cy="100" r="3" fill="#FDE047" />
+              <defs>
+                <linearGradient id="vedicTrishulGold" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFF2A3" />
+                  <stop offset="50%" stopColor="#F59E0B" />
+                  <stop offset="100%" stopColor="#B45309" />
+                </linearGradient>
+                <linearGradient id="vedicRubySpine" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FF4D4D" />
+                  <stop offset="100%" stopColor="#990000" />
+                </linearGradient>
+                <radialGradient id="vedicRubyGem" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FF6B6B" />
+                  <stop offset="70%" stopColor="#B91C1C" />
+                  <stop offset="100%" stopColor="#450A0A" />
+                </radialGradient>
+              </defs>
+
+              {/* South Dark Bronze & Slate Spear with Golden Crescent */}
+              <polygon points="100,186 92,100 100,108" fill="#475569" />
+              <polygon points="100,186 108,100 100,108" fill="#1E293B" />
+              {/* South Crescent Finial */}
+              <path d="M 93,186 C 96,183 104,183 107,186 C 104,188 96,188 93,186 Z" fill="#D97706" />
+
+              {/* North Sacred Multifaceted Spear */}
+              {/* Left facet - Bright Gold */}
+              <polygon points={`100,${apexY} 90,100 100,95`} fill="#FDE047" className="drop-shadow-[0_0_12px_rgba(245,158,11,0.6)]" />
+              {/* Right facet - Deep Antique Gold */}
+              <polygon points={`100,${apexY} 110,100 100,95`} fill="#D97706" />
+              {/* Vermilion Ruby Center Spine */}
+              <line x1="100" y1={apexY + 2} x2="100" y2="95" stroke="url(#vedicRubySpine)" strokeWidth="2.2" strokeLinecap="round" className="drop-shadow-[0_0_8px_#ef4444]" />
+
+              {/* Sacred Trishul (Trident) Wings at Apex */}
+              {/* Left Wing */}
+              <path
+                d={`M 100,${apexY + 10} Q 91,${apexY + 9} 91,${apexY + 4} Q 95,${apexY + 5} 98,${apexY + 8} Z`}
+                fill="url(#vedicTrishulGold)"
+                stroke="#B45309"
+                strokeWidth="0.4"
+                className="drop-shadow-[0_0_6px_rgba(245,158,11,0.8)]"
+              />
+              {/* Right Wing */}
+              <path
+                d={`M 100,${apexY + 10} Q 109,${apexY + 9} 109,${apexY + 4} Q 105,${apexY + 5} 102,${apexY + 8} Z`}
+                fill="url(#vedicTrishulGold)"
+                stroke="#B45309"
+                strokeWidth="0.4"
+                className="drop-shadow-[0_0_6px_rgba(245,158,11,0.8)]"
+              />
+              {/* Center Trishul Diamond Finial */}
+              <polygon points={`100,${apexY} 96.5,${apexY + 6} 100,${apexY + 9} 103.5,${apexY + 6}`} fill="#FFF7ED" stroke="#F59E0B" strokeWidth="0.5" />
+
+              {/* Sudarshana Chakra Center Pivot */}
+              <circle cx="100" cy="100" r="16" fill="none" stroke="#F59E0B" strokeWidth="1.8" className="drop-shadow-[0_0_12px_rgba(245,158,11,0.9)]" />
+              <circle cx="100" cy="100" r="13" fill="none" stroke="#FDE047" strokeWidth="0.6" strokeDasharray="2 1.5" />
+              {/* 8 Chakra Spokes */}
+              {Array.from({ length: 8 }).map((_, i) => (
+                <line
+                  key={`spoke-${i}`}
+                  x1="100"
+                  y1="87"
+                  x2="100"
+                  y2="93"
+                  stroke="#F59E0B"
+                  strokeWidth="1"
+                  transform={`rotate(${i * 45}, 100, 100)`}
+                />
+              ))}
+              {/* Ruby Gem Bindu at Center */}
+              <circle cx="100" cy="100" r="6.5" fill="url(#vedicRubyGem)" stroke="#FDE047" strokeWidth="0.8" className="drop-shadow-[0_0_6px_#ef4444]" />
+              <circle cx="100" cy="100" r="2" fill="#FEF08A" />
             </svg>
           )}
 
@@ -994,105 +1080,104 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {/* 11. Royal Gold Metallic Needle — polished brushed-gold, same structure as Steel */}
           {/* 11. Imperial Royal Gold Needle — Handcrafted 24K Gold with Faceted Ruby Spire & Gems */}
+          {/* 11. Shahi (Royal Gold) Masterpiece Needle — Sculpted 3D 24K Gold Lance with Crown Ruby */}
+          {/* 11. Shahi (Royal Gold) Masterpiece Needle — Sculpted 3D 24K Gold Lance with Crown Ruby */}
+          {/* 11. Shahi (Royal Gold) Masterpiece Needle — Sculpted 3D 24K Gold Lance with Crown Ruby */}
           {styleId === 'royal_gold' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.85)]" viewBox="0 0 200 200">
+            <svg className="w-full h-full p-2 drop-shadow-[0_16px_36px_rgba(40,20,5,0.95)]" viewBox="0 0 200 200">
               <defs>
-                {/* 24K Mirror-Polished Gold Gradients */}
-                <linearGradient id="rg-needle-gold-l" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFFDF5" />
-                  <stop offset="25%" stopColor="#FDE047" />
-                  <stop offset="65%" stopColor="#D4AF37" />
-                  <stop offset="100%" stopColor="#92400E" />
+                {/* 24K Polished Gold Blade Gradients */}
+                <linearGradient id="shahi-gold-blade-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="25%" stopColor="#FFF2B8" />
+                  <stop offset="60%" stopColor="#F5D061" />
+                  <stop offset="100%" stopColor="#D4A738" />
                 </linearGradient>
-                <linearGradient id="rg-needle-gold-r" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#D4AF37" />
-                  <stop offset="45%" stopColor="#B45309" />
-                  <stop offset="80%" stopColor="#78350F" />
-                  <stop offset="100%" stopColor="#451A03" />
+                <linearGradient id="shahi-gold-blade-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#D4A738" />
+                  <stop offset="40%" stopColor="#A16207" />
+                  <stop offset="80%" stopColor="#6E3B06" />
+                  <stop offset="100%" stopColor="#3E1E02" />
                 </linearGradient>
 
-                {/* Faceted Ruby Crystal Gem Gradients */}
-                <linearGradient id="rg-needle-ruby-l" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FF6B8B" />
+                {/* Deep Pigeon-Blood Burmese Ruby Gemstone Gradients */}
+                <radialGradient id="shahi-ruby-cabochon" cx="35%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#FFA4B6" />
+                  <stop offset="25%" stopColor="#F43F5E" />
+                  <stop offset="60%" stopColor="#BE123C" />
+                  <stop offset="85%" stopColor="#881337" />
+                  <stop offset="100%" stopColor="#4C0519" />
+                </radialGradient>
+                <linearGradient id="shahi-ruby-lance-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FF4D6D" />
                   <stop offset="40%" stopColor="#E11D48" />
                   <stop offset="100%" stopColor="#9F1239" />
                 </linearGradient>
-                <linearGradient id="rg-needle-ruby-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient id="shahi-ruby-lance-r" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#BE123C" />
                   <stop offset="50%" stopColor="#881337" />
                   <stop offset="100%" stopColor="#4C0519" />
                 </linearGradient>
-                <radialGradient id="rg-needle-ruby-gem" cx="35%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#FFA4B6" />
-                  <stop offset="30%" stopColor="#F43F5E" />
-                  <stop offset="70%" stopColor="#9F1239" />
-                  <stop offset="100%" stopColor="#4C0519" />
-                </radialGradient>
 
-                {/* Antique South Gold Gradients */}
-                <linearGradient id="rg-needle-south-l" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#B45309" />
-                  <stop offset="60%" stopColor="#78350F" />
+                {/* Antique South Bronze-Gold Spear */}
+                <linearGradient id="shahi-south-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#A16207" />
+                  <stop offset="50%" stopColor="#78350F" />
                   <stop offset="100%" stopColor="#451A03" />
                 </linearGradient>
-                <linearGradient id="rg-needle-south-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient id="shahi-south-r" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#78350F" />
-                  <stop offset="100%" stopColor="#1C0F05" />
+                  <stop offset="100%" stopColor="#240D01" />
                 </linearGradient>
               </defs>
 
-              {/* === SOUTH SPEAR & FLEUR COUNTERWEIGHT === */}
-              {/* South Dark Bronze/Gold Spear */}
-              <polygon points="100,188 89,102 100,108" fill="url(#rg-needle-south-l)" />
-              <polygon points="100,188 111,102 100,108" fill="url(#rg-needle-south-r)" />
-              {/* South Royal Fleur-de-lis Crest Cutout */}
-              <circle cx="100" cy="172" r="3.5" fill="#FDE047" stroke="#451A03" strokeWidth="0.8" />
-              <circle cx="100" cy="172" r="1.5" fill="#451A03" />
+              {/* === SOUTH ARROW: ANTIQUE SCULPTED GOLD SPEAR & FLEUR CREST === */}
+              {/* South Spear Blades (stops at y=174 so it never clashes with S/दक्षिण) */}
+              <polygon points="100,174 91,102 100,108" fill="url(#shahi-south-l)" />
+              <polygon points="100,174 109,102 100,108" fill="url(#shahi-south-r)" />
+              {/* Royal Pierced Fleur Counterweight */}
+              <circle cx="100" cy="158" r="4.5" fill="#FDE047" stroke="#3E1E02" strokeWidth="0.8" />
+              <circle cx="100" cy="158" r="2.2" fill="#3E1E02" />
+              <path d="M 94,166 Q 100,174 106,166 Q 100,160 94,166 Z" fill="#D4AF37" stroke="#3E1E02" strokeWidth="0.5" />
 
-              {/* === NORTH ROYAL 24K GOLD BLADES === */}
-              {/* Main 24K Polished Gold Spear Wings */}
-              <polygon points={`100,${apexY} 84,98 100,94`} fill="url(#rg-needle-gold-l)" />
-              <polygon points={`100,${apexY} 116,98 100,94`} fill="url(#rg-needle-gold-r)" />
+              {/* === NORTH ARROW: 24K SCULPTED GOLD LANCE WITH EMBEDDED RUBY DAGGER === */}
+              {/* Main 24K Gold Spear Blades */}
+              <polygon points={`100,${apexY} 85,98 100,94`} fill="url(#shahi-gold-blade-l)" />
+              <polygon points={`100,${apexY} 115,98 100,94`} fill="url(#shahi-gold-blade-r)" />
 
-              {/* Ornate Gold Side Filigree & Shoulder Ruby Cabochons */}
-              <path d="M 84,98 C 80,95 80,88 84,86 C 88,88 88,94 84,98 Z" fill="#FDE047" stroke="#92400E" strokeWidth="0.6" />
-              <circle cx="83.5" cy="90" r="1.8" fill="url(#rg-needle-ruby-gem)" />
-              <path d="M 116,98 C 120,95 120,88 116,86 C 112,88 112,94 116,98 Z" fill="#FDE047" stroke="#92400E" strokeWidth="0.6" />
-              <circle cx="116.5" cy="90" r="1.8" fill="url(#rg-needle-ruby-gem)" />
+              {/* Royal Pierced Filigree Shoulder Wings */}
+              <path d="M 85,98 C 79,94 79,86 85,84 C 89,86 89,94 85,98 Z" fill="#FFE680" stroke="#78350F" strokeWidth="0.7" />
+              <circle cx="84" cy="88" r="2" fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="0.5" />
+              <path d="M 115,98 C 121,94 121,86 115,84 C 111,86 111,94 115,98 Z" fill="#FFE680" stroke="#78350F" strokeWidth="0.7" />
+              <circle cx="116" cy="88" r="2" fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="0.5" />
 
-              {/* === EMBEDDED IMPERIAL RUBY CRYSTAL SPIRE === */}
-              {/* Ruby Apex Diamond-Cut Point */}
-              <polygon points={`100,${apexY} 94,${apexY + 22} 100,${apexY + 26}`} fill="url(#rg-needle-ruby-l)" className="drop-shadow-[0_0_8px_rgba(225,29,72,0.9)]" />
-              <polygon points={`100,${apexY} 106,${apexY + 22} 100,${apexY + 26}`} fill="url(#rg-needle-ruby-r)" />
-              {/* Golden Prong Collar Holding Ruby Tip */}
-              <polygon points={`93,${apexY + 22} 100,${apexY + 28} 107,${apexY + 22} 100,${apexY + 25}`} fill="#FDE047" stroke="#78350F" strokeWidth="0.5" />
+              {/* Embedded Faceted Royal Pigeon-Blood Ruby Dagger Blade */}
+              {/* Left Ruby Facet */}
+              <polygon points={`100,${apexY + 1} 94,52 96,86 100,88`} fill="url(#shahi-ruby-lance-l)" className="drop-shadow-[0_0_8px_rgba(225,29,72,0.85)]" />
+              {/* Right Ruby Facet */}
+              <polygon points={`100,${apexY + 1} 106,52 104,86 100,88`} fill="url(#shahi-ruby-lance-r)" />
 
-              {/* Mid-Shaft Marquise Cut Ruby Gemstone (Lozenge) */}
-              <g className="drop-shadow-[0_0_8px_rgba(225,29,72,0.7)]">
-                {/* 24K Gold Crown Setting */}
-                <polygon points="100,56 93,68 100,80 107,68" fill="#FDE047" stroke="#78350F" strokeWidth="0.6" />
-                {/* Faceted Ruby Cuts */}
-                <polygon points="100,57.5 94.5,68 100,78.5" fill="url(#rg-needle-ruby-l)" />
-                <polygon points="100,57.5 105.5,68 100,78.5" fill="url(#rg-needle-ruby-r)" />
-                <polygon points="100,61 97,68 100,75 103,68" fill="#FFA4B6" opacity="0.85" />
-                {/* Specular White Gleam */}
-                <circle cx="99" cy="65" r="1" fill="#FFFFFF" />
-              </g>
+              {/* Fine 24K Gold Inlay Ridge Lines */}
+              <line x1="100" y1={apexY + 1} x2="100" y2="88" stroke="#FFFDF0" strokeWidth="0.75" strokeLinecap="round" />
+              {/* Specular Light Reflection Star on Ruby */}
+              <circle cx="98.5" cy={apexY + 12} r="1.2" fill="#FFFFFF" opacity="0.95" />
 
-              {/* Center Gilded Ridge Line */}
-              <line x1="100" y1={apexY + 26} x2="100" y2="56" stroke="#FFFDF0" strokeWidth="1" strokeLinecap="round" />
-              <line x1="100" y1="80" x2="100" y2="94" stroke="#FFFDF0" strokeWidth="1" strokeLinecap="round" />
+              {/* Lower Golden Spine */}
+              <line x1="100" y1="88" x2="100" y2="94" stroke="#FFFDF0" strokeWidth="1.2" strokeLinecap="round" />
 
-              {/* === STATIONARY JEWEL PIVOT MEDALLION === */}
-              {/* Beaded 24K Gold Outer Rim */}
-              <circle cx="100" cy="100" r="16" fill="none" stroke="#FDE047" strokeWidth="1.5" strokeDasharray="1.5 1.5" />
-              <circle cx="100" cy="100" r="13" fill="#D4AF37" stroke="#78350F" strokeWidth="0.8" />
-              <circle cx="100" cy="100" r="10.5" fill="#451A03" />
+              {/* === STATIONARY STAR RUBY PIVOT MEDALLION === */}
+              {/* 24K Gold Coin-Edge Hub */}
+              <circle cx="100" cy="100" r="16" fill="none" stroke="#FFE680" strokeWidth="1.8" strokeDasharray="1.5 1.5" />
+              <circle cx="100" cy="100" r="13" fill="#D4AF37" stroke="#5A3205" strokeWidth="0.8" />
+              <circle cx="100" cy="100" r="10.5" fill="#3E1E02" />
 
-              {/* Large Crown Jewel Cabochon Ruby at Exact Pivot */}
-              <circle cx="100" cy="100" r="8" fill="url(#rg-needle-ruby-gem)" stroke="#FFFDF0" strokeWidth="0.9" className="drop-shadow-[0_0_10px_rgba(225,29,72,0.95)]" />
-              {/* Brilliant Specular Highlight Gleam */}
-              <ellipse cx="97.8" cy="97.5" rx="2.5" ry="1.4" fill="#FFFFFF" opacity="0.95" />
+              {/* Natural Star Ruby Cabochon */}
+              <circle cx="100" cy="100" r="8" fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="0.9" className="drop-shadow-[0_0_12px_rgba(225,29,72,0.95)]" />
+              {/* 6-Ray Asterism Star Light Refraction */}
+              <line x1="93" y1="100" x2="107" y2="100" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.85" />
+              <line x1="96.5" y1="94" x2="103.5" y2="106" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.85" />
+              <line x1="96.5" y1="106" x2="103.5" y2="94" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.85" />
+              <circle cx="100" cy="100" r="1.4" fill="#FFFFFF" opacity="0.95" />
             </svg>
           )}
 
@@ -1180,21 +1265,26 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               </div>
             </div>
           ) : styleId === 'royal_gold' ? (
-            <div className="flex flex-col items-center justify-center h-[4.25rem] w-[4.25rem] rounded-full border-[3.5px] border-[#FDE047] bg-gradient-to-br from-[#2D0B12]/95 via-[#1A0C08]/95 to-[#0D0503]/95 text-[#FFFBEB] shadow-[0_0_30px_rgba(212,175,55,0.8),0_0_14px_rgba(225,29,72,0.45),inset_0_0_12px_rgba(212,175,55,0.25)] relative" style={{ borderStyle: 'double' }}>
+            <div className="flex flex-col items-center justify-center h-12 w-12 rounded-full border-[2.5px] border-[#FFE680] bg-gradient-to-br from-[#1E0F04] via-[#120802] to-[#080301] text-[#FFF8DC] shadow-[0_4px_20px_rgba(40,20,5,0.9),inset_0_1px_3px_rgba(255,240,180,0.4)] relative" style={{ borderStyle: 'double' }}>
               {/* 4 Cardinal Inlaid Ruby Gemstone Pips */}
-              <div className="absolute -top-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
-              <div className="absolute -bottom-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
-              <div className="absolute -left-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
-              <div className="absolute -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
-              <span className="text-[15px] font-black leading-none text-[#FFFDF5] drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">{displayAngle}°</span>
-              <span className="text-[7px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className="absolute -top-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
+              <div className="absolute -bottom-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
+              <div className="absolute -left-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
+              <div className="absolute -right-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
+              <span className="text-[13px] font-black leading-none text-[#FFFDF0] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{displayAngle}°</span>
+              <span className="text-[6.5px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
             </div>
           ) : isGraphite ? (
             <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]">
               <span className="text-[15px] font-black leading-none">{displayAngle}°</span>
               <span className="text-[7px] font-bold uppercase tracking-widest text-slate-300 mt-0.5">{get16WindName(displayHeading)}</span>
             </div>
-          ) : styleId === 'vedic_mandala' || styleId === 'sandalwood' ? (
+          ) : styleId === 'vedic_mandala' ? (
+            <div className="flex flex-col items-center justify-center h-11 w-11 rounded-full border-[1.5px] border-amber-400 bg-gradient-to-br from-[#2E1202] via-[#180A02] to-[#0A0400] text-amber-100 shadow-[0_0_16px_rgba(245,158,11,0.7),inset_0_1px_3px_rgba(254,240,138,0.5)]">
+              <span className="text-[12px] font-mono font-black leading-none text-[#FDE047] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">{displayAngle}°</span>
+              <span className="text-[6.5px] font-bold uppercase tracking-wider text-amber-300 mt-0.5">{get16WindName(displayHeading)}</span>
+            </div>
+          ) : styleId === 'sandalwood' ? (
             <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-emerald-300 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.72)]">
               <span className="text-[15px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
               <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>

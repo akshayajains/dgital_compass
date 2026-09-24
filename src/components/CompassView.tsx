@@ -895,11 +895,15 @@ export const CompassView = () => {
   return (
     <div
       className={cn(
-        "w-full min-h-screen flex flex-col items-center pt-3 pb-8 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
+        "w-full min-h-screen flex flex-col items-center pb-8 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
         theme === 'light' 
           ? "bg-[radial-gradient(circle_at_50%_-10%,#fff7df_0%,#f6ead2_35%,#e8edf0_100%)] text-stone-900" 
           : "bg-[radial-gradient(circle_at_50%_-10%,#3a1420_0%,#180a10_36%,#07090e_100%)] text-white"
       )}
+      style={{
+        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)',
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)'
+      }}
     >
       {/* Layered ambient color keeps the home surface premium without hurting contrast. */}
       <div className="absolute -top-16 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-amber-300/30 dark:bg-red-600/14 blur-3xl pointer-events-none" />
@@ -1376,27 +1380,89 @@ export const CompassView = () => {
 
             {/* Center Heading Readout */}
             {selectedStyle === 'vedic_mandala' ? (
-              <div className={cn(
-                "w-full p-2.5 rounded-2xl border flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.8)] my-1",
-                theme === 'light' ? "bg-white border-amber-500/40 text-stone-900" : "bg-[#14120E] border-amber-500/50 text-white"
-              )}>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 font-mono font-black text-xs border border-amber-500/40">
-                    {get32Pada(displayHeading).code} • {get32Pada(displayHeading).nameHi}
-                  </span>
-                  <span className={cn("text-xs font-mono font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
-                    {get32Pada(displayHeading).startDeg.toFixed(1)}° - {get32Pada(displayHeading).endDeg.toFixed(1)}°
-                  </span>
-                </div>
-                <span className={cn(
-                  "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
-                  get32Pada(displayHeading).isAuspicious
-                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_8px_#10b981]"
-                    : "bg-rose-950/70 text-rose-300 border-rose-500/40 shadow-sm"
-                )}>
-                  {get32Pada(displayHeading).isAuspicious ? "AUSPICIOUS" : "INAUSPICIOUS"}
-                </span>
-              </div>
+              (() => {
+                const currentPada = get32Pada(displayHeading);
+                return (
+                  <div className={cn(
+                    "w-full p-2.5 sm:p-3 rounded-2xl border flex flex-col gap-2 shadow-[0_6px_24px_rgba(0,0,0,0.7)] my-1 transition-all duration-300",
+                    theme === 'light'
+                      ? "bg-gradient-to-br from-amber-50/95 via-orange-50/80 to-amber-100/70 border-amber-300 text-stone-900"
+                      : "bg-gradient-to-br from-[#1C1408] via-[#140E05] to-[#0A0702] border-amber-500/50 text-white"
+                  )}>
+                    {/* Top Row: Pada Code, Deity Name, Degree Span, and Auspicious Badge */}
+                    <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={cn(
+                          "px-2.5 py-1 rounded-xl font-mono font-black text-xs border flex items-center gap-1.5 shadow-sm",
+                          currentPada.isAuspicious
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+                            : "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                        )}>
+                          <span>{currentPada.code}</span>
+                          <span className="opacity-40">•</span>
+                          <span>{language === 'hi' ? currentPada.nameHi : `${currentPada.nameHi} (${currentPada.nameEn})`}</span>
+                        </span>
+                        <span className={cn(
+                          "text-[11px] font-mono font-semibold px-2 py-0.5 rounded-lg border",
+                          theme === 'light' ? "bg-amber-100/80 border-amber-200 text-stone-700" : "bg-white/5 border-white/10 text-stone-300"
+                        )}>
+                          {currentPada.startDeg.toFixed(1)}° - {currentPada.endDeg.toFixed(1)}°
+                        </span>
+                      </div>
+
+                      {/* Auspicious Gate Status Badge */}
+                      <span className={cn(
+                        "px-2.5 py-0.5 rounded-full text-[9.5px] font-black tracking-wide border flex items-center gap-1",
+                        currentPada.isAuspicious
+                          ? "bg-emerald-500/25 text-emerald-300 border-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.4)]"
+                          : "bg-rose-950/60 text-rose-300 border-rose-500/30"
+                      )}>
+                        {currentPada.isAuspicious ? (
+                          <>
+                            <span className="text-amber-400 text-xs">★</span>
+                            <span>{language === 'hi' ? 'श्रेष्ठ मुख्य द्वार' : 'AUSPICIOUS ENTRANCE'}</span>
+                          </>
+                        ) : (
+                          <span>{language === 'hi' ? 'सामान्य / वर्जित द्वार' : 'NON-GATE ZONE'}</span>
+                        )}
+                      </span>
+                    </div>
+
+                    {/* Vedic Shastra Result & Recommended Usage */}
+                    <div className={cn(
+                      "p-2 rounded-xl text-xs flex flex-col gap-1 border",
+                      theme === 'light' ? "bg-white/85 border-amber-200" : "bg-black/40 border-amber-500/20"
+                    )}>
+                      <div className="flex items-start gap-1.5">
+                        <span className="font-bold text-amber-500 shrink-0 text-[11px]">
+                          {language === 'hi' ? 'फल:' : 'Vedic Effect:'}
+                        </span>
+                        <span className={cn(
+                          "leading-snug font-medium text-[11.5px]",
+                          currentPada.isAuspicious
+                            ? (theme === 'light' ? "text-emerald-800 font-semibold" : "text-emerald-300 font-semibold")
+                            : (theme === 'light' ? "text-stone-700" : "text-stone-300")
+                        )}>
+                          {language === 'hi' ? currentPada.resultHi : currentPada.resultEn}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-0.5 text-[10.5px]">
+                        <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold shrink-0">
+                          {language === 'hi' ? currentPada.elementNameHi : `${currentPada.element} Element`}
+                        </span>
+                        <span className={cn(
+                          "truncate font-medium",
+                          theme === 'light' ? "text-stone-600" : "text-stone-400"
+                        )}>
+                          <span className="opacity-75">{language === 'hi' ? 'उपयुक्त: ' : 'Best for: '}</span>
+                          {language === 'hi' ? currentPada.usageHi : currentPada.usageEn}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
               (() => {
                 // Theme-aware center readout box — each theme gets its own colors
@@ -1411,7 +1477,7 @@ export const CompassView = () => {
                     case 'sandalwood':
                       return { bg: 'bg-gradient-to-r from-[#FAF3E8] via-[#F3E6D3] to-[#E9D4B8]', border: 'border-[#C9A67E]', heading: 'text-[#3E2718]', dir: 'text-red-700', btn: 'bg-[#3E2718]/10 hover:bg-[#3E2718]/15 border-[#8C6239]/40 text-[#5C3A1E]' };
                     case 'royal_gold':
-                      return { bg: 'bg-gradient-to-r from-[#2E0B12] via-[#24130A] to-[#120804]', border: 'border-[#FDE047]/65 shadow-[0_4px_20px_rgba(212,175,55,0.25)]', heading: 'text-[#FFFDF5] drop-shadow-[0_0_10px_rgba(245,158,11,0.6)]', dir: 'text-[#FDE047]', btn: 'bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border-[#FDE047]/50 text-[#FDE047]' };
+                      return { bg: 'bg-gradient-to-r from-[#2A1806] via-[#1E1004] to-[#120802]', border: 'border-[#FDE047]/75 shadow-[0_4px_25px_rgba(212,175,55,0.35)]', heading: 'text-[#FFF8DC] drop-shadow-[0_0_12px_rgba(245,158,11,0.7)]', dir: 'text-[#FDE047]', btn: 'bg-[#D4AF37]/20 hover:bg-[#D4AF37]/30 border-[#FDE047]/60 text-[#FDE047]' };
                     case 'cyberpunk':
                       return { bg: 'bg-gradient-to-r from-[#050b14] via-[#0a0f1e] to-[#100520]', border: 'border-cyan-400/50', heading: 'text-cyan-300', dir: 'text-fuchsia-400', btn: 'bg-cyan-400/10 hover:bg-cyan-400/20 border-cyan-400/40 text-cyan-300' };
                     case 'cosmic_galaxy':
