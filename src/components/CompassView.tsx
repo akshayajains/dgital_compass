@@ -1348,23 +1348,28 @@ export const CompassView = () => {
                   <Target className={cn("w-4 h-4", targetHeading === null && (theme === 'light' ? "text-orange-600" : "text-orange-400"))} />
                 </button>
 
-                {/* Pin / Always Visible */}
+                {/* Keep Screen Awake Quick-Toggle */}
                 <button
                   onClick={() => {
-                    const next = !alwaysVisible;
-                    setAlwaysVisible(next);
-                    try { localStorage.setItem('com.spiritual.compass.always_visible', next.toString()); } catch {}
+                    const next = !keepAwake;
+                    setKeepAwake(next);
+                    try { localStorage.setItem('com.spiritual.compass.app_keep_awake', next.toString()); } catch {}
                     triggerHapticFeedback();
+                    if (next) {
+                      toast.success(language === 'hi' ? 'स्क्रीन हमेशा चालू रहेगी' : 'Keep Screen Awake: ON');
+                    } else {
+                      toast.info(language === 'hi' ? 'स्क्रीन टाइमआउट सामान्य' : 'Keep Screen Awake: OFF');
+                    }
                   }}
                   className={cn(
                     "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
-                    alwaysVisible
+                    keepAwake
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]"
                       : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
-                  title={language === 'hi' ? 'हमेशा दिखाएं' : 'Pin (Always Visible)'}
+                  title={language === 'hi' ? 'स्क्रीन जागृत रखें' : 'Keep Screen Awake'}
                 >
-                  <Pin className={cn("w-4 h-4", !alwaysVisible && (theme === 'light' ? "text-violet-600" : "text-violet-400"))} />
+                  <Pin className={cn("w-4 h-4", !keepAwake && (theme === 'light' ? "text-violet-600" : "text-violet-400"))} />
                 </button>
               </div>
             </div>
@@ -1406,18 +1411,17 @@ export const CompassView = () => {
                     case 'sandalwood':
                       return { bg: 'bg-gradient-to-r from-[#FAF3E8] via-[#F3E6D3] to-[#E9D4B8]', border: 'border-[#C9A67E]', heading: 'text-[#3E2718]', dir: 'text-red-700', btn: 'bg-[#3E2718]/10 hover:bg-[#3E2718]/15 border-[#8C6239]/40 text-[#5C3A1E]' };
                     case 'royal_gold':
-                      return { bg: 'bg-gradient-to-r from-[#3b2a12] via-[#2a1c0c] to-[#1a1008]', border: 'border-[#D4AF37]/60', heading: 'text-[#F7E8A0]', dir: 'text-[#E8C547]', btn: 'bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border-[#D4AF37]/50 text-[#F7E8A0]' };
+                      return { bg: 'bg-gradient-to-r from-[#2E0B12] via-[#24130A] to-[#120804]', border: 'border-[#FDE047]/65 shadow-[0_4px_20px_rgba(212,175,55,0.25)]', heading: 'text-[#FFFDF5] drop-shadow-[0_0_10px_rgba(245,158,11,0.6)]', dir: 'text-[#FDE047]', btn: 'bg-[#D4AF37]/15 hover:bg-[#D4AF37]/25 border-[#FDE047]/50 text-[#FDE047]' };
                     case 'cyberpunk':
                       return { bg: 'bg-gradient-to-r from-[#050b14] via-[#0a0f1e] to-[#100520]', border: 'border-cyan-400/50', heading: 'text-cyan-300', dir: 'text-fuchsia-400', btn: 'bg-cyan-400/10 hover:bg-cyan-400/20 border-cyan-400/40 text-cyan-300' };
-                    case 'minimal_onyx':
-                      return { bg: 'bg-gradient-to-r from-[#18181B] via-[#101013] to-[#09090B]', border: 'border-white/15', heading: 'text-white', dir: 'text-stone-300', btn: 'bg-white/5 hover:bg-white/10 border-white/20 text-stone-300' };
-                    case 'tactical_ops':
-                      return { bg: 'bg-gradient-to-r from-[#0F1710] via-[#0C120D] to-[#0A0E0B]', border: 'border-green-500/50', heading: 'text-green-400', dir: 'text-orange-400', btn: 'bg-green-500/10 hover:bg-green-500/20 border-green-500/40 text-green-300' };
                     case 'cosmic_galaxy':
                       return { bg: 'bg-gradient-to-r from-[#110B29] via-[#0D0820] to-[#070314]', border: 'border-indigo-400/50', heading: 'text-indigo-200', dir: 'text-purple-300', btn: 'bg-indigo-400/10 hover:bg-indigo-400/20 border-indigo-400/40 text-indigo-200' };
                     case 'satellite_earth':
                       return { bg: 'bg-gradient-to-r from-[#1E293B] via-[#16202E] to-[#0F172A]', border: 'border-sky-400/50', heading: 'text-sky-200', dir: 'text-red-400', btn: 'bg-sky-400/10 hover:bg-sky-400/20 border-sky-400/40 text-sky-200' };
                     case 'ios_compass':
+                      if (selectedVariant === 'ios_minimal') {
+                        return { bg: 'bg-gradient-to-r from-[#18181B] via-[#101013] to-[#09090B]', border: 'border-white/15', heading: 'text-white', dir: 'text-stone-300', btn: 'bg-white/5 hover:bg-white/10 border-white/20 text-stone-300' };
+                      }
                       return { bg: 'bg-gradient-to-r from-[#161C24] via-[#1F2937] to-[#0B0F14]', border: 'border-slate-400/40', heading: 'text-slate-100', dir: 'text-red-400', btn: 'bg-slate-400/10 hover:bg-slate-400/20 border-slate-400/40 text-slate-200' };
                     case 'color_palette':
                       return { bg: 'bg-gradient-to-r from-[#1a1a1f] via-[#141419] to-[#0d0d10]', border: 'border-white/15', heading: 'text-white', dir: 'text-red-400', btn: 'bg-white/5 hover:bg-white/10 border-white/20 text-stone-300' };
@@ -1869,15 +1873,16 @@ export const CompassView = () => {
       {/* Creator Branding Card: Shown for compass & level tabs */}
       {mainTab !== 'vastu' && <CreatorBanner />}
 
-      {/* Settings Modal */}
+      {/* Settings Modal — Grouped & Streamlined */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in">
           <div className={cn(
-            "w-full max-w-sm p-5 rounded-3xl border shadow-2xl flex flex-col gap-3.5 z-50 animate-in zoom-in-95",
+            "w-full max-w-sm p-4 sm:p-5 rounded-3xl border shadow-2xl flex flex-col gap-3.5 z-50 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto",
             theme === 'light' ? "bg-white border-stone-200 text-stone-900" : "bg-[#14120E] border-white/15 text-white"
           )}>
-            <div className="flex items-center justify-between pb-2 border-b border-stone-200/40 dark:border-white/10">
-              <span className="text-sm font-black tracking-wide text-amber-500">{t.settings}</span>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-stone-200/50 dark:border-white/10">
+              <span className="text-sm font-black tracking-wide text-amber-500 uppercase">{t.settings}</span>
               <button 
                 onClick={() => setShowSettings(false)}
                 className={cn(
@@ -1889,279 +1894,287 @@ export const CompassView = () => {
               </button>
             </div>
 
-            {/* Language Switch */}
-            <div className="flex items-center justify-between text-xs font-bold">
-              <span className="flex items-center gap-2">
-                <Languages className="w-4 h-4 text-amber-500" />
-                {t.language}
+            {/* GROUP 1: रूप-रंग एवं डिस्प्ले (Appearance & Display) */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-500/90 pl-1">
+                {language === 'hi' ? '🎨 रूप-रंग एवं डिस्प्ले' : '🎨 Appearance & Display'}
               </span>
               <div className={cn(
-                "flex items-center p-0.5 rounded-xl border",
-                theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10"
+                "p-3 rounded-2xl border space-y-2.5",
+                theme === 'light' ? "bg-stone-50 border-stone-200/70" : "bg-white/[0.03] border-white/8"
               )}>
-                <button
-                  onClick={() => setLanguage('hi')}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                    language === 'hi' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400")
-                  )}
-                >
-                  हिंदी
-                </button>
-                <button
-                  onClick={() => setLanguage('en')}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
-                    language === 'en' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400")
-                  )}
-                >
-                  English
-                </button>
-              </div>
-            </div>
+                {/* Language Switch */}
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="flex items-center gap-2">
+                    <Languages className="w-4 h-4 text-amber-500" />
+                    {t.language}
+                  </span>
+                  <div className={cn(
+                    "flex items-center p-0.5 rounded-xl border",
+                    theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10"
+                  )}>
+                    <button
+                      onClick={() => setLanguage('hi')}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
+                        language === 'hi' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400")
+                      )}
+                    >
+                      हिंदी
+                    </button>
+                    <button
+                      onClick={() => setLanguage('en')}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all",
+                        language === 'en' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400")
+                      )}
+                    >
+                      English
+                    </button>
+                  </div>
+                </div>
 
-            {/* 12 Styles Gallery Trigger */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Palette className="w-4 h-4 text-amber-500" />
-                {t.styles}
-              </span>
-              <button
-                onClick={() => {
-                  triggerHapticFeedback();
-                  setShowSettings(false);
-                  setShowStyleModal(true);
-                }}
-                className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
-                  theme === 'light'
-                    ? "bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200"
-                    : "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                {/* Theme Mode */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
                 )}>
-                {language === 'hi' ? '12+ शैलियां देखें' : 'View 12+ Styles'}
-              </button>
-            </div>
+                  <span>{t.themeMode}</span>
+                  <ThemeToggle />
+                </div>
 
-            {/* Vastu Grid Toggle */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Grid className="w-4 h-4 text-amber-500" />
-                {t.vastuGrid}
-              </span>
-              <button
-                onClick={() => {
-                  triggerHapticFeedback();
-                  const next = !vastuGridEnabled;
-                  setVastuGridEnabled(next);
-                  localStorage.setItem('com.spiritual.compass.app_vastu', next.toString());
-                }}
-                className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                  vastuGridEnabled ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
-                )}
-              >
-                {vastuGridEnabled ? (language === 'hi' ? "चालू" : "ON") : (language === 'hi' ? "बंद" : "OFF")}
-              </button>
-            </div>
-
-            {/* Sensor Diagnostics */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-emerald-400" />
-                {t.sensorDiagnostics}
-              </span>
-              <button
-                onClick={() => {
-                  triggerHapticFeedback();
-                  setShowSettings(false);
-                  setShowSensorsModal(true);
-                }}
-                className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
-                  theme === 'light'
-                    ? "bg-emerald-100 text-emerald-800 border-emerald-400 hover:bg-emerald-200"
-                    : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                {/* Dial Styles Gallery */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
                 )}>
-                {t.check}
-              </button>
-            </div>
+                  <span className="flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-amber-500" />
+                    {t.styles}
+                  </span>
+                  <button
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      setShowSettings(false);
+                      setShowStyleModal(true);
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
+                      theme === 'light'
+                        ? "bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200"
+                        : "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                    )}>
+                    {language === 'hi' ? 'शैलियां देखें' : 'View Styles'}
+                  </button>
+                </div>
 
-            {/* Calibration Guide */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                {t.calibrationGuide}
-              </span>
-              <button
-                onClick={() => {
-                  triggerHapticFeedback();
-                  setShowSettings(false);
-                  setShowCalibrationModal(true);
-                }}
-                className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
-                  theme === 'light'
-                    ? "bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200"
-                    : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                {/* Vastu Grid Overlay */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
                 )}>
-                {t.view}
-              </button>
-            </div>
-
-            {/* Theme Switcher */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span>{t.themeMode}</span>
-              <ThemeToggle />
-            </div>
-
-            {/* Always Visible (Pin Compass) */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span>Always Visible</span>
-              <button
-                onClick={() => {
-                  const next = !alwaysVisible;
-                  setAlwaysVisible(next);
-                  try { localStorage.setItem('com.spiritual.compass.always_visible', next.toString()); } catch {}
-                  triggerHapticFeedback();
-                }}
-                className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                  alwaysVisible ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
-                )}
-              >
-                {alwaysVisible ? (language === 'hi' ? 'देखते रहें' : 'Pinned') : (language === 'hi' ? 'बंद' : 'Off')}
-              </button>
-            </div>
-
-            {/* Temperature Unit */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Thermometer className="w-4 h-4 text-amber-500" />
-                {language === 'hi' ? 'तापमान इकाई' : 'Temperature Unit'}
-              </span>
-              <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
-                <button
-                  onClick={() => { setTempUnit('c'); try { localStorage.setItem('com.spiritual.compass.app_temp_unit', 'c'); } catch {} triggerHapticFeedback(); }}
-                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'c' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
-                >°C</button>
-                <button
-                  onClick={() => { setTempUnit('f'); try { localStorage.setItem('com.spiritual.compass.app_temp_unit', 'f'); } catch {} triggerHapticFeedback(); }}
-                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'f' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
-                >°F</button>
+                  <span className="flex items-center gap-2">
+                    <Grid className="w-4 h-4 text-amber-500" />
+                    {t.vastuGrid}
+                  </span>
+                  <button
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      const next = !vastuGridEnabled;
+                      setVastuGridEnabled(next);
+                      localStorage.setItem('com.spiritual.compass.app_vastu', next.toString());
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                      vastuGridEnabled ? "bg-amber-500 text-stone-950 font-bold shadow-sm" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
+                    )}
+                  >
+                    {vastuGridEnabled ? (language === 'hi' ? "चालू" : "ON") : (language === 'hi' ? "बंद" : "OFF")}
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Speed Unit */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-emerald-500" />
-                {language === 'hi' ? 'गति इकाई' : 'Speed Unit'}
+            {/* GROUP 2: इकाइयां एवं प्रारूप (Units & Format) */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-500/90 pl-1">
+                {language === 'hi' ? '📏 इकाइयां एवं प्रारूप' : '📏 Units & Format'}
               </span>
-              <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
-                <button
-                  onClick={() => { setSpeedUnit('kmh'); try { localStorage.setItem('com.spiritual.compass.app_speed_unit', 'kmh'); } catch {} triggerHapticFeedback(); }}
-                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'kmh' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
-                >km/h</button>
-                <button
-                  onClick={() => { setSpeedUnit('mph'); try { localStorage.setItem('com.spiritual.compass.app_speed_unit', 'mph'); } catch {} triggerHapticFeedback(); }}
-                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'mph' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
-                >mph</button>
+              <div className={cn(
+                "p-3 rounded-2xl border space-y-2.5",
+                theme === 'light' ? "bg-stone-50 border-stone-200/70" : "bg-white/[0.03] border-white/8"
+              )}>
+                {/* Temperature Unit */}
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="flex items-center gap-2">
+                    <Thermometer className="w-4 h-4 text-amber-500" />
+                    {language === 'hi' ? 'तापमान इकाई' : 'Temperature Unit'}
+                  </span>
+                  <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
+                    <button
+                      onClick={() => { setTempUnit('c'); try { localStorage.setItem('com.spiritual.compass.app_temp_unit', 'c'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'c' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >°C</button>
+                    <button
+                      onClick={() => { setTempUnit('f'); try { localStorage.setItem('com.spiritual.compass.app_temp_unit', 'f'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", tempUnit === 'f' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >°F</button>
+                  </div>
+                </div>
+
+                {/* Speed Unit */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
+                )}>
+                  <span className="flex items-center gap-2">
+                    <Gauge className="w-4 h-4 text-emerald-500" />
+                    {language === 'hi' ? 'गति इकाई' : 'Speed Unit'}
+                  </span>
+                  <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
+                    <button
+                      onClick={() => { setSpeedUnit('kmh'); try { localStorage.setItem('com.spiritual.compass.app_speed_unit', 'kmh'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'kmh' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >km/h</button>
+                    <button
+                      onClick={() => { setSpeedUnit('mph'); try { localStorage.setItem('com.spiritual.compass.app_speed_unit', 'mph'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'mph' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >mph</button>
+                  </div>
+                </div>
+
+                {/* Time Format */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
+                )}>
+                  <span className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-sky-500" />
+                    {language === 'hi' ? 'समय प्रारूप' : 'Time Format'}
+                  </span>
+                  <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
+                    <button
+                      onClick={() => { setTimeFormat('12'); try { localStorage.setItem('com.spiritual.compass.app_time_format', '12'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '12' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >12h</button>
+                    <button
+                      onClick={() => { setTimeFormat('24'); try { localStorage.setItem('com.spiritual.compass.app_time_format', '24'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '24' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >24h</button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Time Format */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-sky-500" />
-                {language === 'hi' ? 'समय प्रारूप' : 'Time Format'}
+            {/* GROUP 3: डिवाइस एवं सिस्टम (Device & System) */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] font-black uppercase tracking-wider text-amber-500/90 pl-1">
+                {language === 'hi' ? '⚙️ डिवाइस एवं सिस्टम' : '⚙️ Device & System'}
               </span>
-              <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
-                <button
-                  onClick={() => { setTimeFormat('12'); try { localStorage.setItem('com.spiritual.compass.app_time_format', '12'); } catch {} triggerHapticFeedback(); }}
-                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '12' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
-                >12h</button>
-                <button
-                  onClick={() => { setTimeFormat('24'); try { localStorage.setItem('com.spiritual.compass.app_time_format', '24'); } catch {} triggerHapticFeedback(); }}
-                  className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", timeFormat === '24' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
-                >24h</button>
+              <div className={cn(
+                "p-3 rounded-2xl border space-y-2.5",
+                theme === 'light' ? "bg-stone-50 border-stone-200/70" : "bg-white/[0.03] border-white/8"
+              )}>
+                {/* Keep Screen Awake (Single source of truth — replaces and eliminates duplicate Always Visible) */}
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="flex items-center gap-2">
+                    <MoonStar className="w-4 h-4 text-indigo-500" />
+                    <div>
+                      <div>{language === 'hi' ? 'स्क्रीन जागृत रखें' : 'Keep Screen Awake'}</div>
+                      <div className="text-[9px] font-normal text-stone-400">{language === 'hi' ? 'स्क्रीन बंद नहीं होगी' : 'Prevent screen timeout'}</div>
+                    </div>
+                  </span>
+                  <button
+                    onClick={() => {
+                      const next = !keepAwake;
+                      setKeepAwake(next);
+                      try { localStorage.setItem('com.spiritual.compass.app_keep_awake', next.toString()); } catch {}
+                      triggerHapticFeedback();
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                      keepAwake ? "bg-amber-500 text-stone-950 font-bold shadow-sm" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
+                    )}
+                  >
+                    {keepAwake ? (language === 'hi' ? 'चालू' : 'ON') : (language === 'hi' ? 'बंद' : 'OFF')}
+                  </button>
+                </div>
+
+                {/* Haptics Feedback */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
+                )}>
+                  <span className="flex items-center gap-2">
+                    <Vibrate className="w-4 h-4 text-fuchsia-500" />
+                    {language === 'hi' ? 'हैप्टिक फीडबैक' : 'Haptic Feedback'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const next = !hapticEnabled;
+                      setHapticEnabled(next);
+                      try { localStorage.setItem('com.spiritual.compass.app_haptic', next.toString()); } catch {}
+                      if (next) triggerHapticFeedback();
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
+                      hapticEnabled ? "bg-amber-500 text-stone-950 font-bold shadow-sm" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
+                    )}
+                  >
+                    {hapticEnabled ? (language === 'hi' ? 'चालू' : 'ON') : (language === 'hi' ? 'बंद' : 'OFF')}
+                  </button>
+                </div>
+
+                {/* Sensor Diagnostics */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
+                )}>
+                  <span className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-emerald-400" />
+                    {t.sensorDiagnostics}
+                  </span>
+                  <button
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      setShowSettings(false);
+                      setShowSensorsModal(true);
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
+                      theme === 'light'
+                        ? "bg-emerald-100 text-emerald-800 border-emerald-400 hover:bg-emerald-200"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    )}>
+                    {t.check}
+                  </button>
+                </div>
+
+                {/* Calibration Guide */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
+                )}>
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    {t.calibrationGuide}
+                  </span>
+                  <button
+                    onClick={() => {
+                      triggerHapticFeedback();
+                      setShowSettings(false);
+                      setShowCalibrationModal(true);
+                    }}
+                    className={cn(
+                      "px-3 py-1 rounded-xl text-[10px] font-black uppercase border transition-all",
+                      theme === 'light'
+                        ? "bg-amber-100 text-amber-800 border-amber-400 hover:bg-amber-200"
+                        : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                    )}>
+                    {t.view}
+                  </button>
+                </div>
               </div>
-            </div>
-
-            {/* Haptics Toggle */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <Vibrate className="w-4 h-4 text-fuchsia-500" />
-                {language === 'hi' ? 'हैप्टिक फीडबैक' : 'Haptic Feedback'}
-              </span>
-              <button
-                onClick={() => {
-                  const next = !hapticEnabled;
-                  setHapticEnabled(next);
-                  try { localStorage.setItem('com.spiritual.compass.app_haptic', next.toString()); } catch {}
-                  if (next) triggerHapticFeedback();
-                }}
-                className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                  hapticEnabled ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
-                )}
-              >
-                {hapticEnabled ? (language === 'hi' ? 'चालू' : 'ON') : (language === 'hi' ? 'बंद' : 'OFF')}
-              </button>
-            </div>
-
-            {/* Keep Screen Awake */}
-            <div className={cn(
-              "flex items-center justify-between text-xs font-bold pt-2 border-t",
-              theme === 'light' ? "border-stone-200" : "border-white/5"
-            )}>
-              <span className="flex items-center gap-2">
-                <MoonStar className="w-4 h-4 text-indigo-500" />
-                {language === 'hi' ? 'स्क्रीन जागृत रखें' : 'Keep Screen Awake'}
-              </span>
-              <button
-                onClick={() => {
-                  const next = !keepAwake;
-                  setKeepAwake(next);
-                  try { localStorage.setItem('com.spiritual.compass.app_keep_awake', next.toString()); } catch {}
-                  triggerHapticFeedback();
-                }}
-                className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase transition-all",
-                  keepAwake ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "bg-stone-200 text-stone-600" : "bg-stone-800 text-stone-400")
-                )}
-              >
-                {keepAwake ? (language === 'hi' ? 'चालू' : 'ON') : (language === 'hi' ? 'बंद' : 'OFF')}
-              </button>
             </div>
           </div>
         </div>

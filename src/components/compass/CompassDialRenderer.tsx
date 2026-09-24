@@ -74,10 +74,12 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   const isGraphite = styleId === 'ios_compass' && variantId === 'ios_graphite';
   // Vintage Nautical is now an iOS Compass variant (was a standalone theme)
   const isNautical = styleId === 'ios_compass' && variantId === 'ios_nautical';
+  // Minimal Onyx is now an iOS Compass variant (was a standalone theme)
+  const isMinimalOnyx = styleId === 'ios_compass' && variantId === 'ios_minimal';
 
   // ── Standalone styles that render their own center needle ──
   const STANDALONE_NEEDLE_STYLES = new Set([
-    'cyberpunk', 'tactical_ops', 'minimal_onyx', 'cosmic_galaxy',
+    'cyberpunk', 'cosmic_galaxy',
     'satellite_earth', 'vedic_mandala', 'sandalwood', 'royal_gold',
   ] as CompassStyleId[]);
 
@@ -87,8 +89,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   // Per-style apex Y coordinate for the center needle (easier to fine-tune per-theme)
   const APEX_Y_MAP: Record<string, number> = {
     cyberpunk: 30,
-    tactical_ops: 30,
-    minimal_onyx: 36,
     cosmic_galaxy: 30,
     satellite_earth: 30,
     vedic_mandala: 30,
@@ -155,15 +155,11 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
       case 'sandalwood':
         return 'border-[20px] sm:border-[24px] border-[#C9A67E] shadow-[0_20px_60px_rgba(78,53,36,0.7),inset_0_3px_8px_rgba(255,255,255,0.7),inset_0_-8px_16px_rgba(78,53,36,0.95)] bg-gradient-to-br from-[#E8D7C2] via-[#C9A67E] to-[#8C6239]';
       case 'royal_gold':
-        return 'border-[18px] sm:border-[22px] border-transparent shadow-[0_24px_65px_rgba(0,0,0,0.95),0_0_35px_rgba(212,175,55,0.35),inset_0_2px_6px_rgba(255,240,180,0.5),inset_0_-8px_16px_rgba(60,40,10,0.9)] bg-[linear-gradient(135deg,#3B2A10,#6B4E1A_25%,#E8C547_50%,#F7D070_55%,#D4AF37_60%,#6B4E1A_78%,#2C1E0E)] bg-origin-border';
+        return 'border-[18px] sm:border-[22px] border-transparent shadow-[0_25px_70px_rgba(0,0,0,0.98),0_0_45px_rgba(212,175,55,0.45),0_0_20px_rgba(225,29,72,0.3),inset_0_2px_8px_rgba(255,245,210,0.85),inset_0_-8px_20px_rgba(45,20,5,0.95)] bg-[linear-gradient(135deg,#5A3E1B_0%,#B8860B_15%,#FDE047_32%,#FFFBEB_42%,#D4AF37_55%,#85581A_72%,#3D240E_100%)] bg-origin-border';
       case 'cyberpunk':
         return 'border-[14px] sm:border-[18px] border-[#0F172A] shadow-[0_0_40px_rgba(0,240,255,0.4),inset_0_0_20px_rgba(0,240,255,0.3)] bg-gradient-to-tr from-[#020617] via-[#0b1329] to-[#020617]';
-      case 'minimal_onyx':
-        return 'border-[16px] sm:border-[20px] border-[#1E1E24] shadow-[0_25px_60px_rgba(0,0,0,0.98),inset_0_2px_4px_rgba(255,255,255,0.1),inset_0_-5px_12px_rgba(0,0,0,0.95)] bg-[#0C0C0E]';
       case 'vedic_mandala':
         return 'border-[18px] sm:border-[22px] border-[#D97706] shadow-[0_20px_60px_rgba(0,0,0,0.95),inset_0_3px_8px_rgba(254,240,138,0.7),inset_0_-8px_16px_rgba(180,83,9,0.9)] bg-gradient-to-tr from-[#D97706] via-[#FBBF24] to-[#B45309]';
-      case 'tactical_ops':
-        return 'border-[16px] sm:border-[20px] border-[#1C261D] shadow-[0_20px_50px_rgba(0,0,0,0.95),inset_0_0_15px_rgba(34,197,94,0.2)] bg-gradient-to-tr from-[#121A13] via-[#233125] to-[#0D140E]';
       case 'cosmic_galaxy':
         return 'border-[16px] sm:border-[20px] border-[#1E1238] shadow-[0_0_45px_rgba(129,140,248,0.35),inset_0_0_20px_rgba(192,132,252,0.2)] bg-gradient-to-tr from-[#0A0517] via-[#1A0C38] to-[#070312]';
       default:
@@ -182,15 +178,11 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
       case 'sandalwood':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FAF3E8] via-[#EFE2CE] to-[#DCBF9E]';
       case 'royal_gold':
-        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#3A2A10] via-[#1E1508] to-[#0A0603]';
+        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#321217] via-[#1E110A] to-[#080302]';
       case 'cyberpunk':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#081226] via-[#040914] to-[#010308]';
-      case 'minimal_onyx':
-        return 'bg-[#080809]';
       case 'vedic_mandala':
         return 'bg-[#0B131B]';
-      case 'tactical_ops':
-        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#141C15] via-[#0B110C] to-[#050805]';
       case 'cosmic_galaxy':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#190F36] via-[#0E0720] to-[#05020D]';
       default:
@@ -333,124 +325,120 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {styleId === 'royal_gold' && (
             <>
-              {/* Outer ornamental filigree rings */}
-              <div className="absolute inset-1.5 rounded-full pointer-events-none flex items-center justify-center">
-                <svg viewBox="0 0 220 220" className="w-full h-full pointer-events-none">
+              {/* Outer circular 24K gold astrolabe and filigree rings */}
+              <div className="absolute inset-1 rounded-full pointer-events-none flex items-center justify-center">
+                <svg viewBox="0 0 200 200" className="w-full h-full pointer-events-none">
                   <defs>
-                    <linearGradient id="rg-bevel" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#F7E8A0" />
-                      <stop offset="30%" stopColor="#E8C547" />
-                      <stop offset="60%" stopColor="#D4AF37" />
-                      <stop offset="100%" stopColor="#8C5F1A" />
-                    </linearGradient>
-                    <linearGradient id="rg-bevel-dark" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#5C4A24" />
-                      <stop offset="100%" stopColor="#3B2E16" />
-                    </linearGradient>
-                    <radialGradient id="rg-core" cx="40%" cy="30%" r="70%">
-                      <stop offset="0%" stopColor="rgba(255,250,230,0.95)" stopOpacity="0.08" />
-                      <stop offset="40%" stopColor="#2b1a09" stopOpacity="0.9" />
-                      <stop offset="100%" stopColor="#0f0804" stopOpacity="1" />
-                    </radialGradient>
+                    {/* Rich metallic 24K gold gradient */}
                     <linearGradient id="rg-gold-shine" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#FFF7D6" stopOpacity="0.9" />
-                      <stop offset="50%" stopColor="#E8C547" stopOpacity="0.7" />
-                      <stop offset="100%" stopColor="#8C5F1A" stopOpacity="0.9" />
+                      <stop offset="0%" stopColor="#FFFDF0" />
+                      <stop offset="25%" stopColor="#FDE047" />
+                      <stop offset="50%" stopColor="#D4AF37" />
+                      <stop offset="75%" stopColor="#B45309" />
+                      <stop offset="100%" stopColor="#78350F" />
+                    </linearGradient>
+                    <linearGradient id="rg-gold-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#92400E" />
+                      <stop offset="50%" stopColor="#5A2E0B" />
+                      <stop offset="100%" stopColor="#2D1405" />
+                    </linearGradient>
+                    {/* Faceted ruby gemstone gradients */}
+                    <radialGradient id="rg-ruby-bright" cx="35%" cy="30%" r="70%">
+                      <stop offset="0%" stopColor="#FFA4B6" />
+                      <stop offset="35%" stopColor="#E11D48" />
+                      <stop offset="75%" stopColor="#9F1239" />
+                      <stop offset="100%" stopColor="#4C0519" />
+                    </radialGradient>
+                    {/* Deep velvet imperial ruby-obsidian core */}
+                    <radialGradient id="rg-core-rich" cx="50%" cy="50%" r="65%">
+                      <stop offset="0%" stopColor="#3B1219" stopOpacity="0.85" />
+                      <stop offset="45%" stopColor="#221008" stopOpacity="0.9" />
+                      <stop offset="100%" stopColor="#0B0403" stopOpacity="0.98" />
+                    </radialGradient>
+                    {/* Petal gold gradients */}
+                    <linearGradient id="rg-petal-light" x1="0%" y1="100%" x2="0%" y2="0%">
+                      <stop offset="0%" stopColor="#D4AF37" />
+                      <stop offset="50%" stopColor="#FDE047" />
+                      <stop offset="100%" stopColor="#FFFDF0" />
+                    </linearGradient>
+                    <linearGradient id="rg-petal-shade" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#D4AF37" />
+                      <stop offset="60%" stopColor="#92400E" />
+                      <stop offset="100%" stopColor="#451A03" />
                     </linearGradient>
                   </defs>
 
-                  {/* Double bezel rim — outer gold, inner dark inlay */}
-                  <rect x="8" y="8" width="204" height="204" rx="28" ry="28" fill="url(#rg-bevel)" stroke="#F7E8A0" strokeWidth="1.5" />
-                  <rect x="16" y="16" width="188" height="188" rx="20" ry="20" fill="url(#rg-bevel-dark)" stroke="#A67C2A" strokeWidth="0.8" />
+                  {/* Circular Core Dial Background */}
+                  <circle cx="100" cy="100" r="97" fill="url(#rg-core-rich)" stroke="url(#rg-gold-shine)" strokeWidth="1.2" />
 
-                  {/* Lapis lazuli inset gems at corners */}
-                  <circle cx="34" cy="34" r="4.5" fill="#0B1F4A" stroke="#E8C547" strokeWidth="1.2" />
-                  <circle cx="186" cy="34" r="4.5" fill="#0B1F4A" stroke="#E8C547" strokeWidth="1.2" />
-                  <circle cx="34" cy="186" r="4.5" fill="#0B1F4A" stroke="#E8C547" strokeWidth="1.2" />
-                  <circle cx="186" cy="186" r="4.5" fill="#0B1F4A" stroke="#E8C547" strokeWidth="1.2" />
+                  {/* Concentric 24K Gold Beaded & Astrolabe Rings */}
+                  <circle cx="100" cy="100" r="93" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.75" />
+                  <circle cx="100" cy="100" r="90" fill="none" stroke="#D4AF37" strokeWidth="0.6" strokeDasharray="1 3" opacity="0.6" />
+                  <circle cx="100" cy="100" r="82" fill="none" stroke="url(#rg-gold-shine)" strokeWidth="1" opacity="0.7" />
+                  <circle cx="100" cy="100" r="68" fill="none" stroke="#E8C547" strokeWidth="0.5" strokeDasharray="2 4" opacity="0.5" />
+                  <circle cx="100" cy="100" r="54" fill="none" stroke="url(#rg-gold-shine)" strokeWidth="0.8" opacity="0.6" />
+                  <circle cx="100" cy="100" r="38" fill="none" stroke="#FDE047" strokeWidth="0.6" opacity="0.45" />
 
-                  {/* Ruby accent gems at midpoints */}
-                  <circle cx="110" cy="10" r="3" fill="#8B1A1A" stroke="#F7E8A0" strokeWidth="0.8" />
-                  <circle cx="210" cy="110" r="3" fill="#8B1A1A" stroke="#F7E8A0" strokeWidth="0.8" />
-                  <circle cx="110" cy="210" r="3" fill="#8B1A1A" stroke="#F7E8A0" strokeWidth="0.8" />
-                  <circle cx="10" cy="110" r="3" fill="#8B1A1A" stroke="#F7E8A0" strokeWidth="0.8" />
+                  {/* 16-Ray Imperial Celestial Sunburst */}
+                  {[0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5].map((angle, idx) => (
+                    <line
+                      key={angle}
+                      x1="100"
+                      y1={idx % 2 === 0 ? "24" : "36"}
+                      x2="100"
+                      y2="100"
+                      stroke={idx % 2 === 0 ? "url(#rg-gold-shine)" : "#D4AF37"}
+                      strokeWidth={idx % 2 === 0 ? "0.6" : "0.35"}
+                      strokeDasharray={idx % 2 === 0 ? "4 3" : undefined}
+                      opacity={idx % 2 === 0 ? "0.45" : "0.25"}
+                      transform={`rotate(${angle} 100 100)`}
+                    />
+                  ))}
 
-                  {/* Core dial overlay */}
-                  <circle cx="110" cy="110" r="60" fill="url(#rg-core)" opacity="0.95" />
+                  {/* 8-Point Ornate Royal Gold Compass Rose / Star */}
+                  {/* 4 Major Cardinal Petals */}
+                  <polygon points="100,24 100,100 93,100" fill="url(#rg-petal-light)" opacity="0.95" />
+                  <polygon points="100,24 100,100 107,100" fill="url(#rg-petal-shade)" opacity="0.9" />
+                  <polygon points="176,100 100,100 100,93" fill="url(#rg-petal-light)" opacity="0.9" />
+                  <polygon points="176,100 100,100 100,107" fill="url(#rg-petal-shade)" opacity="0.95" />
+                  <polygon points="100,176 100,100 107,100" fill="url(#rg-petal-light)" opacity="0.9" />
+                  <polygon points="100,176 100,100 93,100" fill="url(#rg-petal-shade)" opacity="0.95" />
+                  <polygon points="24,100 100,100 100,107" fill="url(#rg-petal-light)" opacity="0.9" />
+                  <polygon points="24,100 100,100 100,93" fill="url(#rg-petal-shade)" opacity="0.95" />
+
+                  {/* 4 Diagonal Secondary Petals */}
+                  <polygon points="152,48 100,100 95,95" fill="#FDE047" opacity="0.8" />
+                  <polygon points="152,48 100,100 105,105" fill="#92400E" opacity="0.85" />
+                  <polygon points="152,152 100,100 105,95" fill="#FDE047" opacity="0.8" />
+                  <polygon points="152,152 100,100 95,105" fill="#92400E" opacity="0.85" />
+                  <polygon points="48,152 100,100 105,105" fill="#FDE047" opacity="0.8" />
+                  <polygon points="48,152 100,100 95,95" fill="#92400E" opacity="0.85" />
+                  <polygon points="48,48 100,100 95,105" fill="#FDE047" opacity="0.8" />
+                  <polygon points="48,48 100,100 105,95" fill="#92400E" opacity="0.85" />
+
+                  {/* 8 Inlaid Royal Ruby Gemstones at Cardinal and Diagonal Points */}
+                  {[
+                    { cx: 100, cy: 19, isMajor: true },
+                    { cx: 157, cy: 43, isMajor: false },
+                    { cx: 181, cy: 100, isMajor: true },
+                    { cx: 157, cy: 157, isMajor: false },
+                    { cx: 100, cy: 181, isMajor: true },
+                    { cx: 43, cy: 157, isMajor: false },
+                    { cx: 19, cy: 100, isMajor: true },
+                    { cx: 43, cy: 43, isMajor: false },
+                  ].map((gem, gIdx) => (
+                    <g key={gIdx} className="drop-shadow-[0_0_8px_rgba(225,29,72,0.8)]">
+                      <circle cx={gem.cx} cy={gem.cy} r={gem.isMajor ? "4.5" : "3.5"} fill="#FDE047" stroke="#78350F" strokeWidth="0.8" />
+                      <circle cx={gem.cx} cy={gem.cy} r={gem.isMajor ? "3.2" : "2.4"} fill="url(#rg-ruby-bright)" />
+                      <ellipse cx={gem.cx - (gem.isMajor ? 0.9 : 0.7)} cy={gem.cy - (gem.isMajor ? 0.9 : 0.7)} rx={gem.isMajor ? "1" : "0.7"} ry={gem.isMajor ? "0.6" : "0.4"} fill="#FFFFFF" opacity="0.9" />
+                    </g>
+                  ))}
+
+                  {/* Inner Royal Astrolabe Medallion */}
+                  <circle cx="100" cy="100" r="30" fill="url(#rg-core-rich)" stroke="url(#rg-gold-shine)" strokeWidth="0.8" />
+                  <circle cx="100" cy="100" r="27" fill="none" stroke="#E8C547" strokeWidth="0.4" strokeDasharray="1 2" opacity="0.7" />
                 </svg>
               </div>
-
-              {/* Ornate 8-point filigree compass rose */}
-              <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
-                <defs>
-                  <linearGradient id="rg-gold-n" x1="0%" y1="100%" x2="0%" y2="0%">
-                    <stop offset="0%" stopColor="#C7A035" />
-                    <stop offset="60%" stopColor="#E8C547" />
-                    <stop offset="100%" stopColor="#FFF7D6" />
-                  </linearGradient>
-                  <linearGradient id="rg-gold-s" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#C7A035" />
-                    <stop offset="100%" stopColor="#6B4E1A" />
-                  </linearGradient>
-                  <linearGradient id="rg-gold-e" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#C7A035" />
-                    <stop offset="100%" stopColor="#6B4E1A" />
-                  </linearGradient>
-                  <linearGradient id="rg-gold-w" x1="100%" y1="0%" x2="0%" y2="0%">
-                    <stop offset="0%" stopColor="#C7A035" />
-                    <stop offset="100%" stopColor="#6B4E1A" />
-                  </linearGradient>
-                </defs>
-
-                {/* Outer filigree ring with gold gradient */}
-                <circle cx="100" cy="100" r="88" fill="none" stroke="url(#rg-gold-shine)" strokeWidth="1.2" opacity="0.5" />
-                <circle cx="100" cy="100" r="85" fill="none" stroke="#D4AF37" strokeWidth="0.4" strokeDasharray="2 4" opacity="0.45" />
-
-                {/* 4 Major Cardinal Petals — elongated, faceted, two-tone gold */}
-                <polygon points="100,16 100,100 92,100" fill="url(#rg-gold-n)" opacity="0.92" />
-                <polygon points="100,16 100,100 108,100" fill="url(#rg-gold-s)" opacity="0.88" />
-                <polygon points="184,100 100,100 100,92" fill="url(#rg-gold-e)" opacity="0.88" />
-                <polygon points="184,100 100,100 100,108" fill="url(#rg-gold-w)" opacity="0.92" />
-                <polygon points="100,184 100,100 108,100" fill="url(#rg-gold-n)" opacity="0.88" />
-                <polygon points="100,184 100,100 92,100" fill="url(#rg-gold-s)" opacity="0.92" />
-                <polygon points="16,100 100,100 100,108" fill="url(#rg-gold-w)" opacity="0.88" />
-                <polygon points="16,100 100,100 100,92" fill="url(#rg-gold-e)" opacity="0.92" />
-
-                {/* 4 Diagonal Secondary Petals — shorter, warmer gold */}
-                <polygon points="158,42 100,100 95,95" fill="#E8C547" opacity="0.75" />
-                <polygon points="158,42 100,100 105,105" fill="#7A5A1C" opacity="0.78" />
-                <polygon points="158,158 100,100 105,95" fill="#E8C547" opacity="0.75" />
-                <polygon points="158,158 100,100 95,105" fill="#7A5A1C" opacity="0.78" />
-                <polygon points="42,158 100,100 105,105" fill="#E8C547" opacity="0.75" />
-                <polygon points="42,158 100,100 95,95" fill="#7A5A1C" opacity="0.78" />
-                <polygon points="42,42 100,100 95,105" fill="#E8C547" opacity="0.75" />
-                <polygon points="42,42 100,100 105,95" fill="#7A5A1C" opacity="0.78" />
-
-                {/* Inner ornamental rings */}
-                <circle cx="100" cy="100" r="70" fill="none" stroke="#E8C547" strokeWidth="0.8" opacity="0.55" />
-                <circle cx="100" cy="100" r="50" fill="none" stroke="#D4AF37" strokeWidth="0.6" strokeDasharray="3 2" opacity="0.65" />
-                <circle cx="100" cy="100" r="30" fill="none" stroke="#E8C547" strokeWidth="0.5" opacity="0.5" />
-
-                {/* Decorative fleur-de-lis at cardinal tips */}
-                <g opacity="0.7">
-                  {/* North fleur */}
-                  <circle cx="100" cy="18" r="2" fill="#E8C547" />
-                  <circle cx="100" cy="18" r="0.8" fill="#0B1F4A" />
-                  {/* East fleur */}
-                  <circle cx="182" cy="100" r="2" fill="#E8C547" />
-                  <circle cx="182" cy="100" r="0.8" fill="#0B1F4A" />
-                  {/* South fleur */}
-                  <circle cx="100" cy="182" r="2" fill="#E8C547" />
-                  <circle cx="100" cy="182" r="0.8" fill="#0B1F4A" />
-                  {/* West fleur */}
-                  <circle cx="18" cy="100" r="2" fill="#E8C547" />
-                  <circle cx="18" cy="100" r="0.8" fill="#0B1F4A" />
-                </g>
-
-                {/* Subtle coordinate crosshair */}
-                <line x1="12" y1="100" x2="188" y2="100" stroke="#D4AF37" strokeWidth="0.4" strokeDasharray="5 4" opacity="0.55" />
-                <line x1="100" y1="12" x2="100" y2="188" stroke="#D4AF37" strokeWidth="0.4" strokeDasharray="5 4" opacity="0.35" />
-              </svg>
             </>
           )}
 
@@ -533,20 +521,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </>
           )}
 
-          {styleId === 'tactical_ops' && (
-            <>
-              <div className="absolute inset-2.5 rounded-full border border-green-500/40 pointer-events-none shadow-[0_0_15px_rgba(34,197,94,0.2)]" />
-              <div className="absolute inset-9 rounded-full border border-dashed border-emerald-500/25 pointer-events-none" />
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-35" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="60" fill="none" stroke="#22C55E" strokeWidth="0.5" strokeDasharray="3 3" />
-                <circle cx="100" cy="100" r="30" fill="none" stroke="#22C55E" strokeWidth="0.4" />
-                <line x1="100" y1="12" x2="100" y2="188" stroke="#22C55E" strokeWidth="0.5" />
-                <line x1="12" y1="100" x2="188" y2="100" stroke="#22C55E" strokeWidth="0.5" />
-                <line x1="38" y1="38" x2="162" y2="162" stroke="#F97316" strokeWidth="0.3" strokeDasharray="2 2" />
-                <line x1="162" y1="38" x2="38" y2="162" stroke="#F97316" strokeWidth="0.3" strokeDasharray="2 2" />
-              </svg>
-            </>
-          )}
+
 
           {styleId === 'cosmic_galaxy' && (
             <>
@@ -604,7 +579,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               </div>
 
               {/* Direction labels — hidden for minimal_onyx */}
-              {styleId !== 'minimal_onyx' && (
+              {(styleId as string) !== 'minimal_onyx' && !isMinimalOnyx && (
               <>
               <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(45deg)' }}>
                 <div className="flex flex-col items-center mt-14 select-none">
@@ -661,7 +636,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     ? (vTickMajor
                         ? `w-[2.5px] h-3.5`
                         : styleId === 'cyberpunk' ? "w-[2.5px] h-3.5 bg-cyan-400 shadow-[0_0_6px_#00F0FF]"
-                        : styleId === 'tactical_ops' ? "w-[2.5px] h-3.5 bg-orange-500 shadow-[0_0_6px_#F97316]"
                         : isNautical ? "w-[2.5px] h-3.5 bg-[#8C5824]"
                         : styleId === 'royal_gold' ? "w-[2.5px] h-4 bg-[#D4AF37] shadow-[0_0_6px_rgba(212,175,55,0.6)]"
                         : styleId === 'sandalwood' ? "w-[2.5px] h-3.5 bg-[#8C6239] shadow-[0_0_4px_rgba(140,98,57,0.4)]"
@@ -699,7 +673,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   "font-mono font-bold text-[0.52rem] drop-shadow-md",
                   styleId === 'cyberpunk' ? "text-cyan-300 font-mono" :
                   styleId === 'vedic_mandala' ? "text-amber-200" :
-                  styleId === 'tactical_ops' ? "text-green-400 font-mono" :
                   styleId === 'cosmic_galaxy' ? "text-indigo-200" :
                   styleId === 'royal_gold' ? "text-[#E8C547]/85 font-semibold" :
                   isGraphite ? "text-slate-300 font-semibold" :
@@ -765,8 +738,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                       ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
                       : styleId === 'cyberpunk'
                       ? "text-cyan-300 text-sm"
-                      : styleId === 'tactical_ops'
-                      ? "text-green-400 text-sm"
                       : styleId === 'royal_gold'
                       ? (pt.isNorth ? "text-[#F7E8A0] text-base font-black drop-shadow-[0_0_8px_rgba(212,175,55,0.7)]" : "text-[#D4AF37] text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]")
                       : isGraphite
@@ -783,7 +754,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           )}
 
           {/* Sun Badge (Real-time Solar Position) — hidden for minimal_onyx */}
-          {sunPos !== null && styleId !== 'minimal_onyx' && (
+          {sunPos !== null && (styleId as string) !== 'minimal_onyx' && !isMinimalOnyx && (
             <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${sunPos}deg)` }}>
               <div className="flex flex-col items-center mt-12 animate-pulse">
                 <div className="flex items-center gap-1 bg-amber-500/90 text-stone-950 px-1.5 py-0.5 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.9)] border border-amber-300">
@@ -922,20 +893,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 3. Tactical Reticle Needle */}
-          {styleId === 'tactical_ops' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_4px_16px_rgba(0,0,0,0.8)]" viewBox="0 0 200 200">
-              <polygon points={`100,${apexY} 88,76 100,64`} fill="#22C55E" />
-              <polygon points={`100,${apexY} 100,64 112,76`} fill="#15803D" />
-              <line x1="100" y1="64" x2="100" y2="136" stroke="#F97316" strokeWidth="1.5" strokeDasharray="2 2" />
-              <polygon points="100,176 92,136 100,144" fill="#374151" />
-              <polygon points="100,176 100,144 108,136" fill="#1F2937" />
-              <circle cx="100" cy="100" r="16" fill="none" stroke="#22C55E" strokeWidth="1.5" />
-            </svg>
-          )}
-
-          {/* 4. Minimal Stealth Pointer */}
-          {styleId === 'minimal_onyx' && (
+          {/* 3. Minimal Stealth Pointer (for iOS Minimal Onyx variant) */}
+          {isMinimalOnyx && (
             <div className="absolute inset-x-0 top-4 flex flex-col items-center pointer-events-none z-30">
               <div className="w-[4px] h-10 bg-gradient-to-b from-red-500 to-orange-500 rounded-full shadow-[0_0_14px_#ef4444]" />
               <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_#ffffff] -mt-1" />
@@ -1034,30 +993,106 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           )}
 
           {/* 11. Royal Gold Metallic Needle — polished brushed-gold, same structure as Steel */}
+          {/* 11. Imperial Royal Gold Needle — Handcrafted 24K Gold with Faceted Ruby Spire & Gems */}
           {styleId === 'royal_gold' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.7)]" viewBox="0 0 200 200">
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.85)]" viewBox="0 0 200 200">
               <defs>
-                <linearGradient id="rg-gold-n" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFF7D6" />
-                  <stop offset="50%" stopColor="#E8C547" />
-                  <stop offset="100%" stopColor="#B8860B" />
+                {/* 24K Mirror-Polished Gold Gradients */}
+                <linearGradient id="rg-needle-gold-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFFDF5" />
+                  <stop offset="25%" stopColor="#FDE047" />
+                  <stop offset="65%" stopColor="#D4AF37" />
+                  <stop offset="100%" stopColor="#92400E" />
                 </linearGradient>
-                <linearGradient id="rg-gold-s" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#8C5F1A" />
-                  <stop offset="100%" stopColor="#4A3419" />
+                <linearGradient id="rg-needle-gold-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#D4AF37" />
+                  <stop offset="45%" stopColor="#B45309" />
+                  <stop offset="80%" stopColor="#78350F" />
+                  <stop offset="100%" stopColor="#451A03" />
+                </linearGradient>
+
+                {/* Faceted Ruby Crystal Gem Gradients */}
+                <linearGradient id="rg-needle-ruby-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FF6B8B" />
+                  <stop offset="40%" stopColor="#E11D48" />
+                  <stop offset="100%" stopColor="#9F1239" />
+                </linearGradient>
+                <linearGradient id="rg-needle-ruby-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#BE123C" />
+                  <stop offset="50%" stopColor="#881337" />
+                  <stop offset="100%" stopColor="#4C0519" />
+                </linearGradient>
+                <radialGradient id="rg-needle-ruby-gem" cx="35%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#FFA4B6" />
+                  <stop offset="30%" stopColor="#F43F5E" />
+                  <stop offset="70%" stopColor="#9F1239" />
+                  <stop offset="100%" stopColor="#4C0519" />
+                </radialGradient>
+
+                {/* Antique South Gold Gradients */}
+                <linearGradient id="rg-needle-south-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#B45309" />
+                  <stop offset="60%" stopColor="#78350F" />
+                  <stop offset="100%" stopColor="#451A03" />
+                </linearGradient>
+                <linearGradient id="rg-needle-south-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#78350F" />
+                  <stop offset="100%" stopColor="#1C0F05" />
                 </linearGradient>
               </defs>
-              {/* South dark-gold split spear */}
-              <polygon points="100,188 90,100 100,110" fill="url(#rg-gold-s)" />
-              <polygon points="100,188 110,100 100,110" fill="#3B2A10" />
-              {/* North polished-gold split spear */}
-              <polygon points={`100,${apexY} 86,100 100,96`} fill="url(#rg-gold-n)" className="drop-shadow-[0_0_12px_rgba(232,197,71,0.6)]" />
-              <polygon points={`100,${apexY} 114,100 100,96`} fill="#B8860B" />
-              {/* Red cardinal line down the north spear */}
-              <line x1="100" y1={apexY} x2="100" y2="64" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
-              {/* Gold pivot rings — chronometer style */}
-              <circle cx="100" cy="100" r="14" fill="none" stroke="#D4AF37" strokeWidth="2" />
-              <circle cx="100" cy="100" r="10" fill="none" stroke="#F7D070" strokeWidth="0.8" opacity="0.7" />
+
+              {/* === SOUTH SPEAR & FLEUR COUNTERWEIGHT === */}
+              {/* South Dark Bronze/Gold Spear */}
+              <polygon points="100,188 89,102 100,108" fill="url(#rg-needle-south-l)" />
+              <polygon points="100,188 111,102 100,108" fill="url(#rg-needle-south-r)" />
+              {/* South Royal Fleur-de-lis Crest Cutout */}
+              <circle cx="100" cy="172" r="3.5" fill="#FDE047" stroke="#451A03" strokeWidth="0.8" />
+              <circle cx="100" cy="172" r="1.5" fill="#451A03" />
+
+              {/* === NORTH ROYAL 24K GOLD BLADES === */}
+              {/* Main 24K Polished Gold Spear Wings */}
+              <polygon points={`100,${apexY} 84,98 100,94`} fill="url(#rg-needle-gold-l)" />
+              <polygon points={`100,${apexY} 116,98 100,94`} fill="url(#rg-needle-gold-r)" />
+
+              {/* Ornate Gold Side Filigree & Shoulder Ruby Cabochons */}
+              <path d="M 84,98 C 80,95 80,88 84,86 C 88,88 88,94 84,98 Z" fill="#FDE047" stroke="#92400E" strokeWidth="0.6" />
+              <circle cx="83.5" cy="90" r="1.8" fill="url(#rg-needle-ruby-gem)" />
+              <path d="M 116,98 C 120,95 120,88 116,86 C 112,88 112,94 116,98 Z" fill="#FDE047" stroke="#92400E" strokeWidth="0.6" />
+              <circle cx="116.5" cy="90" r="1.8" fill="url(#rg-needle-ruby-gem)" />
+
+              {/* === EMBEDDED IMPERIAL RUBY CRYSTAL SPIRE === */}
+              {/* Ruby Apex Diamond-Cut Point */}
+              <polygon points={`100,${apexY} 94,${apexY + 22} 100,${apexY + 26}`} fill="url(#rg-needle-ruby-l)" className="drop-shadow-[0_0_8px_rgba(225,29,72,0.9)]" />
+              <polygon points={`100,${apexY} 106,${apexY + 22} 100,${apexY + 26}`} fill="url(#rg-needle-ruby-r)" />
+              {/* Golden Prong Collar Holding Ruby Tip */}
+              <polygon points={`93,${apexY + 22} 100,${apexY + 28} 107,${apexY + 22} 100,${apexY + 25}`} fill="#FDE047" stroke="#78350F" strokeWidth="0.5" />
+
+              {/* Mid-Shaft Marquise Cut Ruby Gemstone (Lozenge) */}
+              <g className="drop-shadow-[0_0_8px_rgba(225,29,72,0.7)]">
+                {/* 24K Gold Crown Setting */}
+                <polygon points="100,56 93,68 100,80 107,68" fill="#FDE047" stroke="#78350F" strokeWidth="0.6" />
+                {/* Faceted Ruby Cuts */}
+                <polygon points="100,57.5 94.5,68 100,78.5" fill="url(#rg-needle-ruby-l)" />
+                <polygon points="100,57.5 105.5,68 100,78.5" fill="url(#rg-needle-ruby-r)" />
+                <polygon points="100,61 97,68 100,75 103,68" fill="#FFA4B6" opacity="0.85" />
+                {/* Specular White Gleam */}
+                <circle cx="99" cy="65" r="1" fill="#FFFFFF" />
+              </g>
+
+              {/* Center Gilded Ridge Line */}
+              <line x1="100" y1={apexY + 26} x2="100" y2="56" stroke="#FFFDF0" strokeWidth="1" strokeLinecap="round" />
+              <line x1="100" y1="80" x2="100" y2="94" stroke="#FFFDF0" strokeWidth="1" strokeLinecap="round" />
+
+              {/* === STATIONARY JEWEL PIVOT MEDALLION === */}
+              {/* Beaded 24K Gold Outer Rim */}
+              <circle cx="100" cy="100" r="16" fill="none" stroke="#FDE047" strokeWidth="1.5" strokeDasharray="1.5 1.5" />
+              <circle cx="100" cy="100" r="13" fill="#D4AF37" stroke="#78350F" strokeWidth="0.8" />
+              <circle cx="100" cy="100" r="10.5" fill="#451A03" />
+
+              {/* Large Crown Jewel Cabochon Ruby at Exact Pivot */}
+              <circle cx="100" cy="100" r="8" fill="url(#rg-needle-ruby-gem)" stroke="#FFFDF0" strokeWidth="0.9" className="drop-shadow-[0_0_10px_rgba(225,29,72,0.95)]" />
+              {/* Brilliant Specular Highlight Gleam */}
+              <ellipse cx="97.8" cy="97.5" rx="2.5" ry="1.4" fill="#FFFFFF" opacity="0.95" />
             </svg>
           )}
 
@@ -1145,9 +1180,14 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               </div>
             </div>
           ) : styleId === 'royal_gold' ? (
-            <div className="flex flex-col items-center justify-center h-[4.25rem] w-[4.25rem] rounded-full border-[3px] border-[#D4AF37] bg-[#15100A]/95 text-[#F7E8A0] shadow-[0_0_24px_rgba(212,175,55,0.7),inset_0_0_12px_rgba(212,175,55,0.15)]" style={{ borderStyle: 'double' }}>
-              <span className="text-[15px] font-black leading-none">{displayAngle}°</span>
-              <span className="text-[7px] font-bold uppercase tracking-widest text-[#D4AF37] mt-0.5">{get16WindName(displayHeading)}</span>
+            <div className="flex flex-col items-center justify-center h-[4.25rem] w-[4.25rem] rounded-full border-[3.5px] border-[#FDE047] bg-gradient-to-br from-[#2D0B12]/95 via-[#1A0C08]/95 to-[#0D0503]/95 text-[#FFFBEB] shadow-[0_0_30px_rgba(212,175,55,0.8),0_0_14px_rgba(225,29,72,0.45),inset_0_0_12px_rgba(212,175,55,0.25)] relative" style={{ borderStyle: 'double' }}>
+              {/* 4 Cardinal Inlaid Ruby Gemstone Pips */}
+              <div className="absolute -top-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
+              <div className="absolute -bottom-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
+              <div className="absolute -left-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
+              <div className="absolute -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-700 border border-[#FDE047] shadow-[0_0_6px_#f43f5e]" />
+              <span className="text-[15px] font-black leading-none text-[#FFFDF5] drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">{displayAngle}°</span>
+              <span className="text-[7px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
             </div>
           ) : isGraphite ? (
             <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]">
