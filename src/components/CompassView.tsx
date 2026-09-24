@@ -268,6 +268,9 @@ export const CompassView = () => {
       const fetchWeather = async () => {
         try {
           const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m,uv_index,visibility&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=6`);
+          if (!res.ok) {
+            return;
+          }
           const data = await res.json();
           if (data && data.current) {
             const c = data.current;

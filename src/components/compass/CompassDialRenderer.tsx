@@ -757,14 +757,16 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 <div className="flex flex-col items-center select-none mt-5">
                   <span className={cn(
                     "font-black tracking-tight",
-                    pt.isNorth
+                    styleId === 'royal_gold'
+                      ? (pt.isNorth
+                          ? "text-[#4A0208] text-lg font-black font-serif drop-shadow-[0_1px_0px_#FFFFFF] drop-shadow-[0_0_2px_#FDE047] scale-110"
+                          : "text-[#2D1603] text-sm font-black font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]")
+                      : pt.isNorth
                       ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444] animate-pulse-subtle"
                       : styleId === 'satellite_earth'
                       ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
                       : styleId === 'cyberpunk'
                       ? "text-cyan-300 text-sm"
-                      : styleId === 'royal_gold'
-                      ? (pt.isNorth ? "text-[#990024] text-base font-black drop-shadow-[0_1px_3px_rgba(255,255,255,0.9)] scale-110" : "text-[#2D1603] text-sm font-black drop-shadow-[0_1px_2px_rgba(255,255,255,0.7)]")
                       : isGraphite
                       ? "text-slate-200 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                       : activeVariant?.cardinalColor
@@ -1080,9 +1082,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {/* 11. Royal Gold Metallic Needle — polished brushed-gold, same structure as Steel */}
           {/* 11. Imperial Royal Gold Needle — Handcrafted 24K Gold with Faceted Ruby Spire & Gems */}
-          {/* 11. Shahi (Royal Gold) Masterpiece Needle — Sculpted 3D 24K Gold Lance with Crown Ruby */}
-          {/* 11. Shahi (Royal Gold) Masterpiece Needle — Sculpted 3D 24K Gold Lance with Crown Ruby */}
-          {/* 11. Shahi (Royal Gold) Masterpiece Needle — Sculpted 3D 24K Gold Lance with Crown Ruby */}
+          {/* 11. Shahi (Royal Gold) Navratna Masterpiece Needle — 24K Sculpted Gold with Emeralds, Rubies & Diamond Crown */}
           {styleId === 'royal_gold' && (
             <svg className="w-full h-full p-2 drop-shadow-[0_16px_36px_rgba(40,20,5,0.95)]" viewBox="0 0 200 200">
               <defs>
@@ -1119,65 +1119,101 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <stop offset="100%" stopColor="#4C0519" />
                 </linearGradient>
 
-                {/* Antique South Bronze-Gold Spear */}
-                <linearGradient id="shahi-south-l" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#A16207" />
-                  <stop offset="50%" stopColor="#78350F" />
-                  <stop offset="100%" stopColor="#451A03" />
+                {/* Royal Colombian Emerald Gemstone Gradients */}
+                <radialGradient id="shahi-emerald-cabochon" cx="35%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#A7F3D0" />
+                  <stop offset="25%" stopColor="#34D399" />
+                  <stop offset="60%" stopColor="#059669" />
+                  <stop offset="85%" stopColor="#047857" />
+                  <stop offset="100%" stopColor="#022C22" />
+                </radialGradient>
+
+                {/* Imperial Midnight Sapphire & Gold South Spear */}
+                <linearGradient id="shahi-sapphire-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#60A5FA" />
+                  <stop offset="35%" stopColor="#2563EB" />
+                  <stop offset="80%" stopColor="#1E3A8A" />
+                  <stop offset="100%" stopColor="#0F172A" />
                 </linearGradient>
-                <linearGradient id="shahi-south-r" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#78350F" />
-                  <stop offset="100%" stopColor="#240D01" />
+                <linearGradient id="shahi-sapphire-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#1E3A8A" />
+                  <stop offset="50%" stopColor="#0F172A" />
+                  <stop offset="100%" stopColor="#020617" />
+                </linearGradient>
+
+                {/* Diamond Sparkle Gradient */}
+                <linearGradient id="shahi-diamond" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="50%" stopColor="#F8FAFC" />
+                  <stop offset="100%" stopColor="#E2E8F0" />
                 </linearGradient>
               </defs>
 
-              {/* === SOUTH ARROW: ANTIQUE SCULPTED GOLD SPEAR & FLEUR CREST === */}
+              {/* === SOUTH ARROW: IMPERIAL SAPPHIRE & 24K GOLD LANCE WITH EMERALD FINIAL === */}
               {/* South Spear Blades (stops at y=174 so it never clashes with S/दक्षिण) */}
-              <polygon points="100,174 91,102 100,108" fill="url(#shahi-south-l)" />
-              <polygon points="100,174 109,102 100,108" fill="url(#shahi-south-r)" />
-              {/* Royal Pierced Fleur Counterweight */}
-              <circle cx="100" cy="158" r="4.5" fill="#FDE047" stroke="#3E1E02" strokeWidth="0.8" />
-              <circle cx="100" cy="158" r="2.2" fill="#3E1E02" />
+              <polygon points="100,174 91,102 100,108" fill="url(#shahi-sapphire-l)" />
+              <polygon points="100,174 109,102 100,108" fill="url(#shahi-sapphire-r)" />
+              {/* 24K Gold Inlay Chevron Lines on South Spear */}
+              <polyline points="93,125 100,130 107,125" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.85" />
+              <polyline points="94,142 100,147 106,142" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.85" />
+              {/* Royal Pierced Fleur Counterweight with Emerald Cabochon */}
+              <circle cx="100" cy="158" r="5.5" fill="#FDE047" stroke="#3E1E02" strokeWidth="0.9" className="drop-shadow-md" />
+              <circle cx="100" cy="158" r="3.8" fill="url(#shahi-emerald-cabochon)" stroke="#064E3B" strokeWidth="0.5" className="drop-shadow-[0_0_6px_#10b981]" />
+              <ellipse cx="99" cy="156.8" rx="1.1" ry="0.7" fill="#FFFFFF" opacity="0.95" />
               <path d="M 94,166 Q 100,174 106,166 Q 100,160 94,166 Z" fill="#D4AF37" stroke="#3E1E02" strokeWidth="0.5" />
 
-              {/* === NORTH ARROW: 24K SCULPTED GOLD LANCE WITH EMBEDDED RUBY DAGGER === */}
+              {/* === NORTH ARROW: 24K SCULPTED GOLD LANCE, RUBY DAGGER, EMERALD WINGS & DIAMOND APEX === */}
               {/* Main 24K Gold Spear Blades */}
-              <polygon points={`100,${apexY} 85,98 100,94`} fill="url(#shahi-gold-blade-l)" />
-              <polygon points={`100,${apexY} 115,98 100,94`} fill="url(#shahi-gold-blade-r)" />
+              <polygon points={`100,${apexY} 84,98 100,94`} fill="url(#shahi-gold-blade-l)" />
+              <polygon points={`100,${apexY} 116,98 100,94`} fill="url(#shahi-gold-blade-r)" />
 
-              {/* Royal Pierced Filigree Shoulder Wings */}
-              <path d="M 85,98 C 79,94 79,86 85,84 C 89,86 89,94 85,98 Z" fill="#FFE680" stroke="#78350F" strokeWidth="0.7" />
-              <circle cx="84" cy="88" r="2" fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="0.5" />
-              <path d="M 115,98 C 121,94 121,86 115,84 C 111,86 111,94 115,98 Z" fill="#FFE680" stroke="#78350F" strokeWidth="0.7" />
-              <circle cx="116" cy="88" r="2" fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="0.5" />
+              {/* Filigree Shoulder Wings encrusted with Royal Emerald (पन्ना) Cabochons */}
+              {/* Left Wing & Emerald */}
+              <path d="M 84,98 C 76,94 76,84 84,82 C 89,84 89,94 84,98 Z" fill="#FFE680" stroke="#78350F" strokeWidth="0.8" />
+              <circle cx="82" cy="88" r="4.2" fill="#D4AF37" stroke="#5A3205" strokeWidth="0.6" />
+              <circle cx="82" cy="88" r="3.2" fill="url(#shahi-emerald-cabochon)" stroke="#064E3B" strokeWidth="0.5" className="drop-shadow-[0_0_8px_#10b981]" />
+              <ellipse cx="81" cy="86.8" rx="0.9" ry="0.6" fill="#FFFFFF" opacity="0.95" />
+
+              {/* Right Wing & Emerald */}
+              <path d="M 116,98 C 124,94 124,84 116,82 C 111,84 111,94 116,98 Z" fill="#FFE680" stroke="#78350F" strokeWidth="0.8" />
+              <circle cx="118" cy="88" r="4.2" fill="#D4AF37" stroke="#5A3205" strokeWidth="0.6" />
+              <circle cx="118" cy="88" r="3.2" fill="url(#shahi-emerald-cabochon)" stroke="#064E3B" strokeWidth="0.5" className="drop-shadow-[0_0_8px_#10b981]" />
+              <ellipse cx="117" cy="86.8" rx="0.9" ry="0.6" fill="#FFFFFF" opacity="0.95" />
 
               {/* Embedded Faceted Royal Pigeon-Blood Ruby Dagger Blade */}
               {/* Left Ruby Facet */}
-              <polygon points={`100,${apexY + 1} 94,52 96,86 100,88`} fill="url(#shahi-ruby-lance-l)" className="drop-shadow-[0_0_8px_rgba(225,29,72,0.85)]" />
+              <polygon points={`100,${apexY + 5} 93,52 95,86 100,88`} fill="url(#shahi-ruby-lance-l)" className="drop-shadow-[0_0_10px_rgba(225,29,72,0.9)]" />
               {/* Right Ruby Facet */}
-              <polygon points={`100,${apexY + 1} 106,52 104,86 100,88`} fill="url(#shahi-ruby-lance-r)" />
+              <polygon points={`100,${apexY + 5} 107,52 105,86 100,88`} fill="url(#shahi-ruby-lance-r)" />
 
-              {/* Fine 24K Gold Inlay Ridge Lines */}
-              <line x1="100" y1={apexY + 1} x2="100" y2="88" stroke="#FFFDF0" strokeWidth="0.75" strokeLinecap="round" />
+              {/* Gold Filigree Chevron Inlays along the Ruby Blade */}
+              <line x1="100" y1={apexY + 5} x2="100" y2="88" stroke="#FFFDF0" strokeWidth="0.9" strokeLinecap="round" />
+              <polyline points="96,56 100,60 104,56" fill="none" stroke="#FDE047" strokeWidth="0.75" opacity="0.9" />
+              <polyline points="96,70 100,74 104,70" fill="none" stroke="#FDE047" strokeWidth="0.75" opacity="0.9" />
+
               {/* Specular Light Reflection Star on Ruby */}
-              <circle cx="98.5" cy={apexY + 12} r="1.2" fill="#FFFFFF" opacity="0.95" />
+              <circle cx="98.5" cy={apexY + 16} r="1.3" fill="#FFFFFF" opacity="0.95" />
 
-              {/* Lower Golden Spine */}
-              <line x1="100" y1="88" x2="100" y2="94" stroke="#FFFDF0" strokeWidth="1.2" strokeLinecap="round" />
+              {/* Royal Teardrop Ruby right below Diamond Apex */}
+              <path d={`M 100,${apexY + 4} C 97,${apexY + 8} 97,${apexY + 12} 100,${apexY + 14} C 103,${apexY + 12} 103,${apexY + 8} 100,${apexY + 4} Z`} fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="0.5" className="drop-shadow-[0_0_6px_#ef4444]" />
 
-              {/* === STATIONARY STAR RUBY PIVOT MEDALLION === */}
+              {/* Apex Diamond Crown Finial (Koh-i-Noor Star Diamond) */}
+              <polygon points={`100,${apexY - 2} 97,${apexY + 3} 100,${apexY + 6} 103,${apexY + 3}`} fill="url(#shahi-diamond)" stroke="#FDE047" strokeWidth="0.6" className="drop-shadow-[0_0_8px_#ffffff]" />
+              <circle cx="100" cy={`${apexY + 2}`} r="1" fill="#FFFFFF" />
+
+              {/* === NAVRATNA PIVOT MEDALLION (Emerald & Ruby Bezel Settings) === */}
               {/* 24K Gold Coin-Edge Hub */}
-              <circle cx="100" cy="100" r="16" fill="none" stroke="#FFE680" strokeWidth="1.8" strokeDasharray="1.5 1.5" />
-              <circle cx="100" cy="100" r="13" fill="#D4AF37" stroke="#5A3205" strokeWidth="0.8" />
-              <circle cx="100" cy="100" r="10.5" fill="#3E1E02" />
+              <circle cx="100" cy="100" r="17" fill="none" stroke="#FFE680" strokeWidth="2" strokeDasharray="1.5 1.5" className="drop-shadow-[0_0_12px_rgba(212,175,55,0.8)]" />
+              <circle cx="100" cy="100" r="14" fill="#D4AF37" stroke="#5A3205" strokeWidth="0.8" />
+              <circle cx="100" cy="100" r="11" fill="#1E0F04" />
 
-              {/* Natural Star Ruby Cabochon */}
-              <circle cx="100" cy="100" r="8" fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="0.9" className="drop-shadow-[0_0_12px_rgba(225,29,72,0.95)]" />
+              {/* Central Star Ruby Gemstone */}
+              <circle cx="100" cy="100" r="8.5" fill="url(#shahi-ruby-cabochon)" stroke="#FFE680" strokeWidth="1" className="drop-shadow-[0_0_14px_rgba(225,29,72,0.95)]" />
               {/* 6-Ray Asterism Star Light Refraction */}
-              <line x1="93" y1="100" x2="107" y2="100" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.85" />
-              <line x1="96.5" y1="94" x2="103.5" y2="106" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.85" />
-              <line x1="96.5" y1="106" x2="103.5" y2="94" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.85" />
-              <circle cx="100" cy="100" r="1.4" fill="#FFFFFF" opacity="0.95" />
+              <line x1="92.5" y1="100" x2="107.5" y2="100" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.9" />
+              <line x1="96.2" y1="93.5" x2="103.8" y2="106.5" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.9" />
+              <line x1="96.2" y1="106.5" x2="103.8" y2="93.5" stroke="#FFA4B6" strokeWidth="0.8" opacity="0.9" />
+              <circle cx="100" cy="100" r="1.5" fill="#FFFFFF" opacity="0.98" />
             </svg>
           )}
 
@@ -1265,12 +1301,12 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               </div>
             </div>
           ) : styleId === 'royal_gold' ? (
-            <div className="flex flex-col items-center justify-center h-12 w-12 rounded-full border-[2.5px] border-[#FFE680] bg-gradient-to-br from-[#1E0F04] via-[#120802] to-[#080301] text-[#FFF8DC] shadow-[0_4px_20px_rgba(40,20,5,0.9),inset_0_1px_3px_rgba(255,240,180,0.4)] relative" style={{ borderStyle: 'double' }}>
-              {/* 4 Cardinal Inlaid Ruby Gemstone Pips */}
-              <div className="absolute -top-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
-              <div className="absolute -bottom-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
-              <div className="absolute -left-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
-              <div className="absolute -right-1 w-2 h-2 rounded-full bg-gradient-to-br from-rose-500 to-rose-800 border border-[#FFE680] shadow-[0_0_6px_#e11d48]" />
+            <div className="flex flex-col items-center justify-center h-12 w-12 rounded-full border-[2px] border-[#FFE680] bg-gradient-to-br from-[#1E0F04] via-[#120802] to-[#080301] text-[#FFF8DC] shadow-[0_4px_22px_rgba(40,20,5,0.95),inset_0_1px_4px_rgba(255,240,180,0.5)] relative">
+              {/* 4 Inlaid Alternating Emerald & Ruby Gemstones */}
+              <div className="absolute -top-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
+              <div className="absolute -bottom-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
+              <div className="absolute -left-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
+              <div className="absolute -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
               <span className="text-[13px] font-black leading-none text-[#FFFDF0] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{displayAngle}°</span>
               <span className="text-[6.5px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
             </div>
