@@ -18,6 +18,7 @@ import {
   MapPin,
   Navigation,
   Sun,
+  SunMedium,
   Sunset,
   Sunrise,
   Droplets,
@@ -88,7 +89,6 @@ export const CompassView = () => {
   const [magneticFlux, setMagneticFlux] = useState<number | null>(null);
   const [isMagneticInterference, setIsMagneticInterference] = useState<boolean>(false);
   const lastCardinalSoundTimeRef = useRef<number>(0);
-  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const userInteractedRef = useRef<boolean>(false);
 
   useEffect(() => {
@@ -892,42 +892,8 @@ export const CompassView = () => {
 
   const vastuInfo = useMemo(() => getVastuDetails(displayHeading, language), [displayHeading, language]);
 
-  // Mobile swipe gestures between main tabs (compass ↔ level ↔ vastu)
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches.length === 1) {
-      touchStartRef.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-        time: Date.now()
-      };
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartRef.current || e.changedTouches.length === 0) return;
-    const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
-    const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
-    const dt = Date.now() - touchStartRef.current.time;
-    touchStartRef.current = null;
-
-    if (isDraggingDialRef.current) return;
-    if (Math.abs(dx) > 60 && Math.abs(dy) < 50 && dt < 500) {
-      const tabs: ('compass' | 'level' | 'vastu')[] = ['compass', 'level', 'vastu'];
-      const currentIndex = tabs.indexOf(mainTab);
-      if (dx < 0 && currentIndex < tabs.length - 1) {
-        setMainTab(tabs[currentIndex + 1]);
-        triggerHapticFeedback(ImpactStyle.Light);
-      } else if (dx > 0 && currentIndex > 0) {
-        setMainTab(tabs[currentIndex - 1]);
-        triggerHapticFeedback(ImpactStyle.Light);
-      }
-    }
-  };
-
   return (
     <div
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
       className={cn(
         "w-full min-h-screen flex flex-col items-center pt-3 pb-8 px-4 select-none relative overflow-x-hidden transition-colors duration-300",
         theme === 'light' 
@@ -1186,21 +1152,6 @@ export const CompassView = () => {
                     triggerHapticFeedback();
                   }}
                 />
-                <div className="flex items-center justify-center gap-2 mt-1 pointer-events-none select-none">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
-                    <span className="text-[11px] font-black font-mono text-cyan-400 tracking-tight leading-none">μ</span>
-                    <span className="text-[11px] font-black font-mono text-white/90 leading-none tracking-tight">
-                      {declination === 0 ? '0.0°' : declination > 0 ? `+${declination.toFixed(1)}°` : `−${Math.abs(declination).toFixed(1)}°`}
-                    </span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-white/40 leading-none">
-                      {declination > 0 ? 'E' : declination < 0 ? 'W' : '—'}
-                    </span>
-                    <span className="text-white/20 text-[10px] leading-none">|</span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-amber-400/80 leading-none">
-                      {useTrueNorth ? 'TRUE' : 'MAG'}
-                    </span>
-                  </div>
-                </div>
               </React.Suspense>
             )
             ) : (
@@ -1298,33 +1249,28 @@ export const CompassView = () => {
                   <FlashlightIcon className={cn("w-4 h-4", !isFlashlightOn && (theme === 'light' ? "text-amber-600" : "text-amber-400"))} />
                 </button>
 
-                {/* Vastu Inline Toggle */}
+                {/* Always On / Keep Screen Awake */}
                 <button
                   onClick={() => {
-                    setShowVastuPanel(!showVastuPanel);
+                    const next = !keepAwake;
+                    setKeepAwake(next);
+                    try { localStorage.setItem('com.spiritual.compass.app_keep_awake', next.toString()); } catch {}
                     triggerHapticFeedback(ImpactStyle.Light);
+                    if (next) {
+                      toast.success(language === 'hi' ? 'स्क्रीन हमेशा चालू: सक्रिय (स्क्रीन बंद नहीं होगी)' : 'Always On Display: Screen will stay awake');
+                    } else {
+                      toast.info(language === 'hi' ? 'स्क्रीन हमेशा चालू: बंद (सामान्य स्क्रीन टाइमआउट)' : 'Always On Display: Screen will sleep normally');
+                    }
                   }}
                   className={cn(
                     "w-9 h-9 rounded-xl flex items-center justify-center active:scale-95 transition-all duration-200 border",
-                    showVastuPanel
+                    keepAwake
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.6)]"
                       : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
                   )}
-                  title={language === 'hi' ? 'वास्तु मार्गदर्शन' : 'Vastu Guidance'}
+                  title={language === 'hi' ? 'स्क्रीन हमेशा चालू रखें' : 'Always On (Keep Screen Awake)'}
                 >
-                  <Sparkles className={cn("w-4 h-4", !showVastuPanel && (theme === 'light' ? "text-emerald-600" : "text-emerald-400"))} />
-                </button>
-
-                {/* Copy Coordinates */}
-                <button
-                  onClick={copyCoordinates}
-                  className={cn(
-                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
-                    theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
-                  )}
-                  title={language === 'hi' ? 'कॉपी करें' : 'Copy Coordinates'}
-                >
-                  <Copy className={cn("w-4 h-4", theme === 'light' ? "text-sky-600" : "text-sky-400")} />
+                  <SunMedium className={cn("w-4 h-4", !keepAwake && (theme === 'light' ? "text-amber-600" : "text-amber-400"))} />
                 </button>
 
                 {/* Share Coordinates */}
@@ -1358,7 +1304,7 @@ export const CompassView = () => {
                 </button>
               </div>
 
-              {/* Secondary Tools: Lock, Styles */}
+              {/* Secondary Tools: Lock, CDI Target, Pin */}
               <div className="flex items-center gap-1.5">
                 {/* Lock/Unlock Heading */}
                 <button
@@ -1419,21 +1365,6 @@ export const CompassView = () => {
                   title={language === 'hi' ? 'हमेशा दिखाएं' : 'Pin (Always Visible)'}
                 >
                   <Pin className={cn("w-4 h-4", !alwaysVisible && (theme === 'light' ? "text-violet-600" : "text-violet-400"))} />
-                </button>
-
-                {/* Vastu Report */}
-                <button
-                  onClick={() => {
-                    setMainTab('vastu');
-                    triggerHapticFeedback();
-                  }}
-                  className={cn(
-                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
-                    theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
-                  )}
-                  title={language === 'hi' ? 'वास्तु रिपोर्ट' : 'Vastu Report'}
-                >
-                  <Bookmark className={cn("w-4 h-4", theme === 'light' ? "text-fuchsia-600" : "text-fuchsia-400")} />
                 </button>
               </div>
             </div>
