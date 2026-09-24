@@ -1273,16 +1273,16 @@ export const CompassView = () => {
                   <SunMedium className={cn("w-4 h-4", !keepAwake && (theme === 'light' ? "text-amber-600" : "text-amber-400"))} />
                 </button>
 
-                {/* Share Coordinates */}
+                {/* Copy Coordinates */}
                 <button
-                  onClick={shareCoordinates}
+                  onClick={copyCoordinates}
                   className={cn(
                     "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
                     theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
                   )}
-                  title={language === 'hi' ? 'स्थान साझा करें' : 'Share Location'}
+                  title={language === 'hi' ? 'कॉपी करें' : 'Copy Coordinates'}
                 >
-                  <Share2 className={cn("w-4 h-4", theme === 'light' ? "text-indigo-600" : "text-indigo-400")} />
+                  <Copy className={cn("w-4 h-4", theme === 'light' ? "text-sky-600" : "text-sky-400")} />
                 </button>
 
                 {/* Qibla Toggle */}
