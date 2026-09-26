@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { CompassStyleId, Language, CompassStyleVariant } from '@/types/compass';
 import { Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { VASTU_32_PADAS } from '@/lib/vastu32Devta';
+import { VASTU_32_PADAS, VastuPada32 } from '@/lib/vastu32Devta';
 import { getVariant } from '@/components/compass/CompassStyles';
 
 interface Props {
@@ -28,6 +28,8 @@ interface Props {
   targetBearing?: number | null;
   /** Variant id for grouped themes (ios_compass, color_palette) */
   variantId?: string | null;
+  /** Optional callback when user taps a 32 Devta Pada */
+  onSelectPada?: (pada: VastuPada32) => void;
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerMove: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
@@ -59,6 +61,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   useTrueNorth = false,
   targetBearing,
   variantId,
+  onSelectPada,
   onPointerDown,
   onPointerMove,
   onPointerUp
@@ -457,7 +460,15 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
                 {/* 32 Vastu Devta Outer Annular Ring Sectors */}
                 {VASTU_32_PADAS.map((pada) => (
-                  <g key={pada.code} transform={`rotate(${pada.centerDeg}, 100, 100)`}>
+                  <g
+                    key={pada.code}
+                    transform={`rotate(${pada.centerDeg}, 100, 100)`}
+                    className="pointer-events-auto cursor-pointer transition-opacity hover:opacity-100 active:scale-[0.98]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectPada?.(pada);
+                    }}
+                  >
                     {/* Sector Arc Background */}
                     <path
                       d="M 90.69,5.46 A 95,95 0 0,1 109.31,5.46 L 106.57,33.32 A 67,67 0 0,0 93.43,33.32 Z"

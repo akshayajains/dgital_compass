@@ -54,7 +54,10 @@ import { COMPASS_STYLES, getDefaultVariantId } from '@/components/compass/Compas
 import { CompassStyleId } from '@/types/compass';
 import { getVastuDetails, getWeatherDescription, translations } from '@/lib/translations';
 import { CreatorBanner } from '@/components/CreatorBanner';
-import { get32Pada } from '@/lib/vastu32Devta';
+import { get32Pada, VastuPada32 } from '@/lib/vastu32Devta';
+import { App } from '@capacitor/app';
+import { Share } from '@capacitor/share';
+import { DevtaPadaModal } from '@/components/compass/DevtaPadaModal';
 
 // Lazy-loaded heavy views (only fetched when their tab is first opened)
 const AdvancedLevelView = React.lazy(() => import('@/components/level/AdvancedLevelView').then(m => ({ default: m.AdvancedLevelView })));
@@ -84,6 +87,9 @@ export const CompassView = () => {
   const [showCalibrationModal, setShowCalibrationModal] = useState<boolean>(false);
   const [showSensorsModal, setShowSensorsModal] = useState<boolean>(false);
   const [showStyleModal, setShowStyleModal] = useState<boolean>(false);
+  const [showWeatherModal, setShowWeatherModal] = useState<boolean>(false);
+  const [satelliteMode, setSatelliteMode] = useState<'standard' | 'telescope' | 'satellite' | 'map'>('satellite');
+  const [selectedPadaModal, setSelectedPadaModal] = useState<VastuPada32 | null>(null);
   const [mainTab, setMainTab] = useState<'compass' | 'level' | 'vastu'>('compass');
   const [tareOffset, setTareOffset] = useState<{ pitch: number; roll: number } | null>(null);
   const [isHeadingLocked, setIsHeadingLocked] = useState<boolean>(false);
@@ -91,7 +97,93 @@ export const CompassView = () => {
   const [magneticFlux, setMagneticFlux] = useState<number | null>(null);
   const [isMagneticInterference, setIsMagneticInterference] = useState<boolean>(false);
   const lastCardinalSoundTimeRef = useRef<number>(0);
+  const lastCardinalSnapTimeRef = useRef<number>(0);
   const userInteractedRef = useRef<boolean>(false);
+
+  // Screen Keep-Awake WakeLock Integration
+  useEffect(() => {
+    let wakeLockSentinel: any = null;
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator && (navigator as any).wakeLock) {
+          wakeLockSentinel = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch {}
+    };
+
+    requestWakeLock();
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      if (wakeLockSentinel && typeof wakeLockSentinel.release === 'function') {
+        wakeLockSentinel.release().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Android Hardware Back Button Handler
+  useEffect(() => {
+    let handler: any = null;
+    try {
+      handler = App.addListener('backButton', ({ canGoBack }) => {
+        if (selectedPadaModal !== null) {
+          setSelectedPadaModal(null);
+          return;
+        }
+        if (showWeatherModal) {
+          setShowWeatherModal(false);
+          return;
+        }
+        if (showSensorsModal) {
+          setShowSensorsModal(false);
+          return;
+        }
+        if (showCalibrationModal) {
+          setShowCalibrationModal(false);
+          return;
+        }
+        if (showStyleModal) {
+          setShowStyleModal(false);
+          return;
+        }
+        if (satelliteMode === 'telescope') {
+          setSatelliteMode('satellite');
+          return;
+        }
+        if (mainTab !== 'compass') {
+          setMainTab('compass');
+          return;
+        }
+        if (canGoBack) {
+          window.history.back();
+        } else {
+          App.exitApp();
+        }
+      });
+    } catch (e) {
+      // Not on native Android
+    }
+
+    return () => {
+      if (handler && typeof handler.remove === 'function') {
+        handler.remove();
+      }
+    };
+  }, [
+    selectedPadaModal,
+    showSensorsModal,
+    showCalibrationModal,
+    showStyleModal,
+    satelliteMode,
+    mainTab
+  ]);
 
   useEffect(() => {
     const markInteracted = () => {
@@ -108,10 +200,6 @@ export const CompassView = () => {
       window.removeEventListener('click', markInteracted);
     };
   }, []);
-
-  // Satellite Earth Mode States
-  // New SatelliteCompassView mode state
-  const [satelliteMode, setSatelliteMode] = useState<'standard' | 'telescope' | 'satellite' | 'map'>('satellite');
 
   // Weather state
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -229,9 +317,6 @@ export const CompassView = () => {
 
   // Inline Vastu Suggestions Panel State
   const [showVastuPanel, setShowVastuPanel] = useState<boolean>(false);
-
-  // Weather detail modal
-  const [showWeatherModal, setShowWeatherModal] = useState<boolean>(false);
 
   // Geodesic Qibla Angle Calculation to Makkah (21.4225° N, 39.8262° E)
   const qiblaBearing = useMemo(() => {
@@ -772,16 +857,26 @@ export const CompassView = () => {
         }
       }
 
-      // Tibetan Singing Bowl chime on cardinal & sacred alignments (0° North, 45° NE Ishanya, 90° East, 180° South, 270° West)
-      const cardinalSacredAngles = [0, 45, 90, 180, 270];
-      const isAlignedWithCardinal = cardinalSacredAngles.some(a => {
+      // Tibetan Singing Bowl chime ONLY on True North (0°) and Pure East (90°) (or user-locked target bearing)
+      const sacredAngles = targetHeading !== null ? [0, 90, targetHeading] : [0, 90];
+      const isAlignedWithSacred = sacredAngles.some(a => {
         const d = Math.abs(norm - a);
-        return d <= 0.8 || Math.abs(d - 360) <= 0.8;
+        return d <= 0.9 || Math.abs(d - 360) <= 0.9;
       });
-      if (isAlignedWithCardinal && Date.now() - lastCardinalSoundTimeRef.current > 3500) {
+      if (isAlignedWithSacred && Date.now() - lastCardinalSoundTimeRef.current > 4000) {
         lastCardinalSoundTimeRef.current = Date.now();
         playBellSound('singingBowl');
         triggerHapticFeedback(ImpactStyle.Medium);
+      }
+
+      // Micro Cardinal Snap Haptic on exact North (0°), East (90°), South (180°), West (270°)
+      const isCardinalSnap = [0, 90, 180, 270].some(a => {
+        const d = Math.abs(norm - a);
+        return d <= 0.6 || Math.abs(d - 360) <= 0.6;
+      });
+      if (isCardinalSnap && Date.now() - lastCardinalSnapTimeRef.current > 1200) {
+        lastCardinalSnapTimeRef.current = Date.now();
+        triggerHapticFeedback(ImpactStyle.Light);
       }
 
       if (Math.abs(diff) > 0.05) {
@@ -1191,6 +1286,10 @@ export const CompassView = () => {
               useTrueNorth={useTrueNorth}
               targetBearing={targetHeading}
               variantId={selectedVariant}
+              onSelectPada={(pada) => {
+                triggerHapticFeedback(ImpactStyle.Light);
+                setSelectedPadaModal(pada);
+              }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -1392,6 +1491,49 @@ export const CompassView = () => {
                 >
                   <Target className={cn("w-4 h-4", targetHeading === null && (theme === 'light' ? "text-orange-600" : "text-orange-400"))} />
                 </button>
+
+                {/* Share Vastu Audit Report */}
+                <button
+                  onClick={async () => {
+                    triggerHapticFeedback(ImpactStyle.Light);
+                    const currentPada = get32Pada(renderedHeading);
+                    const text = `🧭 DIGITAL COMPASS & VASTU AUDIT\n` +
+                      `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                      `📍 Live Heading: ${Math.round(renderedHeading)}° (${vastuInfo.code} - ${vastuInfo.name.split(' ')[0]})\n` +
+                      `🏛️ 32 Devta Pada: ${currentPada.nameHi} (${currentPada.code} / ${currentPada.nameEn})\n` +
+                      `✨ Status: ${currentPada.isAuspicious ? '★ Auspicious / शुभ द्वार' : 'Non-Auspicious / विचारणीय'}\n` +
+                      `🌊 Element: ${currentPada.elementNameHi}\n` +
+                      `📜 Result: ${language === 'hi' ? currentPada.resultHi : currentPada.resultEn}\n` +
+                      `🏠 Ideal Usage: ${language === 'hi' ? currentPada.usageHi : currentPada.usageEn}\n` +
+                      (location ? `🌐 GPS: ${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°\n` : '') +
+                      `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                      `Generated with Digital Compass & Vastu Suite`;
+
+                    try {
+                      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+                        await (navigator as any).share({
+                          title: 'Digital Compass Vastu Audit',
+                          text
+                        });
+                      } else {
+                        await navigator.clipboard.writeText(text);
+                        toast.success(language === 'hi' ? 'वास्तु रिपोर्ट कॉपी हो गई!' : 'Vastu Audit Report copied to clipboard!');
+                      }
+                    } catch {
+                      try {
+                        await navigator.clipboard.writeText(text);
+                        toast.success(language === 'hi' ? 'वास्तु रिपोर्ट कॉपी हो गई!' : 'Vastu Audit Report copied to clipboard!');
+                      } catch {}
+                    }
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25"
+                  )}
+                  title={language === 'hi' ? 'वास्तु रिपोर्ट साझा करें' : 'Share Vastu Report'}
+                >
+                  <Share2 className={cn("w-4 h-4", theme === 'light' ? "text-amber-600" : "text-amber-400")} />
+                </button>
               </div>
             </div>
 
@@ -1400,12 +1542,18 @@ export const CompassView = () => {
               (() => {
                 const currentPada = get32Pada(displayHeading);
                 return (
-                  <div className={cn(
-                    "w-full p-2.5 sm:p-3 rounded-2xl border flex flex-col gap-2 shadow-[0_6px_24px_rgba(0,0,0,0.7)] my-1 transition-all duration-300",
-                    theme === 'light'
-                      ? "bg-gradient-to-br from-amber-50/95 via-orange-50/80 to-amber-100/70 border-amber-300 text-stone-900"
-                      : "bg-gradient-to-br from-[#1C1408] via-[#140E05] to-[#0A0702] border-amber-500/50 text-white"
-                  )}>
+                  <div 
+                    onClick={() => {
+                      triggerHapticFeedback(ImpactStyle.Light);
+                      setSelectedPadaModal(currentPada);
+                    }}
+                    className={cn(
+                      "w-full p-2.5 sm:p-3 rounded-2xl border flex flex-col gap-2 shadow-[0_6px_24px_rgba(0,0,0,0.7)] my-1 transition-all duration-300 cursor-pointer hover:scale-[1.01] active:scale-[0.99]",
+                      theme === 'light'
+                        ? "bg-gradient-to-br from-amber-50/95 via-orange-50/80 to-amber-100/70 border-amber-300 text-stone-900"
+                        : "bg-gradient-to-br from-[#1C1408] via-[#140E05] to-[#0A0702] border-amber-500/50 text-white"
+                    )}
+                  >
                     {/* Top Row: Pada Code, Deity Name, Degree Span, and Auspicious Badge */}
                     <div className="flex items-center justify-between gap-1.5 flex-wrap">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -1464,16 +1612,13 @@ export const CompassView = () => {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-0.5 text-[10.5px]">
+                      <div className="flex items-center justify-between gap-2 pt-0.5 text-[10.5px]">
                         <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold shrink-0">
                           {language === 'hi' ? currentPada.elementNameHi : `${currentPada.element} Element`}
                         </span>
-                        <span className={cn(
-                          "truncate font-medium",
-                          theme === 'light' ? "text-stone-600" : "text-stone-400"
-                        )}>
-                          <span className="opacity-75">{language === 'hi' ? 'उपयुक्त: ' : 'Best for: '}</span>
-                          {language === 'hi' ? currentPada.usageHi : currentPada.usageEn}
+                        <span className="text-[10px] text-amber-400 font-bold flex items-center gap-1 opacity-90">
+                          <span>{language === 'hi' ? 'विवरण देखें' : 'Tap for details'}</span>
+                          <Sparkles className="w-3 h-3" />
                         </span>
                       </div>
                     </div>
@@ -2319,6 +2464,18 @@ export const CompassView = () => {
           longitude={location?.longitude}
         />
       </React.Suspense>
+
+      {/* 32 Devta Pada Inspector Modal */}
+      {selectedPadaModal && (
+        <DevtaPadaModal
+          pada={selectedPadaModal}
+          onClose={() => setSelectedPadaModal(null)}
+          onSelectPada={(pada) => setSelectedPadaModal(pada)}
+          onLockBearing={(deg) => setTargetHeading(deg)}
+          language={language}
+          theme={theme}
+        />
+      )}
     </div>
   );
 };
