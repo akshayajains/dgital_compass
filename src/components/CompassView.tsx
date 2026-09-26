@@ -469,14 +469,10 @@ export const CompassView = () => {
   }, []);
 
   const dialRef = useRef<HTMLDivElement>(null);
-  const isDraggingDialRef = useRef<boolean>(false);
-  const longPressRef = useRef<{ x: number; y: number; fired: boolean } | null>(null);
-  const longPressTimerRef = useRef<number | null>(null);
   const smoothedVectorRef = useRef<{ x: number; y: number } | null>(null);
   const smoothedPitchRef = useRef<number>(3);
   const smoothedRollRef = useRef<number>(0);
   const usingAbsoluteRef = useRef<boolean>(false);
-  const lastRotaryTickRef = useRef<number>(0);
   // Ref-based callback for handleOrientation — avoids stale closure re-registration on every render
   const handleOrientationRef = useRef<((event: any, isAbsolute: boolean) => void) | null>(null);
   // iOS compass accuracy (degrees of uncertainty; >25 means figure-8 calibration needed)
@@ -634,7 +630,14 @@ export const CompassView = () => {
 
   const handleOrientation = (event: any, isAbsolute: boolean) => {
     if (isHeadingLocked) return;
-    if (!isAbsolute && usingAbsoluteRef.current) return;
+
+    // CRITICAL: Standard `deviceorientation` alpha is NOT north-referenced on Android/Chrome —
+    // it is relative to an arbitrary initial orientation. Only trust:
+    //   1. event.webkitCompassHeading (iOS Safari — already true-magnetic-north referenced)
+    //   2. deviceorientationabsolute alpha (Android Chrome — geomagnetic north referenced)
+    // Ignore standard deviceorientation alpha entirely to prevent wrong initial headings.
+    if (!isAbsolute && !event.webkitCompassHeading && event.webkitCompassHeading === undefined) return;
+
     let compassHeading: number | null = null;
 
     if (event.webkitCompassAccuracy !== undefined && event.webkitCompassAccuracy !== null) {
@@ -647,29 +650,16 @@ export const CompassView = () => {
     }
 
     if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
+      // iOS: webkitCompassHeading is already magnetic north (0–360°, CW)
       compassHeading = event.webkitCompassHeading;
     } else if (isAbsolute && event.alpha !== null && event.alpha !== undefined) {
+      // Android Chrome deviceorientationabsolute: alpha is the rotation around Z axis
+      // where 0° = device top pointing to magnetic north.
+      // Compass heading = 360 - alpha (because alpha increases CCW, compass increases CW)
       usingAbsoluteRef.current = true;
       compassHeading = (360 - event.alpha + 360) % 360;
-    } else if (!usingAbsoluteRef.current && event.alpha !== null && event.alpha !== undefined) {
-      const alpha = event.alpha;
-      const beta = event.beta ?? 0;
-      const gamma = event.gamma ?? 0;
-      const toRad = Math.PI / 180;
-      const bRad = beta * toRad;
-      const gRad = gamma * toRad;
-      const aRad = alpha * toRad;
-
-      // Screen-frame tilt compensation:
-      const cA = Math.cos(aRad), sA = Math.sin(aRad);
-      const cB = Math.cos(bRad), sB = Math.sin(bRad);
-      const cG = Math.cos(gRad), sG = Math.sin(gRad);
-      const xH = -cA * sG - sA * sB * cG;
-      const yH = -sA * sG + cA * sB * cG;
-      let head = Math.atan2(yH, xH) * (180 / Math.PI);
-      if (head < 0) head += 360;
-      compassHeading = (head + 360) % 360;
     }
+    // No else branch — we intentionally ignore standard non-absolute alpha.
 
     if (compassHeading !== null) {
       compassHeading = ((compassHeading % 360) + 360) % 360;
@@ -729,6 +719,7 @@ export const CompassView = () => {
       const onAbsolute = (e: any) => handleOrientationRef.current?.(e, true);
       const onStandard = (e: any) => handleOrientationRef.current?.(e, false);
 
+      // Register absolute FIRST so it takes priority over standard events
       window.addEventListener('deviceorientationabsolute' as any, onAbsolute, true);
       window.addEventListener('deviceorientation', onStandard, true);
 
@@ -766,64 +757,10 @@ export const CompassView = () => {
     };
   }, []);
 
-  const updateHeadingFromPointer = useCallback((clientX: number, clientY: number) => {
-    if (isHeadingLocked || !dialRef.current) return;
-    const rect = dialRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    const dx = clientX - centerX;
-    const dy = clientY - centerY;
-    let angle = (Math.atan2(dy, dx) * 180 / Math.PI) + 90;
-    if (angle < 0) angle += 360;
-    const newAngle = Math.round(angle);
-    setHeading(newAngle);
-
-    // Rotary click wheel feel on every 5° crossing during touch dragging
-    const currentTick = Math.floor(newAngle / 5);
-    if (currentTick !== lastRotaryTickRef.current) {
-      lastRotaryTickRef.current = currentTick;
-      triggerHapticFeedback(ImpactStyle.Light);
-    }
-  }, [isHeadingLocked]);
-
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (isHeadingLocked) return;
-    isDraggingDialRef.current = true;
-    try { (e.target as HTMLElement).setPointerCapture(e.pointerId); } catch {}
-    updateHeadingFromPointer(e.clientX, e.clientY);
-    // Long-press to lock heading
-    longPressRef.current = { x: e.clientX, y: e.clientY, fired: false };
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    longPressTimerRef.current = window.setTimeout(() => {
-      if (longPressRef.current && !longPressRef.current.fired) {
-        longPressRef.current.fired = true;
-        setIsHeadingLocked(true);
-        triggerHapticFeedback(ImpactStyle.Medium);
-        toast.success(language === 'hi' ? 'दिशा लॉक हो गई' : 'Heading Locked');
-      }
-    }, 600);
-  }, [isHeadingLocked, updateHeadingFromPointer, language]);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDraggingDialRef.current || isHeadingLocked) return;
-    // Cancel long-press if moved significantly
-    if (longPressRef.current && !longPressRef.current.fired) {
-      const dx = e.clientX - longPressRef.current.x;
-      const dy = e.clientY - longPressRef.current.y;
-      if (Math.sqrt(dx * dx + dy * dy) > 12) {
-        if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-        longPressRef.current.fired = true;
-      }
-    }
-    updateHeadingFromPointer(e.clientX, e.clientY);
-  }, [isHeadingLocked, updateHeadingFromPointer]);
-
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    isDraggingDialRef.current = false;
-    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-    longPressRef.current = null;
-    try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch {}
-  }, []);
+  // Dial is read-only — pointer events are intentionally no-ops
+  const handlePointerDown = useCallback((_e: React.PointerEvent) => {}, []);
+  const handlePointerMove = useCallback((_e: React.PointerEvent) => {}, []);
+  const handlePointerUp = useCallback((_e: React.PointerEvent) => {}, []);
 
   const displayHeading = useMemo(() => {
     if (heading === null) return 0;
@@ -848,21 +785,17 @@ export const CompassView = () => {
       let diff = (target - current) % 360;
       if (diff > 180) diff -= 360;
       if (diff < -180) diff += 360;
-      // Dynamic responsiveness: 0.75 for direct touch drag, 0.35 for snappy sensor tracking with zero lag
-      const easeFactor = isDraggingDialRef.current ? 0.75 : 0.35;
+      // Snappy sensor tracking — 0.35 ease factor gives fluid but responsive motion
+      const easeFactor = 0.35;
       const next = current + diff * easeFactor;
       smoothHeadingRef.current = next;
       setSmoothHeading(next);
 
-      // Haptic tick on every 5° crossing only when manually dragging the dial
-      // (Sensor updates already provide haptic feedback via handleOrientation to prevent double-haptics)
+      // Track cardinal crossing for haptic/sound
       const norm = ((next % 360) + 360) % 360;
       const cardinal = Math.round(norm / 5);
       if (cardinal !== lastCardinalRef.current && Math.abs(diff) > 0.5) {
         lastCardinalRef.current = cardinal;
-        if (isDraggingDialRef.current) {
-          triggerHapticFeedback(ImpactStyle.Light);
-        }
       }
 
       // Tibetan Singing Bowl chime ONLY on True North (0°) and Pure East (90°) (or user-locked target bearing)
@@ -902,7 +835,8 @@ export const CompassView = () => {
     };
   }, [displayHeading]);
 
-  const renderedHeading = smoothHeading;
+  // renderedHeading is purely sensor-driven (no drag offset)
+  const renderedHeading = ((smoothHeading % 360) + 360) % 360;
 
   const courseDeviation = useMemo(() => {
     if (targetHeading === null) return 0;

@@ -237,7 +237,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         className={cn(
-          "w-[23.5rem] h-[23.5rem] sm:w-[26.5rem] sm:h-[26.5rem] rounded-full flex items-center justify-center relative select-none cursor-grab active:cursor-grabbing touch-none",
+          "w-[23.5rem] h-[23.5rem] sm:w-[26.5rem] sm:h-[26.5rem] rounded-full flex items-center justify-center relative select-none pointer-events-none",
           getBezelClass()
         )}
         style={{
