@@ -74,6 +74,57 @@ const ROOM_VASTU_DATA: Record<string, { label: string; labelHi: string; goodZone
   }
 };
 
+// Multi-tier fallback for camera stream across mobile devices & WebViews
+const getCameraStream = async (): Promise<MediaStream> => {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+    throw new Error('Camera API (getUserMedia) not supported in this environment');
+  }
+
+  const constraintTiers: MediaStreamConstraints[] = [
+    // Tier 1: Ideal environment lens with 1080p/720p ideal
+    {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      },
+      audio: false
+    },
+    // Tier 2: Ideal environment without high resolution restriction
+    {
+      video: {
+        facingMode: { ideal: 'environment' }
+      },
+      audio: false
+    },
+    // Tier 3: Direct facingMode
+    {
+      video: {
+        facingMode: 'environment'
+      },
+      audio: false
+    },
+    // Tier 4: Generic video
+    {
+      video: true,
+      audio: false
+    }
+  ];
+
+  let lastError: any = null;
+  for (const constraints of constraintTiers) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia(constraints);
+      return s;
+    } catch (err) {
+      lastError = err;
+      console.warn('AR Camera constraints attempt failed, trying fallback:', constraints, err);
+    }
+  }
+
+  throw lastError || new Error('Camera not accessible');
+};
+
 export const ARVastuScanner = ({
   isOpen,
   onClose,
@@ -111,50 +162,47 @@ export const ARVastuScanner = ({
   const isAuspicious = roomConfig.goodZones.includes(sectorCode);
   const isSevereDosha = roomConfig.badZones.includes(sectorCode);
 
-  // Start Camera
+  const startStream = async () => {
+    try {
+      stopCamera();
+      setCameraError(null);
+      const stream = await getCameraStream();
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.setAttribute('webkit-playsinline', 'true');
+        videoRef.current.muted = true;
+        const p = videoRef.current.play();
+        if (p !== undefined) {
+          p.catch((e) => console.warn('AR scanner video play error:', e));
+        }
+      }
+    } catch (err: any) {
+      console.warn('AR Camera error:', err);
+      const msg = (err && err.name) || (err && err.message) || '';
+      if (/NotReadableError|NotReadable|TrackStartError/i.test(msg) || /device in use/i.test(msg)) {
+        setCameraError(language === 'hi' ? 'कैमरा उपयोग में है — अन्य ऐप बंद करें और पुनः प्रयास करें।' : 'Camera is currently in use by another application. Close it and try again.');
+      } else if (/NotAllowedError|PermissionDenied|SecurityError/i.test(msg)) {
+        setCameraError(language === 'hi' ? 'कैमरा अनुमति आवश्यक है। सेटिंग्स में जाकर अनुमति दें।' : 'Camera permission denied. Enable in app settings.');
+      } else if (/OverconstrainedError|Overconstrained/i.test(msg)) {
+        setCameraError(language === 'hi' ? 'डिवाइस अनुकूलन समस्या: कैमरा उपलब्ध नहीं है।' : 'Camera constraints could not be satisfied for this device.');
+      } else {
+        setCameraError(language === 'hi' ? 'कैमरा शुरू करने में असमर्थ' : 'Camera stream unavailable.');
+      }
+    }
+  };
+
+  // Start Camera on Open
   useEffect(() => {
     if (!isOpen) {
       stopCamera();
       return;
     }
 
-    let active = true;
-    setCameraError(null);
-
-    const startStream = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          },
-          audio: false
-        });
-
-        if (!active) {
-          stream.getTracks().forEach(t => t.stop());
-          return;
-        }
-
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      } catch (err: any) {
-        console.warn('AR Camera error:', err);
-        setCameraError(
-          err?.name === 'NotAllowedError'
-            ? (language === 'hi' ? 'कैमरा अनुमति आवश्यक है। सेटिंग्स में जाकर अनुमति दें।' : 'Camera permission denied. Enable in app settings.')
-            : (language === 'hi' ? 'कैमरा शुरू करने में असमर्थ' : 'Camera stream unavailable.')
-        );
-      }
-    };
-
     startStream();
 
     return () => {
-      active = false;
       stopCamera();
     };
   }, [isOpen, language]);
@@ -403,8 +451,14 @@ export const ARVastuScanner = ({
 
       {/* Camera Error Banner */}
       {cameraError && (
-        <div className="absolute top-20 inset-x-4 mx-auto max-w-sm p-4 rounded-2xl bg-red-950/90 border border-red-500/50 text-red-200 text-xs font-bold text-center backdrop-blur-md z-30">
-          {cameraError}
+        <div className="absolute top-20 inset-x-4 mx-auto max-w-sm p-4 rounded-2xl bg-red-950/90 border border-red-500/50 text-red-200 text-xs font-bold text-center backdrop-blur-md z-30 flex flex-col items-center gap-2.5 shadow-2xl">
+          <p>{cameraError}</p>
+          <button
+            onClick={() => startStream()}
+            className="px-4 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer"
+          >
+            {language === 'hi' ? 'पुनः प्रयास करें' : 'Retry Camera'}
+          </button>
         </div>
       )}
     </div>

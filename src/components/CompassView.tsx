@@ -1153,6 +1153,13 @@ export const CompassView = () => {
                     triggerHapticFeedback();
                   }}
                   onOpenAR={() => {
+                    if (mediaStreamRef.current) {
+                      mediaStreamRef.current.getTracks().forEach((t) => {
+                        try { t.stop(); } catch {}
+                      });
+                      mediaStreamRef.current = null;
+                      setIsFlashlightOn(false);
+                    }
                     setSatelliteMode('telescope');
                     triggerHapticFeedback();
                   }}

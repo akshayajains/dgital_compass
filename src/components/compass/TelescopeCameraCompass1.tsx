@@ -155,6 +155,57 @@ const ROOM_OPTIONS: Array<{ id: string; label: string; labelHi: string }> = [
   { id: 'naukari', label: 'Job / Career', labelHi: 'नौकरी / करियर' }
 ];
 
+// Multi-tier fallback for camera stream across mobile devices & WebViews
+const getCameraStream = async (mode: 'environment' | 'user'): Promise<MediaStream> => {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+    throw new Error('Camera API (getUserMedia) not supported in this environment');
+  }
+
+  const constraintTiers: MediaStreamConstraints[] = [
+    // Tier 1: Ideal facingMode with 720p ideal
+    {
+      video: {
+        facingMode: { ideal: mode },
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: false
+    },
+    // Tier 2: Ideal facingMode without resolution constraints
+    {
+      video: {
+        facingMode: { ideal: mode }
+      },
+      audio: false
+    },
+    // Tier 3: Exact facingMode
+    {
+      video: {
+        facingMode: mode
+      },
+      audio: false
+    },
+    // Tier 4: Basic video fallback
+    {
+      video: true,
+      audio: false
+    }
+  ];
+
+  let lastError: any = null;
+  for (const constraints of constraintTiers) {
+    try {
+      const s = await navigator.mediaDevices.getUserMedia(constraints);
+      return s;
+    } catch (err) {
+      lastError = err;
+      console.warn('Camera constraints attempt failed, trying fallback tier:', constraints, err);
+    }
+  }
+
+  throw lastError || new Error('Camera not accessible or permission denied');
+};
+
 export const TelescopeCameraCompass: React.FC<Props> = ({
   heading,
   pitch,
@@ -229,22 +280,14 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
   const startCamera = async (mode: 'environment' | 'user' = facingMode) => {
     try {
       if (stream) {
-        stream.getTracks().forEach(t => t.stop());
+        stream.getTracks().forEach((t) => {
+          try { t.stop(); } catch {}
+        });
+        setStream(null);
       }
       setCameraError(null);
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: mode,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false
-      });
+      const newStream = await getCameraStream(mode);
       setStream(newStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
-        await videoRef.current.play();
-      }
       setCameraActive(true);
     } catch (err: any) {
       console.warn('Camera access error:', err);
@@ -257,17 +300,40 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
       } else if (/OverconstrainedError|Overconstrained/i.test(msg)) {
         setCameraError(language === 'hi' ? 'डिवाइस अनुकूलन समस्या: कैमरा उपलब्ध नहीं है।' : 'Camera constraints could not be satisfied for this device.');
       } else {
-        setCameraError(err.message || 'Camera permission denied or unavailable');
+        setCameraError(err?.message || (language === 'hi' ? 'कैमरा शुरू करने में असमर्थ' : 'Camera permission denied or unavailable'));
       }
       setCameraActive(false);
     }
   };
 
+  // Bind stream to video element whenever stream updates
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (stream) {
+      video.srcObject = stream;
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.muted = true;
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          console.warn('Auto-play error in telescope camera:', err);
+        });
+      }
+    } else {
+      video.srcObject = null;
+    }
+  }, [stream]);
+
   useEffect(() => {
     startCamera(facingMode);
     return () => {
       if (stream) {
-        stream.getTracks().forEach(t => t.stop());
+        stream.getTracks().forEach((t) => {
+          try { t.stop(); } catch {}
+        });
       }
     };
   }, [facingMode]);
@@ -363,17 +429,21 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
 
   return (
     <div className="w-full relative rounded-3xl overflow-hidden bg-black border border-slate-700 shadow-2xl flex flex-col items-center select-none aspect-[4/5] sm:aspect-square">
-      {/* 1. Camera Video Element */}
-      {cameraActive && (
-        <video
-          ref={videoRef}
-          playsInline
-          autoPlay
-          muted
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-200"
-          style={{ transform: `scale(${zoomLevel})` }}
-        />
-      )}
+      {/* 1. Camera Video Element - Always kept in DOM for reliable stream attachment */}
+      <video
+        ref={videoRef}
+        playsInline
+        autoPlay
+        muted
+        onLoadedMetadata={() => {
+          videoRef.current?.play().catch(() => {});
+        }}
+        className={cn(
+          "absolute inset-0 w-full h-full object-cover transition-all duration-300",
+          cameraActive ? "opacity-100 scale-100" : "opacity-0 pointer-events-none"
+        )}
+        style={{ transform: `scale(${zoomLevel})` }}
+      />
 
       {/* Fallback Simulation if Camera Permission Denied / Desktop */}
       {!cameraActive && (
@@ -383,14 +453,14 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
             AR TELESCOPE CAMERA VIEW
           </p>
           <p className="text-stone-400 text-[11px] max-w-xs mb-4">
-            {cameraError ? cameraError : 'Enable camera permissions to view the live optical telescope camera with compass telemetry.'}
+            {cameraError ? cameraError : (language === 'hi' ? 'लाइव ऑप्टिकल टेलीस्कोप कैमरा और कंपास देखने के लिए कैमरा अनुमति दें।' : 'Enable camera permissions to view the live optical telescope camera with compass telemetry.')}
           </p>
           <button
-            onClick={() => startCamera()}
-            className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg active:scale-95 transition-all"
+            onClick={() => startCamera(facingMode)}
+            className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg active:scale-95 transition-all cursor-pointer"
           >
             <Camera className="w-4 h-4" />
-            <span>Enable Camera Stream</span>
+            <span>{language === 'hi' ? 'कैमरा चालू करें' : 'Enable Camera Stream'}</span>
           </button>
         </div>
       )}
