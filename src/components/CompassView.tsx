@@ -38,6 +38,8 @@ import {
   Vibrate,
   MoonStar,
   AlertTriangle,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { useSunTimes } from '@/hooks/useSunTimes';
 import SunCalc from 'suncalc';
@@ -1232,7 +1234,7 @@ export const CompassView = () => {
 
           {/* Main Crimson Obsidian Dashboard Card */}
           <div className={cn(
-            "w-full max-w-sm rounded-[28px] p-4 border flex flex-col gap-3 my-2",
+            "w-full max-w-md rounded-[28px] p-4 border flex flex-col gap-3 my-2",
             theme === 'light'
               ? "border-red-200 bg-gradient-to-b from-[#FFF7F7] via-[#FEF2F2] to-[#FDE8E8] shadow-[0_15px_50px_rgba(0,0,0,0.12),0_0_30px_rgba(220,38,38,0.08)] text-stone-900"
               : "border-red-900/60 bg-gradient-to-b from-[#18090C] via-[#120608] to-[#0A0304] shadow-[0_15px_50px_rgba(0,0,0,0.95),0_0_30px_rgba(220,38,38,0.18)] text-white"
@@ -1292,6 +1294,35 @@ export const CompassView = () => {
                   <Copy className={cn("w-4 h-4", theme === 'light' ? "text-sky-600" : "text-sky-400")} />
                 </button>
 
+                {/* Sound Effects On/Off Quick-Toggle */}
+                <button
+                  onClick={() => {
+                    const next = !soundEnabled;
+                    setSoundEnabled(next);
+                    try { localStorage.setItem('com.spiritual.compass.app_sound', next.toString()); } catch {}
+                    triggerHapticFeedback(ImpactStyle.Light);
+                    if (next) {
+                      playBellSound('bell');
+                      toast.success(language === 'hi' ? 'ध्वनि प्रभाव: चालू' : 'Sound Effects: ON');
+                    } else {
+                      toast.info(language === 'hi' ? 'ध्वनि प्रभाव: म्यूट' : 'Sound Effects: Muted');
+                    }
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl flex items-center justify-center active:scale-95 transition-all duration-200 border",
+                    soundEnabled
+                      ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.6)]"
+                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
+                  )}
+                  title={soundEnabled ? (language === 'hi' ? 'ध्वनि बंद करें' : 'Mute Sound') : (language === 'hi' ? 'ध्वनि चालू करें' : 'Enable Sound')}
+                >
+                  {soundEnabled ? (
+                    <Volume2 className="w-4 h-4 text-stone-950 stroke-[2.5]" />
+                  ) : (
+                    <VolumeX className={cn("w-4 h-4", theme === 'light' ? "text-stone-400" : "text-stone-500")} />
+                  )}
+                </button>
+
                 {/* Qibla Toggle */}
                 <button
                   onClick={() => {
@@ -1311,7 +1342,7 @@ export const CompassView = () => {
                 </button>
               </div>
 
-              {/* Secondary Tools: Lock, CDI Target, Pin */}
+              {/* Secondary Tools: Lock, CDI Target */}
               <div className="flex items-center gap-1.5">
                 {/* Lock/Unlock Heading */}
                 <button
@@ -1353,30 +1384,6 @@ export const CompassView = () => {
                   title={language === 'hi' ? 'लक्ष्य कोर्स सेट करें' : 'Set Target Course'}
                 >
                   <Target className={cn("w-4 h-4", targetHeading === null && (theme === 'light' ? "text-orange-600" : "text-orange-400"))} />
-                </button>
-
-                {/* Keep Screen Awake Quick-Toggle */}
-                <button
-                  onClick={() => {
-                    const next = !keepAwake;
-                    setKeepAwake(next);
-                    try { localStorage.setItem('com.spiritual.compass.app_keep_awake', next.toString()); } catch {}
-                    triggerHapticFeedback();
-                    if (next) {
-                      toast.success(language === 'hi' ? 'स्क्रीन हमेशा चालू रहेगी' : 'Keep Screen Awake: ON');
-                    } else {
-                      toast.info(language === 'hi' ? 'स्क्रीन टाइमआउट सामान्य' : 'Keep Screen Awake: OFF');
-                    }
-                  }}
-                  className={cn(
-                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
-                    keepAwake
-                      ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_#f59e0b]"
-                      : (theme === 'light' ? "bg-white border-stone-300 text-stone-600 hover:text-stone-900 hover:border-stone-400" : "bg-stone-800/80 border-white/12 text-stone-300 hover:text-white hover:border-white/25")
-                  )}
-                  title={language === 'hi' ? 'स्क्रीन जागृत रखें' : 'Keep Screen Awake'}
-                >
-                  <Pin className={cn("w-4 h-4", !keepAwake && (theme === 'light' ? "text-violet-600" : "text-violet-400"))} />
                 </button>
               </div>
             </div>
