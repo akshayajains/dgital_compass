@@ -55,6 +55,7 @@ import { CompassStyleId } from '@/types/compass';
 import { getVastuDetails, getWeatherDescription, translations } from '@/lib/translations';
 import { CreatorBanner } from '@/components/CreatorBanner';
 import { get32Pada, VastuPada32 } from '@/lib/vastu32Devta';
+import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Share } from '@capacitor/share';
 import { DevtaPadaModal } from '@/components/compass/DevtaPadaModal';
@@ -130,9 +131,11 @@ export const CompassView = () => {
 
   // Android Hardware Back Button Handler
   useEffect(() => {
-    let handler: any = null;
+    if (!Capacitor.isNativePlatform()) return;
+
+    let cleanupPromise: Promise<any> | null = null;
     try {
-      handler = App.addListener('backButton', ({ canGoBack }) => {
+      cleanupPromise = App.addListener('backButton', ({ canGoBack }) => {
         if (selectedPadaModal !== null) {
           setSelectedPadaModal(null);
           return;
@@ -168,16 +171,21 @@ export const CompassView = () => {
         }
       });
     } catch (e) {
-      // Not on native Android
+      // Not supported
     }
 
     return () => {
-      if (handler && typeof handler.remove === 'function') {
-        handler.remove();
+      if (cleanupPromise) {
+        cleanupPromise.then((handle) => {
+          if (handle && typeof handle.remove === 'function') {
+            handle.remove();
+          }
+        }).catch(() => {});
       }
     };
   }, [
     selectedPadaModal,
+    showWeatherModal,
     showSensorsModal,
     showCalibrationModal,
     showStyleModal,
