@@ -207,17 +207,12 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               viewBox="0 0 200 200"
               style={{ pointerEvents: 'none' }}
             >
-              {/* ── North half (pointing UP) — white left + crimson right, pivot at (100,100) ── */}
+              {/* ── North half (pointing UP to 12 o'clock) — white left + crimson right ── */}
               {/* Tip y=24, waist at y=88..112, hub cleared at r=10 → y=90 */}
               <polygon points="100,24 86,91 100,87" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.7" strokeLinejoin="round" />
               <polygon points="100,24 114,91 100,87" fill="#EF233C" stroke="#B91C1C" strokeWidth="0.7" strokeLinejoin="round" />
               {/* 3D spinal highlight */}
               <line x1="100" y1="26" x2="100" y2="86" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" opacity="0.9" />
-
-              {/* ── South half (pointing DOWN) — silver/graphite, shorter so hub text is fully clear ── */}
-              {/* Tip y=162 (not 174) keeps south blade well away from hub edge */}
-              <polygon points="100,162 86,109 100,113" fill="#D1D5DB" stroke="#9CA3AF" strokeWidth="0.7" strokeLinejoin="round" />
-              <polygon points="100,162 114,109 100,113" fill="#6B7280" stroke="#4B5563" strokeWidth="0.7" strokeLinejoin="round" />
 
               {/* ── Center jewel bearing hub — layered circles for depth ── */}
               <circle cx="100" cy="100" r="11" fill="#111827" stroke="#E5E7EB" strokeWidth="2.5" />
@@ -907,10 +902,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           {/* 1. Ornate Spear Needle (Nautical) */}
           {activeVariant?.needleType === 'ornate_spear' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(78,53,36,0.95)]" viewBox="0 0 200 200">
-              <polygon points="100,190 90,100 100,112" fill="#8C6239" />
-              <polygon points="100,190 110,100 100,112" fill="#4E3524" />
-              <line x1="100" y1="112" x2="100" y2="188" stroke="#D4AF37" strokeWidth="1" opacity="0.7" />
-
               <polygon points={`100,${apexY} 88,100 100,88`} fill="#EF4444" className="drop-shadow-[0_0_16px_rgba(239,68,68,0.85)]" />
               <polygon points={`100,${apexY} 112,100 100,88`} fill="#B91C1C" />
               <line x1="100" y1={apexY} x2="100" y2="88" stroke="#FDE047" strokeWidth="1.6" />
@@ -925,7 +916,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             <svg className="w-full h-full p-2.5 drop-shadow-[0_0_20px_rgba(0,240,255,0.8)]" viewBox="0 0 200 200">
                 <line x1="100" y1={apexY} x2="100" y2="70" stroke="#00F0FF" strokeWidth="3" strokeLinecap="round" className="animate-pulse" />
                 <polygon points={`100,${apexY} 92,${apexY + 20} 108,${apexY + 20}`} fill="#00F0FF" />
-              <line x1="100" y1="130" x2="100" y2="180" stroke="#FF0055" strokeWidth="2.5" strokeDasharray="3 3" />
               <circle cx="100" cy="100" r="18" fill="none" stroke="#00F0FF" strokeWidth="1.5" strokeDasharray="5 3" />
               <circle cx="100" cy="100" r="12" fill="none" stroke="#FF0055" strokeWidth="1" />
             </svg>
@@ -944,8 +934,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             <svg className="w-full h-full p-2.5 drop-shadow-[0_0_20px_rgba(192,132,252,0.8)]" viewBox="0 0 200 200">
               <polygon points={`100,${apexY} 86,78 100,65`} fill="#C084FC" />
               <polygon points={`100,${apexY} 100,65 114,78`} fill="#818CF8" />
-              <polygon points="100,184 90,122 100,135" fill="#312E81" />
-              <polygon points="100,184 100,135 110,122" fill="#1E1B4B" />
               <circle cx="100" cy="100" r="16" fill="none" stroke="#C084FC" strokeWidth="1.5" />
             </svg>
           )}
@@ -953,10 +941,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           {/* 7. Satellite Earth 3D Needle */}
           {styleId === 'satellite_earth' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_32px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
-              {/* South Dark Slate Spear */}
-              <polygon points="100,188 90,100 100,110" fill="#475569" />
-              <polygon points="100,188 110,100 100,110" fill="#1E293B" />
-
               {/* North Red Spear with Cyan Pointer */}
               <polygon points={`100,${apexY} 86,100 100,96`} fill="#EF4444" className="drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]" />
               <polygon points={`100,${apexY} 114,100 100,96`} fill="#B91C1C" />
@@ -983,12 +967,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <stop offset="100%" stopColor="#450A0A" />
                 </radialGradient>
               </defs>
-
-              {/* South Dark Bronze & Slate Spear with Golden Crescent */}
-              <polygon points="100,186 92,100 100,108" fill="#475569" />
-              <polygon points="100,186 108,100 100,108" fill="#1E293B" />
-              {/* South Crescent Finial */}
-              <path d="M 93,186 C 96,183 104,183 107,186 C 104,188 96,188 93,186 Z" fill="#D97706" />
 
               {/* North Sacred Multifaceted Spear */}
               {/* Left facet - Bright Gold */}
@@ -1040,14 +1018,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 9. Sandalwood 3D Faceted Needle (Red & Gold North, Bronze & Gold South) */}
+          {/* 9. Sandalwood 3D Faceted Needle (Red & Gold North) */}
           {styleId === 'sandalwood' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(78,53,36,0.85)]" viewBox="0 0 200 200">
-              {/* South Bronze Faceted Spear */}
-              <polygon points="100,188 90,100 100,110" fill="#8C6239" />
-              <polygon points="100,188 110,100 100,110" fill="#52361B" />
-              {/* removed vertical connector line for sandalwood (design requested) */}
-
               {/* North Red/Crimson Faceted Spear */}
               <polygon points={`100,${apexY} 88,100 100,96`} fill="#EF4444" className="drop-shadow-[0_0_14px_rgba(239,68,68,0.7)]" />
               <polygon points={`100,${apexY} 112,100 100,96`} fill="#B91C1C" />
@@ -1058,12 +1031,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 10. iOS Clean Precision Needle (Red North / White South) */}
+          {/* 10. iOS Clean Precision Needle (Red North Half Only) */}
           {(styleId === 'ios_compass' && activeVariant?.needleType === 'ios_needle') && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]" viewBox="0 0 200 200">
-              {/* South White Spear */}
-              <polygon points="100,188 92,100 100,112" fill="#E2E8F0" />
-              <polygon points="100,188 108,100 100,112" fill="#CBD5E1" />
               {/* North Red Spear */}
               <polygon points={`100,${apexY} 88,100 100,94`} fill="#EF4444" className="drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]" />
               <polygon points={`100,${apexY} 112,100 100,94`} fill="#B91C1C" />
@@ -1075,12 +1045,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 10b. Metal Needle (Silver/Dark classic) */}
+          {/* 10b. Metal Needle (Silver/Dark classic Half Needle) */}
           {(styleId === 'ios_compass' && activeVariant?.needleType === 'metal_needle') && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.6)]" viewBox="0 0 200 200">
-              {/* South Dark Slate Spear */}
-              <polygon points="100,188 90,100 100,110" fill="#475569" />
-              <polygon points="100,188 110,100 100,110" fill="#1E293B" />
               {/* North Silver Spear */}
               <polygon points={`100,${apexY} 86,100 100,96`} fill="#E2E8F0" className="drop-shadow-[0_0_10px_rgba(226,232,240,0.5)]" />
               <polygon points={`100,${apexY} 114,100 100,96`} fill="#94A3B8" />
@@ -1160,19 +1127,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 </linearGradient>
               </defs>
 
-              {/* === SOUTH ARROW: IMPERIAL SAPPHIRE & 24K GOLD LANCE WITH EMERALD FINIAL === */}
-              {/* South Spear Blades (stops at y=174 so it never clashes with S/दक्षिण) */}
-              <polygon points="100,174 91,102 100,108" fill="url(#shahi-sapphire-l)" />
-              <polygon points="100,174 109,102 100,108" fill="url(#shahi-sapphire-r)" />
-              {/* 24K Gold Inlay Chevron Lines on South Spear */}
-              <polyline points="93,125 100,130 107,125" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.85" />
-              <polyline points="94,142 100,147 106,142" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.85" />
-              {/* Royal Pierced Fleur Counterweight with Emerald Cabochon */}
-              <circle cx="100" cy="158" r="5.5" fill="#FDE047" stroke="#3E1E02" strokeWidth="0.9" className="drop-shadow-md" />
-              <circle cx="100" cy="158" r="3.8" fill="url(#shahi-emerald-cabochon)" stroke="#064E3B" strokeWidth="0.5" className="drop-shadow-[0_0_6px_#10b981]" />
-              <ellipse cx="99" cy="156.8" rx="1.1" ry="0.7" fill="#FFFFFF" opacity="0.95" />
-              <path d="M 94,166 Q 100,174 106,166 Q 100,160 94,166 Z" fill="#D4AF37" stroke="#3E1E02" strokeWidth="0.5" />
-
               {/* === NORTH ARROW: 24K SCULPTED GOLD LANCE, RUBY DAGGER, EMERALD WINGS & DIAMOND APEX === */}
               {/* Main 24K Gold Spear Blades */}
               <polygon points={`100,${apexY} 84,98 100,94`} fill="url(#shahi-gold-blade-l)" />
@@ -1242,9 +1196,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <stop offset="100%" stopColor="#1F2937" />
                 </linearGradient>
               </defs>
-              {/* South dark graphite split spear */}
-              <polygon points="100,188 90,100 100,110" fill="url(#gr-s)" />
-              <polygon points="100,188 110,100 100,110" fill="#111827" />
               {/* North brushed-titanium split spear */}
               <polygon points={`100,${apexY} 86,100 100,96`} fill="url(#gr-n)" className="drop-shadow-[0_0_12px_rgba(209,213,219,0.5)]" />
               <polygon points={`100,${apexY} 114,100 100,96`} fill="#6B7280" />

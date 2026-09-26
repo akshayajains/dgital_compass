@@ -628,15 +628,24 @@ export const CompassView = () => {
     }
   }, [location, nowTick]);
 
+  // Timestamp when sensor tracking began (for absolute orientation grace period)
+  const sensorStartTimeRef = useRef<number>(Date.now());
+
   const handleOrientation = (event: any, isAbsolute: boolean) => {
     if (isHeadingLocked) return;
 
-    // CRITICAL: Standard `deviceorientation` alpha is NOT north-referenced on Android/Chrome —
-    // it is relative to an arbitrary initial orientation. Only trust:
-    //   1. event.webkitCompassHeading (iOS Safari — already true-magnetic-north referenced)
-    //   2. deviceorientationabsolute alpha (Android Chrome — geomagnetic north referenced)
-    // Ignore standard deviceorientation alpha entirely to prevent wrong initial headings.
-    if (!isAbsolute && !event.webkitCompassHeading && event.webkitCompassHeading === undefined) return;
+    // Check if this event is geomagnetically absolute:
+    // 1. Explicit isAbsolute flag from deviceorientationabsolute listener
+    // 2. event.absolute === true (standard W3C property on Android when calibrated)
+    const isAbsoluteEvent = isAbsolute || event.absolute === true;
+
+    // If an absolute stream is active, strictly ignore standard non-absolute events
+    if (!isAbsoluteEvent && usingAbsoluteRef.current) return;
+
+    // If not absolute and not iOS, allow 1s grace period before fallback
+    if (!isAbsoluteEvent && event.webkitCompassHeading === undefined && Date.now() - sensorStartTimeRef.current < 1000) {
+      return;
+    }
 
     let compassHeading: number | null = null;
 
@@ -652,16 +661,26 @@ export const CompassView = () => {
     if (event.webkitCompassHeading !== undefined && event.webkitCompassHeading !== null) {
       // iOS: webkitCompassHeading is already magnetic north (0–360°, CW)
       compassHeading = event.webkitCompassHeading;
-    } else if (isAbsolute && event.alpha !== null && event.alpha !== undefined) {
-      // Android Chrome deviceorientationabsolute: alpha is the rotation around Z axis
-      // where 0° = device top pointing to magnetic north.
-      // Compass heading = 360 - alpha (because alpha increases CCW, compass increases CW)
-      usingAbsoluteRef.current = true;
+    } else if (event.alpha !== null && event.alpha !== undefined) {
+      // Android Chrome: alpha is rotation around Z axis, 0° = device top to North, CCW.
+      // Compass heading = 360 - alpha
+      if (isAbsoluteEvent) {
+        usingAbsoluteRef.current = true;
+      }
       compassHeading = (360 - event.alpha + 360) % 360;
     }
-    // No else branch — we intentionally ignore standard non-absolute alpha.
 
     if (compassHeading !== null) {
+      // Screen orientation compensation (portrait=0, landscape-right=90, etc.)
+      // Compensates heading so 0° always corresponds to the TOP of the current screen frame
+      const screenAngle = (typeof window !== 'undefined' && window.screen?.orientation?.angle !== undefined)
+        ? window.screen.orientation.angle
+        : (typeof (window as any)?.orientation === 'number' ? (window as any).orientation : 0);
+      
+      if (screenAngle !== 0) {
+        compassHeading = (compassHeading + screenAngle + 360) % 360;
+      }
+
       compassHeading = ((compassHeading % 360) + 360) % 360;
       const targetRad = compassHeading * (Math.PI / 180);
       const targetVec = { x: Math.sin(targetRad), y: Math.cos(targetRad) };
@@ -673,10 +692,11 @@ export const CompassView = () => {
         const prevHeading = ((Math.atan2(smoothedVectorRef.current.x, smoothedVectorRef.current.y) * (180 / Math.PI)) + 360) % 360;
         const deltaDeg = Math.abs(((compassHeading - prevHeading + 540) % 360) - 180);
 
-        // Sub-0.35 degree deadband to completely eliminate sensor thermal jitter when held still
-        if (deltaDeg >= 0.35) {
-          // Dynamic adaptive filter: heavy smoothing for micro-movements, instant tracking for fast turns
-          const factor = Math.min(0.55, Math.max(0.09, deltaDeg * 0.05));
+        // Low deadband (0.15°) to kill hardware thermal jitter without causing stepping or sticking
+        if (deltaDeg >= 0.15) {
+          // Instant tracking: turns > 2° update immediately (0.75-0.90 factor), micro-movements smoothed (0.45)
+          // Eliminates sluggish lag so the compass tracks turns in real time
+          const factor = Math.min(0.92, Math.max(0.42, deltaDeg * 0.12));
           smoothedVectorRef.current = {
             x: smoothedVectorRef.current.x + (targetVec.x - smoothedVectorRef.current.x) * factor,
             y: smoothedVectorRef.current.y + (targetVec.y - smoothedVectorRef.current.y) * factor
@@ -785,8 +805,8 @@ export const CompassView = () => {
       let diff = (target - current) % 360;
       if (diff > 180) diff -= 360;
       if (diff < -180) diff += 360;
-      // Snappy sensor tracking — 0.35 ease factor gives fluid but responsive motion
-      const easeFactor = 0.35;
+      // Snappy sensor tracking — 0.48 ease factor gives instant responsiveness with buttery 60fps fluidity
+      const easeFactor = 0.48;
       const next = current + diff * easeFactor;
       smoothHeadingRef.current = next;
       setSmoothHeading(next);
@@ -1161,7 +1181,7 @@ export const CompassView = () => {
               <div className="w-full flex flex-col items-center">
                 <React.Suspense fallback={null}>
                   <TelescopeCameraCompass
-                    heading={displayHeading}
+                    heading={renderedHeading}
                     pitch={pitch}
                     roll={roll}
                     location={location}
@@ -1176,7 +1196,7 @@ export const CompassView = () => {
             ) : (
               <React.Suspense fallback={null}>
                 <SatelliteCompassView
-                  heading={displayHeading}
+                  heading={renderedHeading}
                   pitch={pitch}
                   roll={roll}
                   location={location}
