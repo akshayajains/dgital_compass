@@ -635,9 +635,10 @@ export const CompassView = () => {
     if (isHeadingLocked) return;
 
     // Check if this event is geomagnetically absolute:
-    // 1. Explicit isAbsolute flag from deviceorientationabsolute listener
-    // 2. event.absolute === true (standard W3C property on Android when calibrated)
-    const isAbsoluteEvent = isAbsolute || event.absolute === true;
+    // Only trust the explicit isAbsolute flag from the deviceorientationabsolute listener.
+    // Do NOT trust event.absolute === true from the standard deviceorientation listener —
+    // Chrome/Android fires it even on uncalibrated events, causing wrong headings.
+    const isAbsoluteEvent = isAbsolute;
 
     // If an absolute stream is active, strictly ignore standard non-absolute events
     if (!isAbsoluteEvent && usingAbsoluteRef.current) return;
@@ -694,9 +695,9 @@ export const CompassView = () => {
 
         // Low deadband (0.15°) to kill hardware thermal jitter without causing stepping or sticking
         if (deltaDeg >= 0.15) {
-          // Instant tracking: turns > 2° update immediately (0.75-0.90 factor), micro-movements smoothed (0.45)
-          // Eliminates sluggish lag so the compass tracks turns in real time
-          const factor = Math.min(0.92, Math.max(0.42, deltaDeg * 0.12));
+          // Adaptive lerp: small moves smoothed, large turns tracked quickly.
+          // Capped at 0.75 (not 0.92) — prevents sensor noise spikes from causing jerky snapping.
+          const factor = Math.min(0.75, Math.max(0.32, deltaDeg * 0.10));
           smoothedVectorRef.current = {
             x: smoothedVectorRef.current.x + (targetVec.x - smoothedVectorRef.current.x) * factor,
             y: smoothedVectorRef.current.y + (targetVec.y - smoothedVectorRef.current.y) * factor
@@ -781,6 +782,15 @@ export const CompassView = () => {
   const handlePointerDown = useCallback((_e: React.PointerEvent) => {}, []);
   const handlePointerMove = useCallback((_e: React.PointerEvent) => {}, []);
   const handlePointerUp = useCallback((_e: React.PointerEvent) => {}, []);
+
+  // Re-center: clear smoothed vector so next sensor event snaps to true current heading.
+  // Also unlocks heading if it was locked. Like Google Maps' re-center button.
+  const handleRecenter = useCallback(() => {
+    smoothedVectorRef.current = null;
+    if (isHeadingLocked) setIsHeadingLocked(false);
+    triggerHapticFeedback(ImpactStyle.Medium);
+    toast.success(language === 'hi' ? 'दिशा रीसेट हो गई' : 'Compass re-centered');
+  }, [isHeadingLocked, language]);
 
   const displayHeading = useMemo(() => {
     if (heading === null) return 0;
@@ -1252,6 +1262,7 @@ export const CompassView = () => {
                 triggerHapticFeedback(ImpactStyle.Light);
                 setSelectedPadaModal(pada);
               }}
+              onRecenter={handleRecenter}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}

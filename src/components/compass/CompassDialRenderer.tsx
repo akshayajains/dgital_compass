@@ -30,6 +30,8 @@ interface Props {
   variantId?: string | null;
   /** Optional callback when user taps a 32 Devta Pada */
   onSelectPada?: (pada: VastuPada32) => void;
+  /** Re-center callback: resets compass baseline like Google Maps' recenter button */
+  onRecenter?: () => void;
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerMove: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
@@ -62,6 +64,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   targetBearing,
   variantId,
   onSelectPada,
+  onRecenter,
   onPointerDown,
   onPointerMove,
   onPointerUp
@@ -1248,8 +1251,17 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           )}
         </div>
 
-        {/* Center angle readout — clean 2-row: degree + wind name only (μ is shown below the dial) */}
-        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        {/* Center angle readout + re-center tap target (like Google Maps recenter) */}
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ pointerEvents: 'none' }}
+        >
+          <button
+            onClick={onRecenter}
+            title="Tap to re-center compass"
+            className="flex flex-col items-center justify-center focus:outline-none active:scale-90 transition-transform"
+            style={{ pointerEvents: onRecenter ? 'auto' : 'none', background: 'none', border: 'none', padding: 0, cursor: onRecenter ? 'pointer' : 'default' }}
+          >
           {styleId === 'satellite_earth' ? (
             <div className="flex flex-col items-center justify-center pointer-events-none gap-1.5">
               <div className="flex flex-col items-center justify-center h-[3.75rem] w-[3.75rem] rounded-full border-[3.5px] border-emerald-300 bg-emerald-950/95 shadow-[0_0_20px_rgba(52,211,153,0.75),inset_0_0_12px_rgba(0,0,0,0.95)]">
@@ -1299,6 +1311,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
             </div>
           )}
+          </button>
         </div>
       </div>
     </div>

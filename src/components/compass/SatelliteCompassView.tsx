@@ -225,8 +225,6 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
               <polygon points="100,100 52,52 100,88" fill="#0F172A" />
               <polygon points="100,10 88,100 100,88" fill="#F1F5F9" />
               <polygon points="100,10 112,100 100,88" fill="#94A3B8" />
-              <polygon points="100,190 88,100 100,112" fill="#475569" />
-              <polygon points="100,190 112,100 100,112" fill="#1E293B" />
               <polygon points="190,100 100,88 112,100" fill="#475569" />
               <polygon points="190,100 100,112 112,100" fill="#1E293B" />
               <polygon points="10,100 100,88 88,100" fill="#475569" />
