@@ -40,6 +40,20 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths"></meta-data>
         </provider>
+
+        <!-- Nothing OS Inspired Compass Home Screen Widget -->
+        <receiver
+            android:name=".CompassWidgetProvider"
+            android:exported="true"
+            android:label="Digital Compass (Nothing Style)">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.spiritual.compass.ACTION_CHECK_DIRECTION" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_compass_info" />
+        </receiver>
     </application>
 
     <!-- Permissions -->
