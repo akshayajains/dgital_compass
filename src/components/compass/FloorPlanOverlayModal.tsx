@@ -109,15 +109,15 @@ export const FloorPlanOverlayModal = ({
                     // 9x9 Vastu Purusha Mandala Grid
                     <div className="w-full h-full grid grid-cols-3 grid-rows-3 border border-amber-400">
                       {[
-                        { code: 'NW', label: 'वायव्य (Air)', color: 'bg-sky-500/20' },
-                        { code: 'N', label: 'उत्तर (Water)', color: 'bg-blue-500/20' },
-                        { code: 'NE', label: 'ईशान (Divine)', color: 'bg-emerald-500/25 border-2 border-emerald-400' },
-                        { code: 'W', label: 'पश्चिम (Space)', color: 'bg-stone-500/20' },
-                        { code: 'CTR', label: 'ब्रह्मस्थान (Brahma)', color: 'bg-yellow-500/25 font-black' },
-                        { code: 'E', label: 'पूर्व (Solar)', color: 'bg-orange-500/20' },
-                        { code: 'SW', label: 'नैऋत्य (Earth)', color: 'bg-amber-800/30' },
-                        { code: 'S', label: 'दक्षिण (Yama)', color: 'bg-red-800/20' },
-                        { code: 'SE', label: 'आग्नेय (Fire)', color: 'bg-red-500/25 border-2 border-red-400' },
+                        { code: 'NW', label: language === 'hi' ? 'वायव्य (वायु)' : 'NW (Air)', color: 'bg-sky-500/20' },
+                        { code: 'N', label: language === 'hi' ? 'उत्तर (जल)' : 'North (Water)', color: 'bg-blue-500/20' },
+                        { code: 'NE', label: language === 'hi' ? 'ईशान (देव)' : 'NE (Divine)', color: 'bg-emerald-500/25 border-2 border-emerald-400' },
+                        { code: 'W', label: language === 'hi' ? 'पश्चिम (आकाश)' : 'West (Space)', color: 'bg-stone-500/20' },
+                        { code: 'CTR', label: language === 'hi' ? 'ब्रह्मस्थान' : 'Center (Brahma)', color: 'bg-yellow-500/25 font-black' },
+                        { code: 'E', label: language === 'hi' ? 'पूर्व (सूर्य)' : 'East (Solar)', color: 'bg-orange-500/20' },
+                        { code: 'SW', label: language === 'hi' ? 'नैऋत्य (पृथ्वी)' : 'SW (Earth)', color: 'bg-amber-800/30' },
+                        { code: 'S', label: language === 'hi' ? 'दक्षिण (यम)' : 'South (Yama)', color: 'bg-red-800/20' },
+                        { code: 'SE', label: language === 'hi' ? 'आग्नेय (अग्नि)' : 'SE (Fire)', color: 'bg-red-500/25 border-2 border-red-400' },
                       ].map((item, idx) => (
                         <div
                           key={idx}

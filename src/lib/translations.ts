@@ -251,16 +251,16 @@ export const getVastuDetails = (deg: number | null, lang: 'hi' | 'en'): Directio
   if (deg === null || isNaN(deg)) {
     return lang === 'hi'
       ? {
-          name: 'उत्तर (North)',
+          name: 'उत्तर',
           code: 'N',
           vastuTitle: 'कुबेर स्थान (उत्तर)',
           vastuDesc: 'धन, व्यापार व समृद्धि • जल तत्व',
           color: 'text-red-400',
-          element: 'जल तत्व (Water)',
-          deity: 'कुबेर (Lord Kuber)'
+          element: 'जल तत्व',
+          deity: 'कुबेर'
         }
       : {
-          name: 'North (उत्तर)',
+          name: 'North',
           code: 'N',
           vastuTitle: 'Kuber Sector (North)',
           vastuDesc: 'Wealth, Career & Prosperity • Water Element',
@@ -275,131 +275,131 @@ export const getVastuDetails = (deg: number | null, lang: 'hi' | 'en'): Directio
   if (norm >= 337.5 || norm < 22.5) {
     return lang === 'hi'
       ? {
-          name: 'उत्तर (North)',
+          name: 'उत्तर',
           code: 'N',
           vastuTitle: 'कुबेर स्थान (उत्तर)',
           vastuDesc: 'धन, व्यापार व समृद्धि • जल तत्व',
           color: 'text-red-400',
-          element: 'जल (Water)',
+          element: 'जल तत्व',
           deity: 'कुबेर'
         }
       : {
-          name: 'North (उत्तर)',
+          name: 'North',
           code: 'N',
           vastuTitle: 'Kuber Zone (North)',
           vastuDesc: 'Wealth, Opportunities & Financial Flow • Water',
           color: 'text-red-400',
-          element: 'Water',
-          deity: 'Kuber'
+          element: 'Water Element',
+          deity: 'Lord Kuber'
         };
   }
 
   if (norm >= 22.5 && norm < 67.5) {
     return lang === 'hi'
       ? {
-          name: 'ईशान (North-East)',
+          name: 'ईशान',
           code: 'NE',
-          vastuTitle: 'मंदिर व पूजा स्थल (Ishan)',
+          vastuTitle: 'मंदिर व पूजा स्थल (ईशान)',
           vastuDesc: 'देव स्थान • ध्यान, ज्ञान व सकारात्मक ऊर्जा',
           color: 'text-yellow-400',
-          element: 'जल/ईथर (Water/Ether)',
-          deity: 'ईशान/शिव'
+          element: 'जल/आकाश तत्व',
+          deity: 'ईशान (शिव)'
         }
       : {
-          name: 'North-East (ईशान)',
+          name: 'North-East',
           code: 'NE',
-          vastuTitle: 'Temple & Meditation (Ishan)',
+          vastuTitle: 'Temple & Meditation (North-East)',
           vastuDesc: 'Divine Zone • Clarity, Wisdom & Pure Energy',
           color: 'text-yellow-400',
-          element: 'Water/Ether',
-          deity: 'Ishan (Shiva)'
+          element: 'Water / Space Element',
+          deity: 'Ishan (Lord Shiva)'
         };
   }
 
   if (norm >= 67.5 && norm < 112.5) {
     return lang === 'hi'
       ? {
-          name: 'पूर्व (East)',
+          name: 'पूर्व',
           code: 'E',
           vastuTitle: 'इंद्र स्थान (पूर्व)',
           vastuDesc: 'मुख्य द्वार, स्वास्थ्य, मान-सम्मान व नव ऊर्जा',
           color: 'text-emerald-400',
-          element: 'वायु (Air)',
-          deity: 'इंद्र/सूर्य'
+          element: 'वायु तत्व',
+          deity: 'इंद्र / सूर्य'
         }
       : {
-          name: 'East (पूर्व)',
+          name: 'East',
           code: 'E',
           vastuTitle: 'Indra Sector (East)',
           vastuDesc: 'Main Entrance, Health, Social Connections & Vitality',
           color: 'text-emerald-400',
-          element: 'Air/Sun',
-          deity: 'Indra/Surya'
+          element: 'Air / Sun Element',
+          deity: 'Indra / Surya'
         };
   }
 
   if (norm >= 112.5 && norm < 157.5) {
     return lang === 'hi'
       ? {
-          name: 'आग्नेय (South-East)',
+          name: 'आग्नेय',
           code: 'SE',
-          vastuTitle: 'रसोई व अग्नि तत्व (Agneya)',
+          vastuTitle: 'रसोई व अग्नि तत्व (आग्नेय)',
           vastuDesc: 'भोजन, ऊर्जा, गतिशीलता व पाचन शक्ति',
           color: 'text-orange-400',
-          element: 'अग्नि (Fire)',
+          element: 'अग्नि तत्व',
           deity: 'अग्नि देव'
         }
       : {
-          name: 'South-East (आग्नेय)',
+          name: 'South-East',
           code: 'SE',
-          vastuTitle: 'Kitchen & Power (Agneya)',
+          vastuTitle: 'Kitchen & Power (South-East)',
           vastuDesc: 'Fire Element • Cooking, Energy & Vitality',
           color: 'text-orange-400',
-          element: 'Fire',
-          deity: 'Agni'
+          element: 'Fire Element',
+          deity: 'Lord Agni'
         };
   }
 
   if (norm >= 157.5 && norm < 202.5) {
     return lang === 'hi'
       ? {
-          name: 'दक्षिण (South)',
+          name: 'दक्षिण',
           code: 'S',
           vastuTitle: 'यम स्थान (दक्षिण)',
           vastuDesc: 'स्थिरता, विश्राम, ख्याति व भारी निर्माण',
           color: 'text-red-400',
-          element: 'पृथ्वी/अग्नि (Earth/Fire)',
+          element: 'पृथ्वी तत्व',
           deity: 'यमराज'
         }
       : {
-          name: 'South (दक्षिण)',
+          name: 'South',
           code: 'S',
           vastuTitle: 'Yama Sector (South)',
           vastuDesc: 'Stability, Rest, Fame & Heavy Structural Strength',
           color: 'text-red-400',
-          element: 'Earth/Fire',
-          deity: 'Yama'
+          element: 'Earth Element',
+          deity: 'Lord Yama'
         };
   }
 
   if (norm >= 202.5 && norm < 247.5) {
     return lang === 'hi'
       ? {
-          name: 'नैऋत्य (South-West)',
+          name: 'नैऋत्य',
           code: 'SW',
-          vastuTitle: 'मुख्य शयन कक्ष (Nairutya)',
+          vastuTitle: 'मुख्य शयन कक्ष (नैऋत्य)',
           vastuDesc: 'गृहस्वामी कक्ष • नेतृत्व, स्थायित्व व संबंध',
           color: 'text-yellow-400',
-          element: 'पृथ्वी (Earth)',
+          element: 'पृथ्वी तत्व',
           deity: 'नैऋति'
         }
       : {
-          name: 'South-West (नैऋत्य)',
+          name: 'South-West',
           code: 'SW',
-          vastuTitle: 'Master Bedroom (Nairutya)',
+          vastuTitle: 'Master Bedroom (South-West)',
           vastuDesc: 'Head of Family • Grounding, Leadership & Longevity',
           color: 'text-yellow-400',
-          element: 'Earth',
+          element: 'Earth Element',
           deity: 'Nairuti'
         };
   }
@@ -407,43 +407,43 @@ export const getVastuDetails = (deg: number | null, lang: 'hi' | 'en'): Directio
   if (norm >= 247.5 && norm < 292.5) {
     return lang === 'hi'
       ? {
-          name: 'पश्चिम (West)',
+          name: 'पश्चिम',
           code: 'W',
           vastuTitle: 'वरुण स्थान (पश्चिम)',
           vastuDesc: 'अध्ययन कक्ष, लाभ, बचत व भोजन कक्ष',
           color: 'text-slate-200',
-          element: 'जल/अंतरिक्ष (Water/Space)',
+          element: 'जल तत्व',
           deity: 'वरुण देव'
         }
       : {
-          name: 'West (पश्चिम)',
+          name: 'West',
           code: 'W',
           vastuTitle: 'Varuna Sector (West)',
           vastuDesc: 'Study Room, Profits, Dining & Financial Gains',
           color: 'text-slate-200',
-          element: 'Water/Space',
-          deity: 'Varuna'
+          element: 'Water Element',
+          deity: 'Lord Varuna'
         };
   }
 
   return lang === 'hi'
     ? {
-        name: 'वायव्य (North-West)',
+        name: 'वायव्य',
         code: 'NW',
-        vastuTitle: 'अतिथि कक्ष (Vayavya)',
+        vastuTitle: 'अतिथि कक्ष (वायव्य)',
         vastuDesc: 'वायु तत्व • भंडार, अतिथि, संचार व संबंध',
         color: 'text-sky-400',
-        element: 'वायु (Air)',
+        element: 'वायु तत्व',
         deity: 'वायु देव'
       }
     : {
-        name: 'North-West (वायव्य)',
+        name: 'North-West',
         code: 'NW',
-        vastuTitle: 'Guest Room & Flow (Vayavya)',
+        vastuTitle: 'Guest Room & Flow (North-West)',
         vastuDesc: 'Air Element • Communication, Guests & Movement',
         color: 'text-sky-400',
-        element: 'Air',
-        deity: 'Vayu'
+        element: 'Air Element',
+        deity: 'Lord Vayu'
       };
 };
 

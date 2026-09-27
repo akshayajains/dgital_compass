@@ -1472,10 +1472,10 @@ export const CompassView = () => {
                     const currentPada = get32Pada(renderedHeading);
                     const text = `🧭 DIGITAL COMPASS & VASTU AUDIT\n` +
                       `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                      `📍 Live Heading: ${Math.round(renderedHeading)}° (${vastuInfo.code} - ${vastuInfo.name.split(' ')[0]})\n` +
-                      `🏛️ 32 Devta Pada: ${currentPada.nameHi} (${currentPada.code} / ${currentPada.nameEn})\n` +
-                      `✨ Status: ${currentPada.isAuspicious ? '★ Auspicious / शुभ द्वार' : 'Non-Auspicious / विचारणीय'}\n` +
-                      `🌊 Element: ${currentPada.elementNameHi}\n` +
+                      `📍 Live Heading: ${Math.round(renderedHeading)}° (${vastuInfo.code} - ${vastuInfo.name})\n` +
+                      `🏛️ 32 Devta Pada: ${language === 'hi' ? currentPada.nameHi : currentPada.nameEn} (${currentPada.code})\n` +
+                      `✨ Status: ${currentPada.isAuspicious ? (language === 'hi' ? '★ शुभ द्वार (Auspicious)' : '★ Auspicious') : (language === 'hi' ? 'विचारणीय (Non-Auspicious)' : 'Non-Auspicious')}\n` +
+                      `🌊 Element: ${language === 'hi' ? currentPada.elementNameHi : currentPada.element}\n` +
                       `📜 Result: ${language === 'hi' ? currentPada.resultHi : currentPada.resultEn}\n` +
                       `🏠 Ideal Usage: ${language === 'hi' ? currentPada.usageHi : currentPada.usageEn}\n` +
                       (location ? `🌐 GPS: ${location.latitude.toFixed(4)}°, ${location.longitude.toFixed(4)}°\n` : '') +
@@ -1603,8 +1603,18 @@ export const CompassView = () => {
                 // Theme-aware center readout box — each theme gets its own colors
                 // Direction name (localized)
                 const dirName = language === 'hi'
-                  ? vastuInfo.name.split(' ')[0]
-                  : (vastuInfo.code === 'E' ? 'EAST' : vastuInfo.code === 'N' ? 'NORTH' : vastuInfo.code === 'S' ? 'SOUTH' : vastuInfo.code === 'W' ? 'WEST' : vastuInfo.name.split(' ')[0].toUpperCase());
+                  ? vastuInfo.name
+                  : (
+                      vastuInfo.code === 'N' ? 'NORTH' :
+                      vastuInfo.code === 'NE' ? 'NORTH-EAST' :
+                      vastuInfo.code === 'E' ? 'EAST' :
+                      vastuInfo.code === 'SE' ? 'SOUTH-EAST' :
+                      vastuInfo.code === 'S' ? 'SOUTH' :
+                      vastuInfo.code === 'SW' ? 'SOUTH-WEST' :
+                      vastuInfo.code === 'W' ? 'WEST' :
+                      vastuInfo.code === 'NW' ? 'NORTH-WEST' :
+                      vastuInfo.name.toUpperCase()
+                    );
 
                 // Box background + text colors per theme
                 const box = (() => {

@@ -542,11 +542,11 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   />
                 ))}
 
-                {/* Sanskrit Cardinal Direction Labels inside the Sacred Lotus */}
-                <text x="100" y="46" textAnchor="middle" fill="#EF4444" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_#ef4444]">उत्तर</text>
-                <text x="154" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">पूर्व</text>
-                <text x="100" y="157" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">दक्षिण</text>
-                <text x="46" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">पश्चिम</text>
+                {/* Cardinal Direction Labels inside the Sacred Lotus (Localized) */}
+                <text x="100" y="46" textAnchor="middle" fill="#EF4444" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_#ef4444]">{isHi ? 'उत्तर' : 'NORTH'}</text>
+                <text x="154" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'पूर्व' : 'EAST'}</text>
+                <text x="100" y="157" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'दक्षिण' : 'SOUTH'}</text>
+                <text x="46" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'पश्चिम' : 'WEST'}</text>
 
                 {/* Central Sacred Sri Yantra Concentric Rings & Interlocking Triangles */}
                 <circle cx="100" cy="100" r="26" fill="rgba(11, 19, 27, 0.85)" stroke="#F59E0B" strokeWidth="0.75" />

@@ -647,10 +647,10 @@ export const VastuOthersView: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Big Heading Readout Box: 89° पूर्व (E) True North */}
+        {/* Big Heading Readout Box: 89° East (E) True North */}
         <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#FBF3E8] via-[#EFE2CE] to-[#DCBF9E] text-stone-950 flex items-center justify-between shadow-lg">
           <span className="text-xl font-black font-serif tracking-tight">
-            {displayDeg}° {liveZone.nameHi.split(' ')[0]} ({liveZone.code})
+            {displayDeg}° {language === 'hi' ? liveZone.nameHi.split(' ')[0] : liveZone.nameEn.split(' ')[0]} ({liveZone.code})
           </span>
           <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-stone-900/10 border border-stone-800/20 text-stone-900">
             True North
@@ -690,7 +690,7 @@ export const VastuOthersView: React.FC<Props> = ({
             </div>
             <div className={cn("mt-1 text-sm font-black flex items-center justify-between", theme === 'light' ? "text-stone-900" : "text-white")}>
               <span>{livePada.code}</span>
-              <span className="text-[10px] font-bold text-amber-400 font-sans">{livePada.nameHi}</span>
+              <span className="text-[10px] font-bold text-amber-400 font-sans">{language === 'hi' ? livePada.nameHi : livePada.nameEn}</span>
             </div>
           </div>
           <div className={cn("rounded-2xl border px-3 py-2", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
@@ -836,7 +836,7 @@ export const VastuOthersView: React.FC<Props> = ({
                     <Target className="w-4 h-4 text-amber-400 shrink-0" />
                   )}
                   <span>
-                    {language === 'hi' ? 'वर्तमान मुख:' : 'Facing:'} {displayDeg}° {liveZone.nameHi.split(' ')[0]} ({liveZone.code})
+                    {language === 'hi' ? 'वर्तमान मुख:' : 'Facing:'} {displayDeg}° {language === 'hi' ? liveZone.nameHi.split(' ')[0] : liveZone.nameEn.split(' ')[0]} ({liveZone.code})
                   </span>
                 </span>
                 <span className={cn("text-[10px] font-mono font-bold", isActivityMatched ? "text-emerald-400" : "text-amber-400")}>

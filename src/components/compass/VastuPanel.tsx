@@ -309,15 +309,15 @@ export const VastuPanel = ({
               theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-black/40 border-white/10"
             )}>
               {[
-                { key: 'NW', label: 'वायव्य (NW)' },
-                { key: 'N', label: 'उत्तर (N)' },
-                { key: 'NE', label: 'ईशान (NE)' },
-                { key: 'W', label: 'पश्चिम (W)' },
-                { key: 'CENTER', label: 'ब्रह्मस्थान' },
-                { key: 'E', label: 'पूर्व (E)' },
-                { key: 'SW', label: 'नैऋत्य (SW)' },
-                { key: 'S', label: 'दक्षिण (S)' },
-                { key: 'SE', label: 'आग्नेय (SE)' }
+                { key: 'NW', label: language === 'hi' ? 'वायव्य (NW)' : 'North-West (NW)' },
+                { key: 'N', label: language === 'hi' ? 'उत्तर (N)' : 'North (N)' },
+                { key: 'NE', label: language === 'hi' ? 'ईशान (NE)' : 'North-East (NE)' },
+                { key: 'W', label: language === 'hi' ? 'पश्चिम (W)' : 'West (W)' },
+                { key: 'CENTER', label: language === 'hi' ? 'ब्रह्मस्थान' : 'Brahmasthan' },
+                { key: 'E', label: language === 'hi' ? 'पूर्व (E)' : 'East (E)' },
+                { key: 'SW', label: language === 'hi' ? 'नैऋत्य (SW)' : 'South-West (SW)' },
+                { key: 'S', label: language === 'hi' ? 'दक्षिण (S)' : 'South (S)' },
+                { key: 'SE', label: language === 'hi' ? 'आग्नेय (SE)' : 'South-East (SE)' }
               ].map(sec => (
                 <div key={sec.key} className={cn(
                   "p-1.5 rounded-lg border flex flex-col justify-between",
@@ -332,15 +332,15 @@ export const VastuPanel = ({
                       theme === 'light' ? "bg-white text-amber-800 border-stone-300" : "bg-black text-amber-200 border-white/10"
                     )}
                   >
-                    <option value="open">Open Space</option>
-                    <option value="pooja">Pooja Mandir</option>
-                    <option value="kitchen">Kitchen / Rasoi</option>
-                    <option value="master_bedroom">Master Bed</option>
-                    <option value="entrance">Main Entrance</option>
-                    <option value="bathroom">Bathroom / Toilet</option>
-                    <option value="cash">Cash Locker</option>
-                    <option value="study">Study Room</option>
-                    <option value="staircase">Staircase</option>
+                    <option value="open">{language === 'hi' ? 'खुला स्थान' : 'Open Space'}</option>
+                    <option value="pooja">{language === 'hi' ? 'पूजा मंदिर' : 'Pooja Mandir'}</option>
+                    <option value="kitchen">{language === 'hi' ? 'रसोई घर' : 'Kitchen'}</option>
+                    <option value="master_bedroom">{language === 'hi' ? 'मास्टर बेडरूम' : 'Master Bed'}</option>
+                    <option value="entrance">{language === 'hi' ? 'मुख्य द्वार' : 'Main Entrance'}</option>
+                    <option value="bathroom">{language === 'hi' ? 'बाथरूम / शौचालय' : 'Bathroom / Toilet'}</option>
+                    <option value="cash">{language === 'hi' ? 'तिजोरी' : 'Cash Locker'}</option>
+                    <option value="study">{language === 'hi' ? 'अध्ययन कक्ष' : 'Study Room'}</option>
+                    <option value="staircase">{language === 'hi' ? 'सीढ़ियाँ' : 'Staircase'}</option>
                   </select>
                 </div>
               ))}

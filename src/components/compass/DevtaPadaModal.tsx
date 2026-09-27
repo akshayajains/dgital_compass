@@ -31,10 +31,10 @@ export const DevtaPadaModal: React.FC<DevtaPadaModalProps> = ({
   const nextPada = VASTU_32_PADAS[(currentIndex + 1) % VASTU_32_PADAS.length];
 
   const handleShare = async () => {
-    const text = `🏛️ 32 Devta Pada: ${pada.nameHi} (${pada.code} / ${pada.nameEn})\n` +
+    const text = `🏛️ 32 Devta Pada: ${isHi ? pada.nameHi : pada.nameEn} (${pada.code})\n` +
       `🧭 Range: ${pada.startDeg}° – ${pada.endDeg}° (Center: ${pada.centerDeg}°)\n` +
-      `✨ Status: ${pada.isAuspicious ? '★ Auspicious / शुभ द्वार' : 'Non-Auspicious / विचारणीय'}\n` +
-      `🌊 Element: ${pada.elementNameHi} (${pada.element})\n` +
+      `✨ Status: ${pada.isAuspicious ? (isHi ? '★ शुभ द्वार' : '★ Auspicious Entrance') : (isHi ? 'विचारणीय' : 'Non-Auspicious')}\n` +
+      `🌊 Element: ${isHi ? pada.elementNameHi : pada.element}\n` +
       `📜 Effect: ${isHi ? pada.resultHi : pada.resultEn}\n` +
       `🏠 Ideal Usage: ${isHi ? pada.usageHi : pada.usageEn}\n` +
       `— Digital Compass Vastu Suite`;
@@ -51,10 +51,10 @@ export const DevtaPadaModal: React.FC<DevtaPadaModalProps> = ({
 
   const getZoneLabel = (zone: string) => {
     switch (zone) {
-      case 'N': return isHi ? 'उत्तर (North - कुबेर क्षेत्र)' : 'North (Kubera Zone)';
-      case 'E': return isHi ? 'पूर्व (East - इंद्र/सूर्य क्षेत्र)' : 'East (Indra/Surya Zone)';
-      case 'S': return isHi ? 'दक्षिण (South - यम क्षेत्र)' : 'South (Yama Zone)';
-      case 'W': return isHi ? 'पश्चिम (West - वरुण क्षेत्र)' : 'West (Varuna Zone)';
+      case 'N': return isHi ? 'उत्तर (कुबेर क्षेत्र)' : 'North (Kubera Zone)';
+      case 'E': return isHi ? 'पूर्व (इंद्र/सूर्य क्षेत्र)' : 'East (Indra/Surya Zone)';
+      case 'S': return isHi ? 'दक्षिण (यम क्षेत्र)' : 'South (Yama Zone)';
+      case 'W': return isHi ? 'पश्चिम (वरुण क्षेत्र)' : 'West (Varuna Zone)';
       default: return zone;
     }
   };
@@ -87,8 +87,8 @@ export const DevtaPadaModal: React.FC<DevtaPadaModalProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-black tracking-tight">{pada.nameHi}</h3>
-                <span className="text-xs font-semibold opacity-70">({pada.nameEn})</span>
+                <h3 className="text-lg font-black tracking-tight">{isHi ? pada.nameHi : pada.nameEn}</h3>
+                <span className="text-xs font-semibold opacity-70">({isHi ? pada.nameEn : pada.nameHi})</span>
               </div>
               <p className="text-[11px] font-mono text-amber-400 font-bold">
                 {pada.startDeg}° – {pada.endDeg}° <span className="opacity-60">| Center: {pada.centerDeg}°</span>
@@ -170,7 +170,7 @@ export const DevtaPadaModal: React.FC<DevtaPadaModalProps> = ({
                 {isHi ? 'पंचतत्व' : 'Element'}
               </span>
               <span className="text-xs font-black text-cyan-400 mt-1 block">
-                {pada.elementNameHi} ({pada.element})
+                {isHi ? `${pada.elementNameHi} (${pada.element})` : `${pada.element} Element`}
               </span>
             </div>
           </div>
