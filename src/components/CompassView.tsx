@@ -74,6 +74,7 @@ const WeatherModal = React.lazy(() => import('@/components/compass/WeatherModal'
 import type { WeatherData } from '@/components/compass/WeatherModal';
 
 const STYLE_STORAGE_KEY = 'com.spiritual.compass.app_style';
+const CARDINAL_SNAP_ANGLES = [0, 90, 180, 270];
 
 export const CompassView = () => {
   const { location, times, liveTracking, toggleLiveTracking, loading: locationLoading, error: locationError } = useSunTimes();
@@ -278,6 +279,17 @@ export const CompassView = () => {
   const [speedUnit, setSpeedUnit] = useState<'kmh' | 'mph'>(() => {
     try { return localStorage.getItem('com.spiritual.compass.app_speed_unit') === 'mph' ? 'mph' : 'kmh'; } catch { return 'kmh'; }
   });
+  const [altUnit, setAltUnit] = useState<'ft' | 'm'>(() => {
+    try { return localStorage.getItem('com.spiritual.compass.app_alt_unit') === 'm' ? 'm' : 'ft'; } catch { return 'ft'; }
+  });
+  const toggleAltUnit = useCallback(() => {
+    setAltUnit(prev => {
+      const next = prev === 'ft' ? 'm' : 'ft';
+      try { localStorage.setItem('com.spiritual.compass.app_alt_unit', next); } catch {}
+      return next;
+    });
+    triggerHapticFeedback(ImpactStyle.Light);
+  }, []);
   const [timeFormat, setTimeFormat] = useState<'12' | '24'>(() => {
     try { return localStorage.getItem('com.spiritual.compass.app_time_format') === '24' ? '24' : '12'; } catch { return '12'; }
   });
@@ -789,8 +801,13 @@ export const CompassView = () => {
     smoothedVectorRef.current = null;
     if (isHeadingLocked) setIsHeadingLocked(false);
     triggerHapticFeedback(ImpactStyle.Medium);
-    toast.success(language === 'hi' ? 'दिशा रीसेट हो गई' : 'Compass re-centered');
+    toast.success(language === 'hi' ? 'कंपास पुनः केंद्रित हुआ ✓' : 'Compass Re-centered ✓');
   }, [isHeadingLocked, language]);
+
+  const handleSelectPada = useCallback((pada: VastuPada32) => {
+    triggerHapticFeedback(ImpactStyle.Light);
+    setSelectedPadaModal(pada);
+  }, []);
 
   const displayHeading = useMemo(() => {
     if (heading === null) return 0;
@@ -841,7 +858,7 @@ export const CompassView = () => {
       }
 
       // Micro Cardinal Snap Haptic on exact North (0°), East (90°), South (180°), West (270°)
-      const isCardinalSnap = [0, 90, 180, 270].some(a => {
+      const isCardinalSnap = CARDINAL_SNAP_ANGLES.some(a => {
         const d = Math.abs(norm - a);
         return d <= 0.6 || Math.abs(d - 360) <= 0.6;
       });
@@ -850,7 +867,8 @@ export const CompassView = () => {
         triggerHapticFeedback(ImpactStyle.Light);
       }
 
-      if (Math.abs(diff) > 0.05) {
+      // Settle deadband at 0.18° to prevent spinning continuous 60fps rAF loop when phone is stationary
+      if (Math.abs(diff) > 0.18) {
         rafRef.current = requestAnimationFrame(step);
       } else {
         smoothHeadingRef.current = target;
@@ -962,7 +980,11 @@ export const CompassView = () => {
     return null;
   }, [times, nowTick, language]);
 
-  const vastuInfo = useMemo(() => getVastuDetails(displayHeading, language), [displayHeading, language]);
+  const roundedHeading = useMemo(() => {
+    return displayHeading !== null ? Math.round(displayHeading) : null;
+  }, [displayHeading]);
+
+  const vastuInfo = useMemo(() => getVastuDetails(roundedHeading, language), [roundedHeading, language]);
 
   return (
     <div
@@ -1243,25 +1265,19 @@ export const CompassView = () => {
               styleId={selectedStyle}
               language={language}
               displayHeading={renderedHeading}
-              pitch={pitch}
-              roll={roll}
               sunPos={sunPos}
               isQiblaMode={isQiblaMode}
               qiblaBearing={qiblaBearing}
               qiblaDistanceKm={qiblaDistanceKm}
               isFacingQibla={isFacingQibla}
               vastuGridEnabled={vastuGridEnabled}
-              isLevel={isLevel}
               dialRef={dialRef}
               customAccentColor="#EF4444"
               declination={declination}
               useTrueNorth={useTrueNorth}
               targetBearing={targetHeading}
               variantId={selectedVariant}
-              onSelectPada={(pada) => {
-                triggerHapticFeedback(ImpactStyle.Light);
-                setSelectedPadaModal(pada);
-              }}
+              onSelectPada={handleSelectPada}
               onRecenter={handleRecenter}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
@@ -1513,7 +1529,7 @@ export const CompassView = () => {
             {/* Center Heading Readout */}
             {selectedStyle === 'vedic_mandala' ? (
               (() => {
-                const currentPada = get32Pada(displayHeading);
+                const currentPada = get32Pada(roundedHeading);
                 return (
                   <div 
                     onClick={() => {
@@ -1651,33 +1667,50 @@ export const CompassView = () => {
                         <span className={cn("text-sm sm:text-base font-black font-serif leading-tight", box.dir)}>
                           {dirName} ({vastuInfo.code})
                         </span>
-                        {/* Magnetic Declination μ indicator */}
-                        <span className="text-[10px] font-mono font-bold text-cyan-400 opacity-90 flex items-center gap-1 mt-0.5">
-                          <span className="text-[11px] font-black text-cyan-300">μ</span>
-                          <span>{declination === 0 ? '0.0°' : declination > 0 ? `+${declination.toFixed(1)}°` : `−${Math.abs(declination).toFixed(1)}°`}</span>
-                          <span className="text-[8.5px] text-white/50 font-sans uppercase font-bold">{declination > 0 ? 'E' : declination < 0 ? 'W' : ''}</span>
-                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {/* Magnetic Declination μ indicator */}
+                          <span className="text-[10px] font-mono font-bold text-cyan-400 opacity-90 flex items-center gap-0.5">
+                            <span className="text-[11px] font-black text-cyan-300">μ</span>
+                            <span>{declination === 0 ? '0.0°' : declination > 0 ? `+${declination.toFixed(1)}°` : `−${Math.abs(declination).toFixed(1)}°`}</span>
+                            <span className="text-[8px] text-white/50 font-sans uppercase font-bold">{declination > 0 ? 'E' : declination < 0 ? 'W' : ''}</span>
+                          </span>
+                          <span className="opacity-40 text-[9px]">•</span>
+                          {/* Element Badge */}
+                          <span className={cn(
+                            "text-[8.5px] font-bold px-1.5 py-0.5 rounded-md border flex items-center gap-1",
+                            theme === 'light' ? "bg-amber-100/70 border-amber-300/80 text-amber-900" : "bg-white/10 border-white/15 text-stone-200"
+                          )}>
+                            <span>{vastuInfo.element === 'Fire' ? '🔥' : vastuInfo.element === 'Water' ? '💧' : vastuInfo.element === 'Air' ? '💨' : vastuInfo.element === 'Earth' ? '🌍' : '✨'}</span>
+                            <span>{language === 'hi' ? vastuInfo.element : vastuInfo.element}</span>
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 sm:gap-2">
-                      {/* Sea Level / Altitude in Heading Box */}
-                      <div className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border backdrop-blur-sm transition-all",
-                        theme === 'light'
-                          ? "bg-white/80 border-stone-300 text-stone-800 shadow-sm"
-                          : "bg-white/5 border-white/10 text-stone-200"
-                      )}>
+                      {/* Sea Level / Altitude in Heading Box — Tap to toggle FT / M */}
+                      <button
+                        onClick={toggleAltUnit}
+                        title={language === 'hi' ? 'इकाई बदलें (FT/M)' : 'Toggle Altitude Unit (FT/M)'}
+                        className={cn(
+                          "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border backdrop-blur-sm transition-all active:scale-95 text-left cursor-pointer",
+                          theme === 'light'
+                            ? "bg-white/80 border-stone-300 text-stone-800 hover:border-amber-400 shadow-sm"
+                            : "bg-white/5 border-white/10 text-stone-200 hover:border-white/25"
+                        )}
+                      >
                         <Mountain className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                         <div className="flex flex-col text-left leading-none">
                           <span className="text-[7.5px] uppercase font-bold text-stone-400 tracking-wider">
                             {language === 'hi' ? 'समुद्र तल' : 'SEA LEVEL'}
                           </span>
                           <span className="text-[11px] font-mono font-black mt-0.5">
-                            {location?.altitude ? Math.round(location.altitude * 3.28084) : '—'}{' '}
-                            <span className="text-[8px] font-sans font-normal opacity-70">FT</span>
+                            {location?.altitude
+                              ? (altUnit === 'm' ? Math.round(location.altitude) : Math.round(location.altitude * 3.28084))
+                              : '—'}{' '}
+                            <span className="text-[8px] font-bold text-amber-400 uppercase tracking-tight">{altUnit.toUpperCase()}</span>
                           </span>
                         </div>
-                      </div>
+                      </button>
 
                       <button
                         onClick={() => {
@@ -1697,57 +1730,87 @@ export const CompassView = () => {
             {/* Target Bearing & Course Deviation Indicator (CDI) HUD */}
             {targetHeading !== null && (
               <div className={cn(
-                "w-full p-2.5 rounded-2xl border flex items-center justify-between transition-all duration-300 my-1 shadow-md",
+                "w-full p-2.5 rounded-2xl border flex flex-col gap-2 transition-all duration-300 my-1 shadow-md",
                 isOnCourse
                   ? "bg-emerald-950/80 border-emerald-500/70 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
                   : "bg-amber-950/70 border-amber-500/60 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
               )}>
-                <div className="flex items-center gap-2.5">
-                  <div className={cn(
-                    "w-8 h-8 rounded-xl flex items-center justify-center border shrink-0",
-                    isOnCourse
-                      ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 animate-pulse"
-                      : "bg-amber-500/20 border-amber-400 text-amber-300"
-                  )}>
-                    <Target className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-stone-300">
-                        {language === 'hi' ? 'लक्ष्य कोर्स:' : 'Target Course:'}
-                      </span>
-                      <span className="text-xs font-mono font-black text-amber-300">
-                        {Math.round(targetHeading)}°
-                      </span>
+                <div className="w-full flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center border shrink-0",
+                      isOnCourse
+                        ? "bg-emerald-500/20 border-emerald-400 text-emerald-300 animate-pulse"
+                        : "bg-amber-500/20 border-amber-400 text-amber-300"
+                    )}>
+                      <Target className="w-4 h-4" />
                     </div>
-                    <div className="text-xs font-black tracking-tight mt-0.5">
-                      {isOnCourse ? (
-                        <span className="text-emerald-400 font-black flex items-center gap-1">
-                          ✓ {language === 'hi' ? 'कोर्स पर हैं (0° विचलन)' : 'ON COURSE (0° DEVIATION)'}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-stone-300">
+                          {language === 'hi' ? 'लक्ष्य कोर्स:' : 'Target Course:'}
                         </span>
-                      ) : courseDeviation > 0 ? (
-                        <span className="text-amber-300 font-bold">
-                          ↶ {language === 'hi' ? `बाएं घूमें ${Math.abs(Math.round(courseDeviation))}°` : `TURN LEFT ${Math.abs(Math.round(courseDeviation))}°`}
+                        <span className="text-xs font-mono font-black text-amber-300">
+                          {Math.round(targetHeading)}°
                         </span>
-                      ) : (
-                        <span className="text-amber-300 font-bold">
-                          {language === 'hi' ? `दाएं घूमें ${Math.abs(Math.round(courseDeviation))}° ↷` : `TURN RIGHT ${Math.abs(Math.round(courseDeviation))}° ↷`}
-                        </span>
-                      )}
+                      </div>
+                      <div className="text-xs font-black tracking-tight mt-0.5">
+                        {isOnCourse ? (
+                          <span className="text-emerald-400 font-black flex items-center gap-1">
+                            ✓ {language === 'hi' ? 'कोर्स पर हैं (0° विचलन)' : 'ON COURSE (0° DEVIATION)'}
+                          </span>
+                        ) : courseDeviation > 0 ? (
+                          <span className="text-amber-300 font-bold">
+                            ↶ {language === 'hi' ? `बाएं घूमें ${Math.abs(Math.round(courseDeviation))}°` : `TURN LEFT ${Math.abs(Math.round(courseDeviation))}°`}
+                          </span>
+                        ) : (
+                          <span className="text-amber-300 font-bold">
+                            {language === 'hi' ? `दाएं घूमें ${Math.abs(Math.round(courseDeviation))}° ↷` : `TURN RIGHT ${Math.abs(Math.round(courseDeviation))}° ↷`}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      setTargetHeading(null);
+                      triggerHapticFeedback();
+                      toast.info(language === 'hi' ? 'लक्ष्य हटाया गया' : 'Target Cleared');
+                    }}
+                    className="p-1.5 rounded-xl hover:bg-white/10 text-stone-400 hover:text-white transition-colors border border-white/10"
+                    title={language === 'hi' ? 'लक्ष्य हटाएं' : 'Clear Target'}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => {
-                    setTargetHeading(null);
-                    triggerHapticFeedback();
-                    toast.info(language === 'hi' ? 'लक्ष्य हटाया गया' : 'Target Cleared');
-                  }}
-                  className="p-1.5 rounded-xl hover:bg-white/10 text-stone-400 hover:text-white transition-colors border border-white/10"
-                  title={language === 'hi' ? 'लक्ष्य हटाएं' : 'Clear Target'}
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
+
+                {/* Avionics Course Deviation Bar */}
+                <div className="w-full flex items-center gap-1.5 px-1 pt-1 border-t border-white/10">
+                  <span className="text-[8px] font-mono text-stone-400 shrink-0">L 30°</span>
+                  <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden flex justify-end">
+                    {courseDeviation > 1 && (
+                      <div 
+                        className="h-full bg-amber-400 rounded-full transition-all" 
+                        style={{ width: `${Math.min(100, (Math.abs(courseDeviation) / 30) * 100)}%` }} 
+                      />
+                    )}
+                  </div>
+                  <div className={cn(
+                    "w-2.5 h-2.5 rounded-full border shrink-0 transition-all",
+                    isOnCourse 
+                      ? "bg-emerald-400 border-white shadow-[0_0_8px_#10b981] scale-125" 
+                      : "bg-white/30 border-white/50"
+                  )} />
+                  <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                    {courseDeviation < -1 && (
+                      <div 
+                        className="h-full bg-amber-400 rounded-full transition-all" 
+                        style={{ width: `${Math.min(100, (Math.abs(courseDeviation) / 30) * 100)}%` }} 
+                      />
+                    )}
+                  </div>
+                  <span className="text-[8px] font-mono text-stone-400 shrink-0">30° R</span>
+                </div>
               </div>
             )}
 
@@ -1828,13 +1891,34 @@ export const CompassView = () => {
               </button>
             </div>
 
-            {/* Surface Level: Pitch, Roll + Open Level Tab */}
-            <div className={cn("w-full flex items-center justify-between text-xs pt-1 border-t", theme === 'light' ? "border-stone-200" : "border-white/10")}>
-              <div className="flex items-center gap-1.5">
-                <Gauge className="w-3.5 h-3.5 text-emerald-400" />
+            {/* Surface Level: Pitch, Roll + Mini Bubble Preview + Open Level Tab */}
+            <div className={cn("w-full flex items-center justify-between text-xs pt-1.5 border-t", theme === 'light' ? "border-stone-200" : "border-white/10")}>
+              <div className="flex items-center gap-2">
+                {/* Mini Live Spirit Bubble Indicator */}
+                <div className={cn(
+                  "w-11 h-5 rounded-full border relative flex items-center justify-center overflow-hidden transition-colors shrink-0",
+                  isLevel 
+                    ? "bg-emerald-950/60 border-emerald-400/80 shadow-[0_0_8px_rgba(16,185,129,0.3)]" 
+                    : "bg-stone-900/60 border-amber-500/40"
+                )}>
+                  {/* Center Crosshair Pip */}
+                  <div className="absolute inset-y-0 left-1/2 w-[1px] bg-white/20 -translate-x-1/2" />
+                  <div className="absolute inset-x-0 top-1/2 h-[1px] bg-white/20 -translate-y-1/2" />
+                  {/* Live Floating Bubble */}
+                  <div 
+                    className={cn(
+                      "w-2.5 h-2.5 rounded-full transition-transform duration-75 shadow-sm",
+                      isLevel ? "bg-emerald-400 shadow-[0_0_6px_#10b981]" : "bg-amber-400 shadow-[0_0_6px_#f59e0b]"
+                    )}
+                    style={{
+                      transform: `translate(${Math.max(-14, Math.min(14, roll * 1.4))}px, ${Math.max(-3.5, Math.min(3.5, pitch * 0.7))}px)`
+                    }}
+                  />
+                </div>
                 <div className="flex flex-col items-start text-left">
-                  <span className={cn("text-[9px] font-bold uppercase tracking-wider", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
-                    {language === 'hi' ? 'सतह स्तर' : 'SURFACE LEVEL'}
+                  <span className={cn("text-[9px] font-bold uppercase tracking-wider flex items-center gap-1", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
+                    <span>{language === 'hi' ? 'सतह स्तर' : 'SURFACE LEVEL'}</span>
+                    {isLevel && <span className="text-emerald-400 font-black text-[8px]">✓ LEVEL</span>}
                   </span>
                   <span className={cn("text-[10px] font-mono font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
                     PITCH {pitch.toFixed(1)}° • ROLL {roll.toFixed(1)}°
@@ -2251,6 +2335,27 @@ export const CompassView = () => {
                       onClick={() => { setSpeedUnit('mph'); try { localStorage.setItem('com.spiritual.compass.app_speed_unit', 'mph'); } catch {} triggerHapticFeedback(); }}
                       className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", speedUnit === 'mph' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
                     >mph</button>
+                  </div>
+                </div>
+
+                {/* Altitude Unit */}
+                <div className={cn(
+                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
+                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
+                )}>
+                  <span className="flex items-center gap-2">
+                    <Mountain className="w-4 h-4 text-amber-500" />
+                    {language === 'hi' ? 'ऊंचाई इकाई' : 'Altitude Unit'}
+                  </span>
+                  <div className={cn("flex items-center p-0.5 rounded-xl border", theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-stone-800 border-white/10")}>
+                    <button
+                      onClick={() => { setAltUnit('ft'); try { localStorage.setItem('com.spiritual.compass.app_alt_unit', 'ft'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", altUnit === 'ft' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >FT</button>
+                    <button
+                      onClick={() => { setAltUnit('m'); try { localStorage.setItem('com.spiritual.compass.app_alt_unit', 'm'); } catch {} triggerHapticFeedback(); }}
+                      className={cn("px-2.5 py-1 rounded-lg text-[10px] font-black uppercase transition-all", altUnit === 'm' ? "bg-amber-500 text-stone-950 shadow-sm" : (theme === 'light' ? "text-stone-500" : "text-stone-400"))}
+                    >M</button>
                   </div>
                 </div>
 

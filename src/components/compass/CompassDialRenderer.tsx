@@ -9,15 +9,15 @@ interface Props {
   styleId: CompassStyleId;
   language: Language;
   displayHeading: number | null;
-  pitch: number;
-  roll: number;
+  pitch?: number;
+  roll?: number;
   sunPos: number | null;
   isQiblaMode: boolean;
   qiblaBearing: number;
   qiblaDistanceKm: number;
   isFacingQibla: boolean;
   vastuGridEnabled: boolean;
-  isLevel: boolean;
+  isLevel?: boolean;
   dialRef: React.RefObject<HTMLDivElement>;
   customAccentColor?: string;
   /** Magnetic declination in degrees (from NOAA WMM) */
@@ -48,15 +48,12 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   styleId,
   language,
   displayHeading,
-  pitch,
-  roll,
   sunPos,
   isQiblaMode,
   qiblaBearing,
   qiblaDistanceKm,
   isFacingQibla,
   vastuGridEnabled,
-  isLevel,
   dialRef,
   customAccentColor,
   declination = 0,
@@ -71,6 +68,14 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 }: Props) {
   const isHi = language === 'hi';
   const displayAngle = displayHeading !== null ? Math.round(displayHeading) : 0;
+  const [recenterPulse, setRecenterPulse] = React.useState<boolean>(false);
+
+  const handleCenterTap = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecenterPulse(true);
+    window.setTimeout(() => setRecenterPulse(false), 500);
+    onRecenter?.();
+  };
 
   // Resolve active variant for grouped themes (ios_compass, color_palette)
   const activeVariant: CompassStyleVariant | null = variantId ? getVariant(styleId, variantId) : null;
@@ -1253,64 +1258,97 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
         {/* Center angle readout + re-center tap target (like Google Maps recenter) */}
         <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ pointerEvents: 'none' }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
         >
           <button
-            onClick={onRecenter}
-            title="Tap to re-center compass"
-            className="flex flex-col items-center justify-center focus:outline-none active:scale-90 transition-transform"
+            onClick={handleCenterTap}
+            title={isHi ? "पुनः केंद्रित करने के लिए टैप करें (Recenter)" : "Tap to re-center compass"}
+            className="group relative flex flex-col items-center justify-center focus:outline-none active:scale-90 transition-transform"
             style={{ pointerEvents: onRecenter ? 'auto' : 'none', background: 'none', border: 'none', padding: 0, cursor: onRecenter ? 'pointer' : 'default' }}
           >
-          {styleId === 'satellite_earth' ? (
-            <div className="flex flex-col items-center justify-center pointer-events-none gap-1.5">
-              <div className="flex flex-col items-center justify-center h-[3.75rem] w-[3.75rem] rounded-full border-[3.5px] border-emerald-300 bg-emerald-950/95 shadow-[0_0_20px_rgba(52,211,153,0.75),inset_0_0_12px_rgba(0,0,0,0.95)]">
-                <span className="text-[14px] font-black font-mono text-emerald-100 leading-none">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-400 mt-0.5">{get16WindName(displayHeading)}</span>
+            {/* Visual Re-center Ripple Wave */}
+            {recenterPulse && (
+              <span className="absolute -inset-2 rounded-full border-2 border-amber-400 animate-ping pointer-events-none opacity-80" />
+            )}
+
+            {styleId === 'satellite_earth' ? (
+              <div className="flex flex-col items-center justify-center pointer-events-none gap-1.5">
+                <div className="relative flex flex-col items-center justify-center h-[3.75rem] w-[3.75rem] rounded-full border-[3.5px] border-emerald-300 bg-emerald-950/95 shadow-[0_0_20px_rgba(52,211,153,0.75),inset_0_0_12px_rgba(0,0,0,0.95)] group-hover:border-emerald-200 transition-colors">
+                  <span className="text-[14px] font-black font-mono text-emerald-100 leading-none">{displayAngle}°</span>
+                  <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-400 mt-0.5">{get16WindName(displayHeading)}</span>
+                  {/* Micro Recenter Reticle Dot */}
+                  <span className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-400/60" />
+                </div>
+                <div className="text-center select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
+                  <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
+                    {displayHeading !== null ? Math.round(displayHeading) : 0}° {get16WindName(displayHeading)}
+                  </span>
+                </div>
               </div>
-              <div className="text-center select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
-                <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
-                  {displayHeading !== null ? Math.round(displayHeading) : 0}° {get16WindName(displayHeading)}
-                </span>
+            ) : styleId === 'royal_gold' ? (
+              <div className="flex flex-col items-center justify-center h-12 w-12 rounded-full border-[2px] border-[#FFE680] bg-gradient-to-br from-[#1E0F04] via-[#120802] to-[#080301] text-[#FFF8DC] shadow-[0_4px_22px_rgba(40,20,5,0.95),inset_0_1px_4px_rgba(255,240,180,0.5)] relative">
+                {/* 4 Inlaid Alternating Emerald & Ruby Gemstones */}
+                <div className="absolute -top-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
+                <div className="absolute -bottom-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
+                <div className="absolute -left-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
+                <div className="absolute -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
+                <span className="text-[13px] font-black leading-none text-[#FFFDF0] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{displayAngle}°</span>
+                <span className="text-[6.5px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
               </div>
-            </div>
-          ) : styleId === 'royal_gold' ? (
-            <div className="flex flex-col items-center justify-center h-12 w-12 rounded-full border-[2px] border-[#FFE680] bg-gradient-to-br from-[#1E0F04] via-[#120802] to-[#080301] text-[#FFF8DC] shadow-[0_4px_22px_rgba(40,20,5,0.95),inset_0_1px_4px_rgba(255,240,180,0.5)] relative">
-              {/* 4 Inlaid Alternating Emerald & Ruby Gemstones */}
-              <div className="absolute -top-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
-              <div className="absolute -bottom-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
-              <div className="absolute -left-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
-              <div className="absolute -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
-              <span className="text-[13px] font-black leading-none text-[#FFFDF0] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{displayAngle}°</span>
-              <span className="text-[6.5px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
-            </div>
-          ) : isGraphite ? (
-            <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]">
-              <span className="text-[15px] font-black leading-none">{displayAngle}°</span>
-              <span className="text-[7px] font-bold uppercase tracking-widest text-slate-300 mt-0.5">{get16WindName(displayHeading)}</span>
-            </div>
-          ) : styleId === 'vedic_mandala' ? (
-            <div className="flex flex-col items-center justify-center h-11 w-11 rounded-full border-[1.5px] border-amber-400 bg-gradient-to-br from-[#2E1202] via-[#180A02] to-[#0A0400] text-amber-100 shadow-[0_0_16px_rgba(245,158,11,0.7),inset_0_1px_3px_rgba(254,240,138,0.5)]">
-              <span className="text-[12px] font-mono font-black leading-none text-[#FDE047] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">{displayAngle}°</span>
-              <span className="text-[6.5px] font-bold uppercase tracking-wider text-amber-300 mt-0.5">{get16WindName(displayHeading)}</span>
-            </div>
-          ) : styleId === 'sandalwood' ? (
-            <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-emerald-300 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.72)]">
-              <span className="text-[15px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
-              <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
-            </div>
-          ) : isGrouped ? (
-            /* Grouped theme (ios_compass / color_palette) */
-            <div className="w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 border-emerald-300/60 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.5)]">
-              <span className="text-[14px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
-              <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
-            </div>
-          ) : (
-            <div className="w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 border-emerald-300 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.72)]">
-              <span className="text-[14px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
-              <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
-            </div>
-          )}
+            ) : isGraphite ? (
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]">
+                <span className="text-[15px] font-black font-mono leading-none">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-slate-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : variantId === 'ios_white' ? (
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-300 bg-white/95 text-slate-900 shadow-[0_4px_18px_rgba(0,0,0,0.15),inset_0_1px_3px_rgba(0,0,0,0.05)]">
+                <span className="text-[15px] font-black font-mono leading-none text-slate-950">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : variantId === 'ios_minimal' ? (
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-zinc-700 bg-zinc-950/95 text-zinc-100 shadow-[0_0_16px_rgba(0,0,0,0.8)]">
+                <span className="text-[15px] font-mono font-black leading-none text-zinc-100">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : variantId === 'ios_nautical' ? (
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-[#D4AF37] bg-gradient-to-br from-[#1C2833] via-[#0E161D] to-[#050A0E] text-[#F3E5AB] shadow-[0_0_18px_rgba(212,175,55,0.4)]">
+                <span className="text-[15px] font-serif font-black leading-none text-[#F3E5AB]">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-[#D4AF37] mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : styleId === 'cyberpunk' ? (
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-cyan-400 bg-[#050b14]/95 text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.65),inset_0_0_10px_rgba(6,182,212,0.2)]">
+                <span className="text-[15px] font-mono font-black leading-none text-cyan-200">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-fuchsia-400 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : styleId === 'cosmic_galaxy' ? (
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-indigo-400 bg-[#0D0820]/95 text-indigo-100 shadow-[0_0_18px_rgba(129,140,248,0.6),inset_0_0_10px_rgba(129,140,248,0.2)]">
+                <span className="text-[15px] font-mono font-black leading-none text-indigo-200">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-purple-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : styleId === 'vedic_mandala' ? (
+              <div className="flex flex-col items-center justify-center h-11 w-11 rounded-full border-[1.5px] border-amber-400 bg-gradient-to-br from-[#2E1202] via-[#180A02] to-[#0A0400] text-amber-100 shadow-[0_0_16px_rgba(245,158,11,0.7),inset_0_1px_3px_rgba(254,240,138,0.5)]">
+                <span className="text-[12px] font-mono font-black leading-none text-[#FDE047] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">{displayAngle}°</span>
+                <span className="text-[6.5px] font-bold uppercase tracking-wider text-amber-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : styleId === 'sandalwood' ? (
+              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-[#C9A67E] bg-[#FAF3E8]/95 text-[#3E2718] shadow-[0_0_16px_rgba(140,98,57,0.3)]">
+                <span className="text-[15px] font-black text-[#3E2718] leading-none font-serif">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-red-700 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : styleId === 'color_palette' && activeVariant ? (
+              <div 
+                className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 bg-stone-950/90 shadow-lg"
+                style={{ borderColor: activeVariant.primaryColor, boxShadow: `0 0 16px ${activeVariant.primaryColor}55` }}
+              >
+                <span className="text-[15px] font-black font-mono leading-none" style={{ color: activeVariant.primaryColor }}>{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-stone-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 border-emerald-300/80 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.6)]">
+                <span className="text-[14px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              </div>
+            )}
           </button>
         </div>
       </div>
