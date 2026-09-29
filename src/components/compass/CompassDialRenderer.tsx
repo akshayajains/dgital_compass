@@ -1067,14 +1067,31 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {/* 10b. Metal Needle (Silver/Dark classic Half Needle) */}
           {(styleId === 'ios_compass' && activeVariant?.needleType === 'metal_needle') && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.6)]" viewBox="0 0 200 200">
-              {/* North Silver Spear */}
-              <polygon points={`100,${apexY} 86,100 100,96`} fill="#E2E8F0" className="drop-shadow-[0_0_10px_rgba(226,232,240,0.5)]" />
-              <polygon points={`100,${apexY} 114,100 100,96`} fill="#94A3B8" />
-              <line x1="100" y1={apexY} x2="100" y2="64" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
-              {/* Center Pivot Ring */}
-              <circle cx="100" cy="100" r="14" fill="none" stroke="#64748B" strokeWidth="2" />
-              <circle cx="100" cy="100" r="10" fill="none" stroke="#94A3B8" strokeWidth="0.8" opacity="0.6" />
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.65)]" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="metal-n-l" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="40%" stopColor="#F1F5F9" />
+                  <stop offset="100%" stopColor="#CBD5E1" />
+                </linearGradient>
+                <linearGradient id="metal-n-r" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#64748B" />
+                  <stop offset="60%" stopColor="#475569" />
+                  <stop offset="100%" stopColor="#334155" />
+                </linearGradient>
+              </defs>
+              {/* North Silver/Titanium Spear - Light Facet */}
+              <polygon points={`100,${apexY} 88,98 100,95`} fill="url(#metal-n-l)" className="drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]" />
+              {/* North Silver/Titanium Spear - Shadow Facet */}
+              <polygon points={`100,${apexY} 112,98 100,95`} fill="url(#metal-n-r)" />
+              {/* Precision Specular Center Ridge */}
+              <line x1="100" y1={apexY} x2="100" y2="95" stroke="#FFFFFF" strokeWidth="0.8" strokeLinecap="round" opacity="0.85" />
+              {/* South Counter-weight balance fin */}
+              <polygon points="100,105 92,102 100,120" fill="#475569" opacity="0.75" />
+              <polygon points="100,105 108,102 100,120" fill="#1E293B" opacity="0.75" />
+              {/* Center Pivot Rings */}
+              <circle cx="100" cy="100" r="14.5" fill="none" stroke="#64748B" strokeWidth="1.5" opacity="0.7" />
+              <circle cx="100" cy="100" r="11" fill="none" stroke="#94A3B8" strokeWidth="0.8" opacity="0.5" />
             </svg>
           )}
 
@@ -1202,30 +1219,40 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 11b. Graphite Titanium Needle — sleek brushed-grey with red beacon tip */}
+          {/* 11b. Graphite Titanium Needle — sleek brushed-titanium chiseled needle */}
           {activeVariant?.needleType === 'graphite_needle' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.7)]" viewBox="0 0 200 200">
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_10px_28px_rgba(0,0,0,0.75)]" viewBox="0 0 200 200">
               <defs>
-                <linearGradient id="gr-n" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#F3F4F6" />
-                  <stop offset="50%" stopColor="#D1D5DB" />
+                <linearGradient id="gr-n-light" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#FFFFFF" />
+                  <stop offset="35%" stopColor="#F3F4F6" />
+                  <stop offset="80%" stopColor="#D1D5DB" />
                   <stop offset="100%" stopColor="#9CA3AF" />
                 </linearGradient>
-                <linearGradient id="gr-s" x1="0%" y1="0%" x2="100%" y2="0%">
+                <linearGradient id="gr-n-dark" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#6B7280" />
+                  <stop offset="45%" stopColor="#4B5563" />
                   <stop offset="100%" stopColor="#1F2937" />
                 </linearGradient>
+                <linearGradient id="gr-ridge" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+                  <stop offset="70%" stopColor="#E2E8F0" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#94A3B8" stopOpacity="0.3" />
+                </linearGradient>
               </defs>
-              {/* North brushed-titanium split spear */}
-              <polygon points={`100,${apexY} 86,100 100,96`} fill="url(#gr-n)" className="drop-shadow-[0_0_12px_rgba(209,213,219,0.5)]" />
-              <polygon points={`100,${apexY} 114,100 100,96`} fill="#6B7280" />
-              {/* Red beacon line down the north spear */}
-              <line x1="100" y1={apexY} x2="100" y2="64" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
-              {/* Red beacon tip */}
-              <circle cx="100" cy={apexY + 2} r="2.5" fill="#EF4444" className="drop-shadow-[0_0_8px_#ef4444]" />
-              {/* Graphite pivot rings */}
-              <circle cx="100" cy="100" r="14" fill="none" stroke="#9CA3AF" strokeWidth="2" />
-              <circle cx="100" cy="100" r="10" fill="none" stroke="#D1D5DB" strokeWidth="0.8" opacity="0.6" />
+              {/* North brushed-titanium faceted spear - Light side */}
+              <polygon points={`100,${apexY} 88,98 100,95`} fill="url(#gr-n-light)" className="drop-shadow-[0_0_12px_rgba(255,255,255,0.45)]" />
+              {/* North brushed-titanium faceted spear - Shadow side */}
+              <polygon points={`100,${apexY} 112,98 100,95`} fill="url(#gr-n-dark)" />
+              {/* Razor-sharp central specular ridge line */}
+              <line x1="100" y1={apexY} x2="100" y2="95" stroke="url(#gr-ridge)" strokeWidth="0.85" strokeLinecap="round" />
+              {/* Balanced South Counter-weight fin */}
+              <polygon points="100,105 92,102 100,122" fill="#374151" opacity="0.8" />
+              <polygon points="100,105 108,102 100,122" fill="#111827" opacity="0.8" />
+              <line x1="100" y1="105" x2="100" y2="122" stroke="#6B7280" strokeWidth="0.5" opacity="0.6" />
+              {/* Precision graphite pivot collar rings */}
+              <circle cx="100" cy="100" r="14.5" fill="none" stroke="#9CA3AF" strokeWidth="1.5" opacity="0.8" />
+              <circle cx="100" cy="100" r="11" fill="none" stroke="#D1D5DB" strokeWidth="0.8" opacity="0.5" />
             </svg>
           )}
 
