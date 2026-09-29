@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { ImpactStyle } from '@capacitor/haptics';
 
@@ -9,7 +10,7 @@ interface JyotishPanelProps {
   onHaptic: (style?: ImpactStyle) => void;
 }
 
-export const JyotishPanel = ({ language, theme, jyotishRashi, setJyotishRashi, onHaptic }: JyotishPanelProps) => {
+export const JyotishPanel = memo(({ language, theme, jyotishRashi, setJyotishRashi, onHaptic }: JyotishPanelProps) => {
   return (
     <div className="space-y-4">
       <div className={cn(
@@ -69,4 +70,4 @@ export const JyotishPanel = ({ language, theme, jyotishRashi, setJyotishRashi, o
       </div>
     </div>
   );
-};
+});

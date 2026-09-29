@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { Grid, Save, Trash2 } from 'lucide-react';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -20,7 +21,7 @@ interface VastuPanelProps {
   onDeleteRoom: (id: string) => void;
 }
 
-export const VastuPanel = ({
+export const VastuPanel = memo(({
   language, theme, vastuScore, selectedRoom, setSelectedRoom,
   doorDegree, setDoorDegree, house9Grid, setHouse9Grid, onHaptic,
   currentDir, savedRooms, onSaveRoom, onLoadRoom, onDeleteRoom
@@ -350,4 +351,4 @@ export const VastuPanel = ({
       </div>
     </div>
   );
-};
+});

@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle2, CircleDot, Heart, RotateCcw, Sparkles, Sun } from 'lucide-react';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -15,7 +16,7 @@ interface JainPanelProps {
   onHaptic: (style?: ImpactStyle) => void;
 }
 
-export const JainPanel = ({
+export const JainPanel = memo(({
   language, theme, jaapCount, incrementJaap, resetJaap,
   jainActivity, setJainActivity, checklist, toggleChecklistItem, onHaptic
 }: JainPanelProps) => {
@@ -157,4 +158,4 @@ export const JainPanel = ({
       </div>
     </div>
   );
-};
+});

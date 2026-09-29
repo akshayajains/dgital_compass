@@ -544,12 +544,12 @@ export const VastuOthersView: React.FC<Props> = ({
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {[
-          { id: 'vastu', label: language === 'hi' ? 'वास्तु' : 'Vastu', icon: '✨' },
-          { id: 'jyotish', label: language === 'hi' ? 'ज्योतिष' : 'Jyotish', icon: '⭐' },
-          { id: 'numerology', label: language === 'hi' ? 'अंक शास्त्र' : 'Numerology', icon: '#' },
-          { id: 'sadhana', label: language === 'hi' ? 'साधना' : 'Sadhana', icon: '⊙' },
-          { id: 'feng_shui', label: language === 'hi' ? 'फेंग शुई' : 'Feng Shui', icon: '🧭' },
-          { id: 'qibla', label: language === 'hi' ? 'किबला' : 'Qibla', icon: '↗' }
+          { id: 'vastu', label: language === 'hi' ? 'वास्तु' : 'Vastu', icon: '✨', activeBg: 'bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)]' },
+          { id: 'jyotish', label: language === 'hi' ? 'ज्योतिष' : 'Jyotish', icon: '⭐', activeBg: 'bg-purple-600 text-white border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.4)]' },
+          { id: 'numerology', label: language === 'hi' ? 'अंक शास्त्र' : 'Numerology', icon: '#', activeBg: 'bg-cyan-500 text-stone-950 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]' },
+          { id: 'sadhana', label: language === 'hi' ? 'साधना' : 'Sadhana', icon: '⊙', activeBg: 'bg-orange-500 text-white border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.4)]' },
+          { id: 'feng_shui', label: language === 'hi' ? 'फेंग शुई' : 'Feng Shui', icon: '🧭', activeBg: 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]' },
+          { id: 'qibla', label: language === 'hi' ? 'किबला' : 'Qibla', icon: '↗', activeBg: 'bg-teal-600 text-white border-teal-400 shadow-[0_0_12px_rgba(13,148,136,0.4)]' }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -562,7 +562,7 @@ export const VastuOthersView: React.FC<Props> = ({
               className={cn(
                 "px-3.5 py-1.5 rounded-full text-[11px] font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 shadow-sm active:scale-95",
                 isActive
-                  ? (theme === 'light' ? "bg-stone-800 text-white border-white/40 shadow-[0_0_12px_rgba(0,0,0,0.15)] scale-[1.03]" : "bg-stone-800 text-white border-white/40 shadow-[0_0_12px_rgba(255,255,255,0.25)] scale-[1.03]")
+                  ? `${tab.activeBg} scale-[1.03]`
                   : (theme === 'light' ? "bg-white text-stone-600 border-stone-300 hover:text-stone-900 hover:border-stone-400" : "bg-stone-950/80 text-stone-400 border-white/10 hover:text-white hover:border-white/25")
               )}
             >
@@ -823,15 +823,17 @@ export const VastuOthersView: React.FC<Props> = ({
 
             {/* Direction Match Live Feedback & Turn Guidance */}
             <div className={cn(
-              "w-full rounded-2xl p-2.5 border text-xs flex flex-col gap-1.5",
+              "w-full rounded-2xl p-3 border text-xs flex flex-col gap-2 shadow-md transition-all duration-300",
               isActivityMatched
-                ? (theme === 'light' ? "border-emerald-300 bg-emerald-100/60 text-emerald-950" : "border-emerald-500/30 bg-emerald-950/40 text-emerald-200")
+                ? (theme === 'light'
+                    ? "border-emerald-300 bg-emerald-100/70 text-emerald-950 shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+                    : "border-emerald-500/40 bg-emerald-950/60 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.35)]")
                 : (theme === 'light' ? "border-stone-200 bg-stone-50 text-stone-800" : "border-white/10 bg-white/5 text-stone-200")
             )}>
               <div className="flex items-center justify-between font-bold">
                 <span className="flex items-center gap-1.5">
                   {isActivityMatched ? (
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 animate-pulse" />
                   ) : (
                     <Target className="w-4 h-4 text-amber-400 shrink-0" />
                   )}
@@ -839,12 +841,39 @@ export const VastuOthersView: React.FC<Props> = ({
                     {language === 'hi' ? 'वर्तमान मुख:' : 'Facing:'} {displayDeg}° {language === 'hi' ? liveZone.nameHi.split(' ')[0] : liveZone.nameEn.split(' ')[0]} ({liveZone.code})
                   </span>
                 </span>
-                <span className={cn("text-[10px] font-mono font-bold", isActivityMatched ? "text-emerald-400" : "text-amber-400")}>
+                <span className={cn("text-[10px] font-mono font-black", isActivityMatched ? "text-emerald-400" : "text-amber-400")}>
                   {isActivityMatched
                     ? '✓ 100% MATCH'
-                    : `${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'Left' : 'Right'}`}
+                    : `${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? (language === 'hi' ? 'बाएं ↶' : 'Left ↶') : (language === 'hi' ? 'दाएं ↷' : 'Right ↷')}`}
                 </span>
               </div>
+
+              {/* Dynamic Turn Compass Navigator & Alignment Gauge */}
+              {!isActivityMatched && (
+                <div className="w-full flex items-center gap-2 py-1.5 px-2.5 rounded-xl bg-black/15 border border-white/5">
+                  <div className="flex items-center gap-1 text-[11px] font-black text-amber-400 shrink-0">
+                    {headingDeviation > 0 ? (
+                      <>
+                        <span className="text-base animate-bounce">↶</span>
+                        <span>{language === 'hi' ? `बाएं ${Math.abs(Math.round(headingDeviation))}° घूमें` : `Turn ${Math.abs(Math.round(headingDeviation))}° Left`}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-base animate-bounce">↷</span>
+                        <span>{language === 'hi' ? `दाएं ${Math.abs(Math.round(headingDeviation))}° घूमें` : `Turn ${Math.abs(Math.round(headingDeviation))}° Right`}</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex-1 h-1.5 rounded-full bg-stone-700/40 overflow-hidden relative">
+                    <div 
+                      className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full transition-all duration-150"
+                      style={{ width: `${Math.max(10, 100 - Math.min(100, Math.abs(headingDeviation) * 1.5))}%` }}
+                    />
+                  </div>
+                  <span className="text-[9px] font-mono font-bold opacity-75">{Math.round(Math.max(10, 100 - Math.min(100, Math.abs(headingDeviation) * 1.5)))}%</span>
+                </div>
+              )}
+
               <p className="text-[11px] leading-relaxed opacity-90">
                 {isActivityMatched
                   ? (language === 'hi' ? `अत्यंत शुभ! ${activityDirections.facing}` : `Perfect alignment! ${activityDirections.facing}`)
@@ -852,9 +881,9 @@ export const VastuOthersView: React.FC<Props> = ({
                       ? `${activityDirections.title} के लिए ${Math.round(activityDirections.targetDeg)}° की ओर ${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'बाएं ↶' : 'दाएं ↷'} घूमें। ${activityDirections.facing}`
                       : `Turn ${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'Left ↶' : 'Right ↷'} towards ${Math.round(activityDirections.targetDeg)}° for optimal energy. ${activityDirections.facing}`)}
               </p>
-              <div className="text-[10px] pt-1 border-t border-current/15 flex flex-col gap-0.5">
-                <div><span className="font-black">{language === 'hi' ? 'आदर्श:' : 'Ideal:'}</span> {liveHeadingAdvice.idealFor}</div>
-                <div><span className="font-black text-rose-400">{language === 'hi' ? 'वर्जित:' : 'Avoid:'}</span> {liveHeadingAdvice.avoidFor}</div>
+              <div className="text-[10px] pt-1.5 border-t border-current/15 flex flex-col gap-0.5">
+                <div><span className="font-black">{language === 'hi' ? 'आदर्श कार्य:' : 'Ideal for:'}</span> {liveHeadingAdvice.idealFor}</div>
+                <div><span className="font-black text-rose-400">{language === 'hi' ? 'वर्जित कार्य:' : 'Avoid for:'}</span> {liveHeadingAdvice.avoidFor}</div>
               </div>
             </div>
           </div>

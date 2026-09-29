@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface FengShuiPanelProps {
@@ -7,7 +8,7 @@ interface FengShuiPanelProps {
   setFengshuiDoor: (v: number) => void;
 }
 
-export const FengShuiPanel = ({ language, theme, fengshuiDoor, setFengshuiDoor }: FengShuiPanelProps) => {
+export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiDoor }: FengShuiPanelProps) => {
   return (
     <div className="space-y-4">
       <div className={cn(
@@ -76,4 +77,4 @@ export const FengShuiPanel = ({ language, theme, fengshuiDoor, setFengshuiDoor }
       </div>
     </div>
   );
-};
+});

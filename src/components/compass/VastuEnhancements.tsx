@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, useMemo, memo, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Share2, Search, AlertTriangle, Clock, Home } from 'lucide-react';
 import { getChoghadiyaData } from '@/lib/choghadiya';
@@ -46,14 +46,14 @@ const DOSHAS = [
   { zone: 'center', issue: 'heavy', labelHi: 'ब्रह्मस्थान में भारी सामान', labelEn: 'Heavy items in center', severity: 'moderate', remedyHi: 'केंद्र को खाली और हल्का रखें', remedyEn: 'Keep center empty and light' },
 ];
 
-export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }: VastuEnhancementsProps) => {
+export const VastuEnhancements = memo(({ language, theme, currentHeading, onHaptic }: VastuEnhancementsProps) => {
   const isHi = language === 'hi';
   const [activeSection, setActiveSection] = useState<'zones' | 'lookup' | 'dosha' | 'muhurat'>('zones');
   const [searchActivity, setSearchActivity] = useState<string>('study');
   const [shareMsg, setShareMsg] = useState<string | null>(null);
 
   // Determine current zone from heading
-  const currentZone = (() => {
+  const currentZone = useMemo(() => {
     if (currentHeading === null) return 'N';
     const d = ((currentHeading % 360) + 360) % 360;
     if (d >= 337.5 || d < 22.5) return 'N';
@@ -64,10 +64,10 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
     if (d >= 202.5 && d < 247.5) return 'SW';
     if (d >= 247.5 && d < 292.5) return 'W';
     return 'NW';
-  })();
+  }, [currentHeading]);
 
-  // Muhurat data
-  const choghadiya = getChoghadiyaData(new Date());
+  // Muhurat data memoized
+  const choghadiya = useMemo(() => getChoghadiyaData(new Date()), []);
 
   const handleShare = () => {
     onHaptic();
@@ -364,4 +364,4 @@ export const VastuEnhancements = ({ language, theme, currentHeading, onHaptic }:
       )}
     </div>
   );
-};
+});

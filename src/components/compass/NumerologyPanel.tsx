@@ -1,3 +1,4 @@
+import React, { memo } from 'react';
 import { cn } from '@/lib/utils';
 import { ImpactStyle } from '@capacitor/haptics';
 
@@ -21,7 +22,7 @@ interface NumerologyPanelProps {
   onHaptic: (style?: ImpactStyle) => void;
 }
 
-export const NumerologyPanel = ({
+export const NumerologyPanel = memo(({
   language, theme, numerologyDob, setNumerologyDob, mulank, numerologyNumber,
   loShuGrid, numerologyPhone, setNumerologyPhone, phoneTotal,
   numerologyHouse, setNumerologyHouse, houseTotal,
@@ -396,4 +397,4 @@ export const NumerologyPanel = ({
       </div>
     </div>
   );
-};
+});
