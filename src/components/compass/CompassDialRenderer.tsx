@@ -113,35 +113,47 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   const cardinalPoints = useMemo(() => {
     if (styleId === 'vedic_mandala') {
       return [
-        { labelEn: 'N', labelHi: 'उत्तर', deg: 0, isNorth: true, code: 'N' },
-        { labelEn: 'E', labelHi: 'पूर्व', deg: 90, isNorth: false, code: 'E' },
-        { labelEn: 'S', labelHi: 'दक्षिण', deg: 180, isNorth: false, code: 'S' },
-        { labelEn: 'W', labelHi: 'पश्चिम', deg: 270, isNorth: false, code: 'W' }
+        { label: 'N', deg: 0, isNorth: true, code: 'N' },
+        { label: 'E', deg: 90, isNorth: false, code: 'E' },
+        { label: 'S', deg: 180, isNorth: false, code: 'S' },
+        { label: 'W', deg: 270, isNorth: false, code: 'W' }
       ];
     }
     if (styleId === 'satellite_earth') {
       return [
-        { labelEn: 'N', labelHi: 'उ', deg: 0, isNorth: true, code: 'N' },
-        { labelEn: 'NE', labelHi: 'ईश', deg: 45, isNorth: false, code: 'NE' },
-        { labelEn: 'E', labelHi: 'पू', deg: 90, isNorth: false, code: 'E' },
-        { labelEn: 'SE', labelHi: 'आग्', deg: 135, isNorth: false, code: 'SE' },
-        { labelEn: 'S', labelHi: 'द', deg: 180, isNorth: false, code: 'S' },
-        { labelEn: 'SW', labelHi: 'नै', deg: 225, isNorth: false, code: 'SW' },
-        { labelEn: 'W', labelHi: 'प', deg: 270, isNorth: false, code: 'W' },
-        { labelEn: 'NW', labelHi: 'वाय', deg: 315, isNorth: false, code: 'NW' }
+        { label: 'N', deg: 0, isNorth: true, code: 'N' },
+        { label: 'NE', deg: 45, isNorth: false, code: 'NE' },
+        { label: 'E', deg: 90, isNorth: false, code: 'E' },
+        { label: 'SE', deg: 135, isNorth: false, code: 'SE' },
+        { label: 'S', deg: 180, isNorth: false, code: 'S' },
+        { label: 'SW', deg: 225, isNorth: false, code: 'SW' },
+        { label: 'W', deg: 270, isNorth: false, code: 'W' },
+        { label: 'NW', deg: 315, isNorth: false, code: 'NW' }
+      ];
+    }
+    if (isHi) {
+      return [
+        { label: 'उत्तर', deg: 0, isNorth: true, code: 'N' },
+        { label: 'ईशान', deg: 45, isNorth: false, code: 'NE' },
+        { label: 'पूर्व', deg: 90, isNorth: false, code: 'E' },
+        { label: 'आग्नेय', deg: 135, isNorth: false, code: 'SE' },
+        { label: 'दक्षिण', deg: 180, isNorth: false, code: 'S' },
+        { label: 'नैऋत्य', deg: 225, isNorth: false, code: 'SW' },
+        { label: 'पश्चिम', deg: 270, isNorth: false, code: 'W' },
+        { label: 'वायव्य', deg: 315, isNorth: false, code: 'NW' }
       ];
     }
     return [
-      { labelEn: 'N', labelHi: 'उ', deg: 0, isNorth: true, code: 'N' },
-      { labelEn: 'NE', labelHi: 'ईशान', deg: 45, isNorth: false, code: 'NE' },
-      { labelEn: 'E', labelHi: 'पूर्व', deg: 90, isNorth: false, code: 'E' },
-      { labelEn: 'SE', labelHi: 'आग्नेय', deg: 135, isNorth: false, code: 'SE' },
-      { labelEn: 'S', labelHi: 'दक्षिण', deg: 180, isNorth: false, code: 'S' },
-      { labelEn: 'SW', labelHi: 'नैऋत्य', deg: 225, isNorth: false, code: 'SW' },
-      { labelEn: 'W', labelHi: 'पश्चिम', deg: 270, isNorth: false, code: 'W' },
-      { labelEn: 'NW', labelHi: 'वायव्य', deg: 315, isNorth: false, code: 'NW' }
+      { label: 'N', deg: 0, isNorth: true, code: 'N' },
+      { label: 'NE', deg: 45, isNorth: false, code: 'NE' },
+      { label: 'E', deg: 90, isNorth: false, code: 'E' },
+      { label: 'SE', deg: 135, isNorth: false, code: 'SE' },
+      { label: 'S', deg: 180, isNorth: false, code: 'S' },
+      { label: 'SW', deg: 225, isNorth: false, code: 'SW' },
+      { label: 'W', deg: 270, isNorth: false, code: 'W' },
+      { label: 'NW', deg: 315, isNorth: false, code: 'NW' }
     ];
-  }, [styleId]);
+  }, [isHi, styleId]);
 
   // Outer bezel styling classes
   const getBezelClass = () => {
@@ -196,46 +208,24 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           This div uses absolute inset-0 so it never shifts regardless of bezel border width. */}
       {!hasCenterNeedle && (
         <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+          {/* w-full h-full fills the same bounding box as the rotating dial exactly */}
           <div className="w-full h-full relative flex items-center justify-center">
             <svg
-              className="absolute inset-0 w-full h-full drop-shadow-[0_8px_20px_rgba(0,0,0,0.95)]"
+              className="absolute inset-0 w-full h-full drop-shadow-[0_4px_14px_rgba(0,0,0,0.95)]"
               viewBox="0 0 200 200"
               style={{ pointerEvents: 'none' }}
             >
-              <defs>
-                <linearGradient id="stat-crimson-l" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFA4B6" />
-                  <stop offset="30%" stopColor="#FF3B56" />
-                  <stop offset="100%" stopColor="#DC2626" />
-                </linearGradient>
-                <linearGradient id="stat-crimson-r" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#B91C1C" />
-                  <stop offset="70%" stopColor="#7F1D1D" />
-                  <stop offset="100%" stopColor="#450A0A" />
-                </linearGradient>
-                <linearGradient id="stat-silver-l" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFFFFF" />
-                  <stop offset="100%" stopColor="#CBD5E1" />
-                </linearGradient>
-                <linearGradient id="stat-silver-r" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#94A3B8" />
-                  <stop offset="100%" stopColor="#475569" />
-                </linearGradient>
-              </defs>
-              {/* South Counterbalance Silver Spear */}
-              <polygon points="100,160 91,108 100,111" fill="url(#stat-silver-l)" stroke="#CBD5E1" strokeWidth="0.3" />
-              <polygon points="100,160 109,108 100,111" fill="url(#stat-silver-r)" stroke="#475569" strokeWidth="0.3" />
-              <line x1="100" y1="112" x2="100" y2="158" stroke="#FFFFFF" strokeWidth="1" strokeLinecap="round" opacity="0.8" />
-              {/* North Sculpted Crimson Spear */}
-              <polygon points="100,26 88,94 100,89" fill="url(#stat-crimson-l)" stroke="#FF8096" strokeWidth="0.4" />
-              <polygon points="100,26 112,94 100,89" fill="url(#stat-crimson-r)" stroke="#5F0811" strokeWidth="0.4" />
-              <line x1="100" y1="28" x2="100" y2="89" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" className="drop-shadow-[0_0_4px_#ffffff]" />
-              <polygon points="100,25 98,30 100,34 102,30" fill="#FFFFFF" />
-              {/* Center Hub */}
-              <circle cx="100" cy="100" r="14" fill="none" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="1 1" opacity="0.6" />
-              <circle cx="100" cy="100" r="11" fill="#1E293B" stroke="#F59E0B" strokeWidth="1.5" />
-              <circle cx="100" cy="100" r="5.5" fill="#EF4444" stroke="#FDE047" strokeWidth="0.8" />
-              <circle cx="98.5" cy="98.5" r="1.3" fill="#FFFFFF" />
+              {/* ── North half (pointing UP to 12 o'clock) — white left + crimson right ── */}
+              {/* Tip y=24, waist at y=88..112, hub cleared at r=10 → y=90 */}
+              <polygon points="100,24 86,91 100,87" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="0.7" strokeLinejoin="round" />
+              <polygon points="100,24 114,91 100,87" fill="#EF233C" stroke="#B91C1C" strokeWidth="0.7" strokeLinejoin="round" />
+              {/* 3D spinal highlight */}
+              <line x1="100" y1="26" x2="100" y2="86" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" opacity="0.9" />
+
+              {/* ── Center jewel bearing hub — layered circles for depth ── */}
+              <circle cx="100" cy="100" r="11" fill="#111827" stroke="#E5E7EB" strokeWidth="2.5" />
+              <circle cx="100" cy="100" r="6"  fill="#EF233C" />
+              <circle cx="100" cy="100" r="2.5" fill="#FDE047" />
             </svg>
           </div>
         </div>
@@ -593,112 +583,34 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </>
           )}
 
-          {/* iOS Vastu Master Dial Face — Sacred Chakra Mandala, Precision Rings & VASTU • वास्तु Insignia */}
-          {styleId === 'ios_compass' && !isMinimalOnyx && !isNautical && (
+          {isGraphite && (
             <>
-              {/* Precision outer mil-ring and warm metallic accent rings */}
-              <div className="absolute inset-2 rounded-full border border-slate-400/25 pointer-events-none" />
-              <div className="absolute inset-5 rounded-full border border-amber-500/20 pointer-events-none" />
-              <div className="absolute inset-8 rounded-full border border-slate-300/15 pointer-events-none shadow-[inset_0_0_24px_rgba(0,0,0,0.7)]" />
-
+              {/* Precision mil-ring — fine ticked outer ring */}
+              <div className="absolute inset-2 rounded-full border border-slate-400/30 pointer-events-none" />
+              <div className="absolute inset-5 rounded-full border border-slate-500/20 pointer-events-none" />
+              {/* Brushed titanium inner ring */}
+              <div className="absolute inset-9 rounded-full border border-slate-300/15 pointer-events-none shadow-[inset_0_0_18px_rgba(0,0,0,0.6)]" />
               <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
-                <defs>
-                  <radialGradient id="vastuDialGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.14" />
-                    <stop offset="50%" stopColor="#D97706" stopOpacity="0.05" />
-                    <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-                  </radialGradient>
-                  <linearGradient id="goldTextGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#FFF2A3" />
-                    <stop offset="50%" stopColor="#FBBF24" />
-                    <stop offset="100%" stopColor="#D97706" />
-                  </linearGradient>
-                  <linearGradient id="goldChakraRay" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FDE047" stopOpacity="0.6" />
-                    <stop offset="50%" stopColor="#F59E0B" stopOpacity="0.35" />
-                    <stop offset="100%" stopColor="#B45309" stopOpacity="0.15" />
-                  </linearGradient>
-                </defs>
-
-                {/* Ambient Vastu Center Glow */}
-                <circle cx="100" cy="100" r="70" fill="url(#vastuDialGlow)" />
-
-                {/* 60 fine precision mil ticks around perimeter */}
+                {/* 60 fine mil ticks */}
                 {[...Array(60)].map((_, i) => {
                   const a = (i * 6) * Math.PI / 180;
-                  const r1 = 88, r2 = i % 5 === 0 ? 81 : 84;
+                  const r1 = 88, r2 = i % 5 === 0 ? 80 : 84;
                   return (
                     <line
-                      key={`miltick-${i}`}
+                      key={i}
                       x1={100 + r1 * Math.sin(a)}
                       y1={100 - r1 * Math.cos(a)}
                       x2={100 + r2 * Math.sin(a)}
                       y2={100 - r2 * Math.cos(a)}
-                      stroke={i % 5 === 0 ? '#E2E8F0' : '#64748B'}
-                      strokeWidth={i % 5 === 0 ? 1.1 : 0.5}
-                      opacity={i % 5 === 0 ? 0.85 : 0.45}
+                      stroke={i % 5 === 0 ? '#D1D5DB' : '#6B7280'}
+                      strokeWidth={i % 5 === 0 ? 1.2 : 0.5}
+                      opacity={i % 5 === 0 ? 0.9 : 0.5}
                     />
                   );
                 })}
-
-                {/* Concentric Sacred Geometry Rings */}
-                <circle cx="100" cy="100" r="54" fill="none" stroke="#F59E0B" strokeWidth="0.6" strokeOpacity="0.45" />
-                <circle cx="100" cy="100" r="51" fill="none" stroke="#FDE047" strokeWidth="0.35" strokeOpacity="0.3" strokeDasharray="2 2" />
-                <circle cx="100" cy="100" r="28" fill="none" stroke="#F59E0B" strokeWidth="0.5" strokeOpacity="0.4" />
-
-                {/* 8-Directional Sacred Vastu Chakra / Mandala Petals */}
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <g key={`chakra-petal-${i}`} transform={`rotate(${i * 45}, 100, 100)`}>
-                    {/* Directional sacred ray */}
-                    <line x1="100" y1="28" x2="100" y2="51" stroke="url(#goldChakraRay)" strokeWidth="0.75" />
-                    {/* Lotus petal outline */}
-                    <path
-                      d="M 100,54 C 95,62 95,68 100,74 C 105,68 105,62 100,54 Z"
-                      fill="rgba(245, 158, 11, 0.05)"
-                      stroke="#F59E0B"
-                      strokeWidth="0.45"
-                      strokeOpacity="0.4"
-                    />
-                    {/* Outer petal bindu */}
-                    <circle cx="100" cy="54" r="1.1" fill="#FDE047" fillOpacity="0.75" />
-                  </g>
-                ))}
-
-                {/* Vastu Quadrant Diagonals (Fine Crosshair) */}
-                <line x1="100" y1="26" x2="100" y2="174" stroke="#F59E0B" strokeWidth="0.35" strokeOpacity="0.22" strokeDasharray="3 4" />
-                <line x1="26" y1="100" x2="174" y2="100" stroke="#F59E0B" strokeWidth="0.35" strokeOpacity="0.22" strokeDasharray="3 4" />
-                <line x1="48" y1="48" x2="152" y2="152" stroke="#F59E0B" strokeWidth="0.3" strokeOpacity="0.18" strokeDasharray="3 4" />
-                <line x1="152" y1="48" x2="48" y2="152" stroke="#F59E0B" strokeWidth="0.3" strokeOpacity="0.18" strokeDasharray="3 4" />
-
-                {/* Central Vastu Purusha Mandala Square (Sacred Brahma Grid) */}
-                <rect x="80" y="80" width="40" height="40" fill="none" stroke="#F59E0B" strokeWidth="0.45" strokeOpacity="0.22" />
-                <rect x="87" y="87" width="26" height="26" fill="none" stroke="#FDE047" strokeWidth="0.3" strokeOpacity="0.2" />
-
-                {/* VASTU • वास्तु Emblem Engraved Badge at lower quadrant */}
-                <g transform="translate(100, 142)">
-                  <rect x="-32" y="-7.5" width="64" height="15" rx="7.5" fill="rgba(10, 15, 24, 0.85)" stroke="#F59E0B" strokeWidth="0.65" strokeOpacity="0.55" className="drop-shadow-md" />
-                  <circle cx="-25" cy="0" r="1.2" fill="#FDE047" />
-                  <circle cx="25" cy="0" r="1.2" fill="#FDE047" />
-                  <circle cx="0" cy="0" r="1.1" fill="#FDE047" opacity="0.8" />
-                  {/* Left: VASTU (English) */}
-                  <text x="-12.5" y="3.2" textAnchor="middle" fill="url(#goldTextGrad)" fontSize="5.2" fontWeight="900" letterSpacing="0.6" className="drop-shadow-[0_0_4px_rgba(245,158,11,0.6)]">
-                    VASTU
-                  </text>
-                  {/* Right: वास्तु (Hindi) */}
-                  <text x="12.5" y="3.2" textAnchor="middle" fill="url(#goldTextGrad)" fontSize="5.5" fontWeight="900" letterSpacing="0.4" className="drop-shadow-[0_0_4px_rgba(245,158,11,0.6)]">
-                    वास्तु
-                  </text>
-                </g>
-
-                {/* 4 Sacred Elements Badges in the 4 Vastu corners */}
-                {/* NE (Jal / Water) */}
-                <text x="134" y="68" textAnchor="middle" fill="#38BDF8" fontSize="3.6" fontWeight="800" opacity="0.7">जल</text>
-                {/* SE (Agni / Fire) */}
-                <text x="134" y="136" textAnchor="middle" fill="#FB923C" fontSize="3.6" fontWeight="800" opacity="0.7">अग्नि</text>
-                {/* SW (Prithvi / Earth) */}
-                <text x="66" y="136" textAnchor="middle" fill="#FACC15" fontSize="3.6" fontWeight="800" opacity="0.7">पृथ्वी</text>
-                {/* NW (Vayu / Air) */}
-                <text x="66" y="68" textAnchor="middle" fill="#A7F3D0" fontSize="3.6" fontWeight="800" opacity="0.7">वायु</text>
+                {/* Subtle crosshair */}
+                <line x1="14" y1="100" x2="186" y2="100" stroke="#9CA3AF" strokeWidth="0.4" strokeDasharray="4 4" opacity="0.5" />
+                <line x1="100" y1="14" x2="100" y2="186" stroke="#9CA3AF" strokeWidth="0.4" strokeDasharray="4 4" opacity="0.5" />
               </svg>
             </>
           )}
@@ -856,43 +768,26 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           ) : (
             cardinalPoints.map((pt) => (
               <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
-                <div className="flex flex-col items-center select-none mt-4 sm:mt-5">
-                  {/* English Primary Cardinal Marker */}
+                <div className="flex flex-col items-center select-none mt-5">
                   <span className={cn(
-                    "font-black tracking-tight leading-none",
-                    pt.isNorth
-                      ? "text-[#EF4444] text-[15px] sm:text-base font-black drop-shadow-[0_0_10px_rgba(239,68,68,0.85)] scale-110 animate-pulse-subtle"
-                      : styleId === 'royal_gold'
-                      ? "text-[#2D1603] text-sm font-black font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]"
-                      : isNautical
-                      ? "text-[#3E2718] text-sm font-serif font-black"
+                    "font-black tracking-tight",
+                    styleId === 'royal_gold'
+                      ? (pt.isNorth
+                          ? "text-[#4A0208] text-lg font-black font-serif drop-shadow-[0_1px_0px_#FFFFFF] drop-shadow-[0_0_2px_#FDE047] scale-110"
+                          : "text-[#2D1603] text-sm font-black font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]")
+                      : pt.isNorth
+                      ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444] animate-pulse-subtle"
                       : styleId === 'satellite_earth'
                       ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
                       : styleId === 'cyberpunk'
-                      ? "text-cyan-300 text-sm font-mono"
+                      ? "text-cyan-300 text-sm"
                       : isGraphite
-                      ? "text-slate-100 text-sm font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                      ? "text-slate-200 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                       : activeVariant?.cardinalColor
                       ? activeVariant.cardinalColor
-                      : "text-white text-sm font-bold"
+                      : ""
                   )}>
-                    {pt.labelEn}
-                  </span>
-
-                  {/* Hindi Vastu Dual Marker */}
-                  <span className={cn(
-                    "text-[8px] sm:text-[8.5px] font-bold leading-tight mt-0.5 tracking-tight select-none",
-                    pt.isNorth
-                      ? "text-red-400 font-black drop-shadow-[0_0_6px_rgba(239,68,68,0.7)]"
-                      : styleId === 'royal_gold'
-                      ? "text-[#78470E] font-serif font-bold"
-                      : isNautical
-                      ? "text-[#8C5824] font-serif font-bold"
-                      : styleId === 'cyberpunk'
-                      ? "text-cyan-400/80 font-mono"
-                      : "text-amber-400/90 font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
-                  )}>
-                    {pt.labelHi}
+                    {pt.label}
                   </span>
                 </div>
               </div>
@@ -1144,134 +1039,30 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 10. iOS Master 3D Sculpted Crimson & Silver Needle with Knurled Pivot Hub */}
-          {(styleId === 'ios_compass' && (activeVariant?.needleType === 'ios_needle' || activeVariant?.needleType === 'metal_needle')) && (
-            <svg className="w-full h-full p-2 drop-shadow-[0_14px_32px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
-              <defs>
-                {/* 3D North Crimson Facet Gradients */}
-                <linearGradient id="ios-crimson-left" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFA4B6" />
-                  <stop offset="20%" stopColor="#FF3B56" />
-                  <stop offset="65%" stopColor="#EF233C" />
-                  <stop offset="100%" stopColor="#D90429" />
-                </linearGradient>
-                <linearGradient id="ios-crimson-right" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#B91C1C" />
-                  <stop offset="45%" stopColor="#991B1B" />
-                  <stop offset="85%" stopColor="#7F1D1D" />
-                  <stop offset="100%" stopColor="#450A0A" />
-                </linearGradient>
+          {/* 10. iOS Clean Precision Needle (Red North Half Only) */}
+          {(styleId === 'ios_compass' && activeVariant?.needleType === 'ios_needle') && (
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]" viewBox="0 0 200 200">
+              {/* North Red Spear */}
+              <polygon points={`100,${apexY} 88,100 100,94`} fill="#EF4444" className="drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]" />
+              <polygon points={`100,${apexY} 112,100 100,94`} fill="#B91C1C" />
+              {/* White center line */}
+              <line x1="100" y1={apexY} x2="100" y2="94" stroke="#FFFFFF" strokeWidth="1.4" />
+              <polygon points={`100,${apexY} 97,${apexY + 12} 103,${apexY + 12}`} fill="#FFFFFF" />
+              {/* Center Pivot Ring */}
+              <circle cx="100" cy="100" r="14" fill="none" stroke="#64748B" strokeWidth="1.5" />
+            </svg>
+          )}
 
-                {/* 3D South Counterbalance Silver/Titanium Gradients */}
-                <linearGradient id="ios-silver-left" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFFFFF" />
-                  <stop offset="35%" stopColor="#F1F5F9" />
-                  <stop offset="70%" stopColor="#CBD5E1" />
-                  <stop offset="100%" stopColor="#94A3B8" />
-                </linearGradient>
-                <linearGradient id="ios-silver-right" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#94A3B8" />
-                  <stop offset="40%" stopColor="#64748B" />
-                  <stop offset="80%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#334155" />
-                </linearGradient>
-
-                {/* Knurled Gold & Titanium Hub Rim */}
-                <radialGradient id="ios-hub-bezel" cx="35%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#FFFDF0" />
-                  <stop offset="25%" stopColor="#FDE047" />
-                  <stop offset="55%" stopColor="#D4AF37" />
-                  <stop offset="85%" stopColor="#92620A" />
-                  <stop offset="100%" stopColor="#451A03" />
-                </radialGradient>
-                <radialGradient id="ios-hub-jewel" cx="35%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#FFA4B6" />
-                  <stop offset="30%" stopColor="#EF4444" />
-                  <stop offset="70%" stopColor="#B91C1C" />
-                  <stop offset="100%" stopColor="#450A0A" />
-                </radialGradient>
-                <filter id="ios-needle-glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-              </defs>
-
-              {/* ── SOUTH COUNTERBALANCE SILVER LANCE (Points to 180° South) ── */}
-              {/* Left polished silver facet */}
-              <polygon
-                points="100,162 90,108 100,111"
-                fill="url(#ios-silver-left)"
-                stroke="#E2E8F0"
-                strokeWidth="0.3"
-              />
-              {/* Right shaded gunmetal facet */}
-              <polygon
-                points="100,162 110,108 100,111"
-                fill="url(#ios-silver-right)"
-                stroke="#475569"
-                strokeWidth="0.3"
-              />
-              {/* South spinal highlight */}
-              <line x1="100" y1="112" x2="100" y2="160" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
-              {/* South tip finial diamond */}
-              <polygon points="100,163 98.5,159 100,157 101.5,159" fill="#FFFFFF" opacity="0.9" />
-
-              {/* ── NORTH SCULPTED 3D CRIMSON SPEAR (Points to 0° North) ── */}
-              {/* Ambient Red Needle Core Glow */}
-              <polygon
-                points={`100,${apexY} 88,96 112,96`}
-                fill="#EF4444"
-                opacity="0.25"
-                filter="url(#ios-needle-glow)"
-              />
-              {/* Left Vivid Ruby-Crimson Facet */}
-              <polygon
-                points={`100,${apexY} 88,96 100,91`}
-                fill="url(#ios-crimson-left)"
-                stroke="#FF8096"
-                strokeWidth="0.4"
-                strokeLinejoin="round"
-              />
-              {/* Right Deep Wine-Crimson Shaded Facet */}
-              <polygon
-                points={`100,${apexY} 112,96 100,91`}
-                fill="url(#ios-crimson-right)"
-                stroke="#5F0811"
-                strokeWidth="0.4"
-                strokeLinejoin="round"
-              />
-
-              {/* Brilliant Specular Spinal Ridge Line */}
-              <line
-                x1="100"
-                y1={apexY + 2}
-                x2="100"
-                y2="91"
-                stroke="#FFFFFF"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                className="drop-shadow-[0_0_4px_#ffffff]"
-              />
-
-              {/* Apex Precision Glint Diamond */}
-              <polygon
-                points={`100,${apexY - 1} 98,${apexY + 4} 100,${apexY + 8} 102,${apexY + 4}`}
-                fill="#FFFFFF"
-                className="drop-shadow-[0_0_8px_#ffffff]"
-              />
-              <circle cx="100" cy={apexY + 3} r="1.2" fill="#FFFFFF" />
-
-              {/* ── JEWEL BEARING CENTER PIVOT HUB (Titanium, Gold & Ruby) ── */}
-              {/* Outer Knurled / Coin-edge Bezel */}
-              <circle cx="100" cy="100" r="16.5" fill="none" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="1.2 1.2" opacity="0.6" />
-              {/* 24K Gold Accent Bezel */}
-              <circle cx="100" cy="100" r="14" fill="url(#ios-hub-bezel)" stroke="#3E1E02" strokeWidth="0.75" className="drop-shadow-lg" />
-              {/* Dark Obsidian Inner Retainer */}
-              <circle cx="100" cy="100" r="10.5" fill="#0A0E14" stroke="#475569" strokeWidth="0.6" />
-              {/* Polished Ruby Jewel Pivot Bindu */}
-              <circle cx="100" cy="100" r="6.5" fill="url(#ios-hub-jewel)" stroke="#FDE047" strokeWidth="0.8" className="drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]" />
-              {/* Center Specular Glint */}
-              <circle cx="98" cy="98" r="1.6" fill="#FFFFFF" opacity="0.95" />
+          {/* 10b. Metal Needle (Silver/Dark classic Half Needle) */}
+          {(styleId === 'ios_compass' && activeVariant?.needleType === 'metal_needle') && (
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.6)]" viewBox="0 0 200 200">
+              {/* North Silver Spear */}
+              <polygon points={`100,${apexY} 86,100 100,96`} fill="#E2E8F0" className="drop-shadow-[0_0_10px_rgba(226,232,240,0.5)]" />
+              <polygon points={`100,${apexY} 114,100 100,96`} fill="#94A3B8" />
+              <line x1="100" y1={apexY} x2="100" y2="64" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+              {/* Center Pivot Ring */}
+              <circle cx="100" cy="100" r="14" fill="none" stroke="#64748B" strokeWidth="2" />
+              <circle cx="100" cy="100" r="10" fill="none" stroke="#94A3B8" strokeWidth="0.8" opacity="0.6" />
             </svg>
           )}
 
@@ -1399,68 +1190,30 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 11b. Graphite Vastu 3D Faceted Crimson & Silver Needle with Knurled Pivot Hub */}
+          {/* 11b. Graphite Titanium Needle — sleek brushed-grey with red beacon tip */}
           {activeVariant?.needleType === 'graphite_needle' && (
-            <svg className="w-full h-full p-2 drop-shadow-[0_14px_32px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
+            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.7)]" viewBox="0 0 200 200">
               <defs>
-                <linearGradient id="gr-crimson-left" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFA4B6" />
-                  <stop offset="20%" stopColor="#FF3B56" />
-                  <stop offset="65%" stopColor="#EF233C" />
-                  <stop offset="100%" stopColor="#D90429" />
+                <linearGradient id="gr-n" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#F3F4F6" />
+                  <stop offset="50%" stopColor="#D1D5DB" />
+                  <stop offset="100%" stopColor="#9CA3AF" />
                 </linearGradient>
-                <linearGradient id="gr-crimson-right" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#B91C1C" />
-                  <stop offset="45%" stopColor="#991B1B" />
-                  <stop offset="85%" stopColor="#7F1D1D" />
-                  <stop offset="100%" stopColor="#450A0A" />
+                <linearGradient id="gr-s" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6B7280" />
+                  <stop offset="100%" stopColor="#1F2937" />
                 </linearGradient>
-                <linearGradient id="gr-silver-left" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#FFFFFF" />
-                  <stop offset="35%" stopColor="#F1F5F9" />
-                  <stop offset="70%" stopColor="#CBD5E1" />
-                  <stop offset="100%" stopColor="#94A3B8" />
-                </linearGradient>
-                <linearGradient id="gr-silver-right" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#94A3B8" />
-                  <stop offset="40%" stopColor="#64748B" />
-                  <stop offset="80%" stopColor="#475569" />
-                  <stop offset="100%" stopColor="#334155" />
-                </linearGradient>
-                <radialGradient id="gr-hub-bezel" cx="35%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#FFFDF0" />
-                  <stop offset="25%" stopColor="#FDE047" />
-                  <stop offset="55%" stopColor="#D4AF37" />
-                  <stop offset="85%" stopColor="#92620A" />
-                  <stop offset="100%" stopColor="#451A03" />
-                </radialGradient>
-                <radialGradient id="gr-hub-jewel" cx="35%" cy="30%" r="70%">
-                  <stop offset="0%" stopColor="#FFA4B6" />
-                  <stop offset="30%" stopColor="#EF4444" />
-                  <stop offset="70%" stopColor="#B91C1C" />
-                  <stop offset="100%" stopColor="#450A0A" />
-                </radialGradient>
               </defs>
-
-              {/* South Counterbalance Silver Lance */}
-              <polygon points="100,162 90,108 100,111" fill="url(#gr-silver-left)" stroke="#E2E8F0" strokeWidth="0.3" />
-              <polygon points="100,162 110,108 100,111" fill="url(#gr-silver-right)" stroke="#475569" strokeWidth="0.3" />
-              <line x1="100" y1="112" x2="100" y2="160" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" opacity="0.85" />
-              <polygon points="100,163 98.5,159 100,157 101.5,159" fill="#FFFFFF" opacity="0.9" />
-
-              {/* North Sculpted 3D Crimson Spear */}
-              <polygon points={`100,${apexY} 88,96 100,91`} fill="url(#gr-crimson-left)" stroke="#FF8096" strokeWidth="0.4" strokeLinejoin="round" />
-              <polygon points={`100,${apexY} 112,96 100,91`} fill="url(#gr-crimson-right)" stroke="#5F0811" strokeWidth="0.4" strokeLinejoin="round" />
-              <line x1="100" y1={apexY + 2} x2="100" y2="91" stroke="#FFFFFF" strokeWidth="1.8" strokeLinecap="round" className="drop-shadow-[0_0_4px_#ffffff]" />
-              <polygon points={`100,${apexY - 1} 98,${apexY + 4} 100,${apexY + 8} 102,${apexY + 4}`} fill="#FFFFFF" className="drop-shadow-[0_0_8px_#ffffff]" />
-              <circle cx="100" cy={apexY + 3} r="1.2" fill="#FFFFFF" />
-
-              {/* Jewel Bearing Center Pivot Hub */}
-              <circle cx="100" cy="100" r="16.5" fill="none" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="1.2 1.2" opacity="0.6" />
-              <circle cx="100" cy="100" r="14" fill="url(#gr-hub-bezel)" stroke="#3E1E02" strokeWidth="0.75" className="drop-shadow-lg" />
-              <circle cx="100" cy="100" r="10.5" fill="#0A0E14" stroke="#475569" strokeWidth="0.6" />
-              <circle cx="100" cy="100" r="6.5" fill="url(#gr-hub-jewel)" stroke="#FDE047" strokeWidth="0.8" className="drop-shadow-[0_0_10px_rgba(239,68,68,0.9)]" />
-              <circle cx="98" cy="98" r="1.6" fill="#FFFFFF" opacity="0.95" />
+              {/* North brushed-titanium split spear */}
+              <polygon points={`100,${apexY} 86,100 100,96`} fill="url(#gr-n)" className="drop-shadow-[0_0_12px_rgba(209,213,219,0.5)]" />
+              <polygon points={`100,${apexY} 114,100 100,96`} fill="#6B7280" />
+              {/* Red beacon line down the north spear */}
+              <line x1="100" y1={apexY} x2="100" y2="64" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" />
+              {/* Red beacon tip */}
+              <circle cx="100" cy={apexY + 2} r="2.5" fill="#EF4444" className="drop-shadow-[0_0_8px_#ef4444]" />
+              {/* Graphite pivot rings */}
+              <circle cx="100" cy="100" r="14" fill="none" stroke="#9CA3AF" strokeWidth="2" />
+              <circle cx="100" cy="100" r="10" fill="none" stroke="#D1D5DB" strokeWidth="0.8" opacity="0.6" />
             </svg>
           )}
 
