@@ -83,6 +83,8 @@ public class CompassWidgetProvider extends AppWidgetProvider {
         final float[] latestHeading = new float[]{-1f};
         final int[] sampleCount = new int[]{0};
 
+        final boolean[] finished = new boolean[]{false};
+
         final SensorEventListener listener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
@@ -100,8 +102,11 @@ public class CompassWidgetProvider extends AppWidgetProvider {
                 sampleCount[0]++;
                 // Collect 3 samples (~150-300ms) for stability before updating
                 if (sampleCount[0] >= 3 && latestHeading[0] >= 0) {
-                    sensorManager.unregisterListener(this);
-                    finishUpdate(context, latestHeading[0], asyncResult);
+                    if (!finished[0]) {
+                        finished[0] = true;
+                        try { sensorManager.unregisterListener(this); } catch (Exception ignored) {}
+                        finishUpdate(context, latestHeading[0], asyncResult);
+                    }
                 }
             }
 
@@ -116,15 +121,18 @@ public class CompassWidgetProvider extends AppWidgetProvider {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                try {
-                    sensorManager.unregisterListener(listener);
-                    if (latestHeading[0] >= 0) {
-                        finishUpdate(context, latestHeading[0], asyncResult);
-                    } else {
-                        asyncResult.finish();
+                if (!finished[0]) {
+                    finished[0] = true;
+                    try {
+                        sensorManager.unregisterListener(listener);
+                        if (latestHeading[0] >= 0) {
+                            finishUpdate(context, latestHeading[0], asyncResult);
+                        } else {
+                            asyncResult.finish();
+                        }
+                    } catch (Exception ignored) {
+                        try { asyncResult.finish(); } catch (Exception e) {}
                     }
-                } catch (Exception ignored) {
-                    try { asyncResult.finish(); } catch (Exception e) {}
                 }
             }
         }, 1200);
@@ -267,7 +275,7 @@ public class CompassWidgetProvider extends AppWidgetProvider {
 
             canvas.restore();
             return bitmap;
-        } catch (Exception e) {
+        } catch (Throwable t) {
             return null;
         }
     }

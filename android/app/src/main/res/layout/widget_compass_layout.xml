@@ -8,18 +8,19 @@
     android:padding="12dp"
     android:gravity="center_horizontal">
 
-    <!-- Top Bar: Nothing Red Dot + Title + Open App Button -->
+    <!-- Top Bar: Red Dot + Title + Launch Button -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <View
+        <ImageView
             android:layout_width="7dp"
             android:layout_height="7dp"
-            android:background="@drawable/widget_red_dot"
-            android:layout_marginEnd="6dp" />
+            android:src="@drawable/widget_red_dot"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="Status dot" />
 
         <TextView
             android:layout_width="0dp"
@@ -32,12 +33,15 @@
             android:letterSpacing="0.12"
             android:fontFamily="sans-serif-medium" />
 
-        <ImageView
+        <TextView
             android:id="@+id/widget_btn_open"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:padding="4dp"
-            android:src="@drawable/ic_widget_launch"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:gravity="center"
+            android:text="↗"
+            android:textColor="#8A929B"
+            android:textSize="14sp"
+            android:textStyle="bold"
             android:contentDescription="Open full app" />
     </LinearLayout>
 
@@ -47,14 +51,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginVertical="4dp">
-
-        <!-- Outer Dial Background -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:background="@drawable/widget_circle_dial" />
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="4dp">
 
         <!-- Rendered Dial Needle & Compass Rose -->
         <ImageView
@@ -63,9 +61,10 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:scaleType="centerInside"
+            android:src="@drawable/widget_circle_dial"
             android:contentDescription="Compass dial" />
 
-        <!-- Center Text: Big Cardinal (N, NE...) and Degree (340°) -->
+        <!-- Center Text: Big Cardinal (N, NE...) and Degree (0°) -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -105,14 +104,16 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:paddingVertical="2dp">
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp">
 
-        <ImageView
-            android:layout_width="12dp"
-            android:layout_height="12dp"
-            android:src="@drawable/ic_widget_refresh"
-            android:layout_marginEnd="4dp"
-            android:contentDescription="Refresh direction" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="↻ "
+            android:textColor="#8A929B"
+            android:textSize="11sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/widget_status_text"
