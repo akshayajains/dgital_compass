@@ -1086,6 +1086,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               <polygon points={`100,${apexY} 112,98 100,95`} fill="url(#metal-n-r)" />
               {/* Precision Specular Center Ridge */}
               <line x1="100" y1={apexY} x2="100" y2="95" stroke="#FFFFFF" strokeWidth="0.8" strokeLinecap="round" opacity="0.85" />
+
               {/* South Counter-weight balance fin */}
               <polygon points="100,105 92,102 100,120" fill="#475569" opacity="0.75" />
               <polygon points="100,105 108,102 100,120" fill="#1E293B" opacity="0.75" />
@@ -1219,7 +1220,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 11b. Graphite Titanium Needle — sleek brushed-titanium chiseled needle */}
+          {/* 11b. Graphite Titanium Needle — sleek brushed-titanium chiseled needle with Faceted Ruby Tip */}
           {activeVariant?.needleType === 'graphite_needle' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_10px_28px_rgba(0,0,0,0.75)]" viewBox="0 0 200 200">
               <defs>
@@ -1246,6 +1247,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               <polygon points={`100,${apexY} 112,98 100,95`} fill="url(#gr-n-dark)" />
               {/* Razor-sharp central specular ridge line */}
               <line x1="100" y1={apexY} x2="100" y2="95" stroke="url(#gr-ridge)" strokeWidth="0.85" strokeLinecap="round" />
+
               {/* Balanced South Counter-weight fin */}
               <polygon points="100,105 92,102 100,122" fill="#374151" opacity="0.8" />
               <polygon points="100,105 108,102 100,122" fill="#111827" opacity="0.8" />
