@@ -9,15 +9,12 @@ interface Props {
   styleId: CompassStyleId;
   language: Language;
   displayHeading: number | null;
-  pitch?: number;
-  roll?: number;
   sunPos: number | null;
   isQiblaMode: boolean;
   qiblaBearing: number;
   qiblaDistanceKm: number;
   isFacingQibla: boolean;
   vastuGridEnabled: boolean;
-  isLevel?: boolean;
   dialRef: React.RefObject<HTMLDivElement>;
   customAccentColor?: string;
   /** Magnetic declination in degrees (from NOAA WMM) */
@@ -28,6 +25,12 @@ interface Props {
   targetBearing?: number | null;
   /** Variant id for grouped themes (ios_compass, color_palette) */
   variantId?: string | null;
+  /** Live device pitch (X-axis tilt in degrees) for Bullseye Level */
+  pitch?: number;
+  /** Live device roll (Y-axis tilt in degrees) for Bullseye Level */
+  roll?: number;
+  /** Whether device is held flat within level threshold */
+  isLevel?: boolean;
   /** Optional callback when user taps a 32 Devta Pada */
   onSelectPada?: (pada: VastuPada32) => void;
   /** Re-center callback: resets compass baseline like Google Maps' recenter button */
@@ -60,6 +63,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   useTrueNorth = false,
   targetBearing,
   variantId,
+  pitch = 0,
+  roll = 0,
+  isLevel,
   onSelectPada,
   onRecenter,
   onPointerDown,
@@ -69,6 +75,12 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   const isHi = language === 'hi';
   const displayAngle = displayHeading !== null ? Math.round(displayHeading) : 0;
   const [recenterPulse, setRecenterPulse] = React.useState<boolean>(false);
+
+  // Bullseye level metrics for central reticle
+  const totalTilt = Math.sqrt(pitch * pitch + roll * roll);
+  const isDeviceFlat = isLevel ?? (totalTilt <= 2.2);
+  const bubbleX = isDeviceFlat ? 0 : Math.max(-11, Math.min(11, -roll * 0.95));
+  const bubbleY = isDeviceFlat ? 0 : Math.max(-11, Math.min(11, pitch * 0.95));
 
   const handleCenterTap = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -1296,57 +1308,179 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 <span className="text-[6.5px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
               </div>
             ) : isGraphite ? (
-              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]">
-                <span className="text-[15px] font-black font-mono leading-none">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-slate-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 transition-all duration-200 relative overflow-hidden",
+                isDeviceFlat
+                  ? "border-emerald-400 bg-[#0B1510]/95 text-emerald-100 shadow-[0_0_22px_rgba(16,185,129,0.75),inset_0_0_12px_rgba(0,0,0,0.9)]"
+                  : "border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]"
+              )}>
+                {/* Bullseye Level Crosshair Reticle */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" viewBox="0 0 56 56">
+                  <circle cx="28" cy="28" r="9" fill="none" stroke="currentColor" strokeWidth="0.8" />
+                  <line x1="28" y1="4" x2="28" y2="52" stroke="currentColor" strokeWidth="0.5" />
+                  <line x1="4" y1="28" x2="52" y2="28" stroke="currentColor" strokeWidth="0.5" />
+                </svg>
+                {/* Floating Bullseye Bubble */}
+                <div
+                  className={cn(
+                    "absolute w-3 h-3 rounded-full pointer-events-none transition-transform duration-75",
+                    isDeviceFlat
+                      ? "bg-emerald-400 shadow-[0_0_8px_#10b981] border border-white/80"
+                      : "bg-amber-400/80 shadow-[0_0_6px_#f59e0b] border border-amber-200"
+                  )}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className={cn("text-[14px] font-black font-mono leading-none z-10 drop-shadow-md", isDeviceFlat ? "text-emerald-100" : "text-slate-100")}>
+                  {displayAngle}°
+                </span>
+                <span className={cn("text-[6.5px] font-black uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-slate-300")}>
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : variantId === 'ios_white' ? (
-              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-slate-300 bg-white/95 text-slate-900 shadow-[0_4px_18px_rgba(0,0,0,0.15),inset_0_1px_3px_rgba(0,0,0,0.05)]">
-                <span className="text-[15px] font-black font-mono leading-none text-slate-950">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 transition-all duration-200 relative overflow-hidden",
+                isDeviceFlat
+                  ? "border-emerald-500 bg-emerald-50/95 text-emerald-950 shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+                  : "border-slate-300 bg-white/95 text-slate-900 shadow-[0_4px_18px_rgba(0,0,0,0.15)]"
+              )}>
+                {/* Bullseye Floating Bubble */}
+                <div
+                  className={cn(
+                    "absolute w-3 h-3 rounded-full pointer-events-none transition-transform duration-75",
+                    isDeviceFlat ? "bg-emerald-500/80 shadow-[0_0_6px_#10b981]" : "bg-amber-500/60"
+                  )}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-black font-mono leading-none text-slate-950 z-10">{displayAngle}°</span>
+                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-600 font-black" : "text-slate-500")}>
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : variantId === 'ios_minimal' ? (
-              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-zinc-700 bg-zinc-950/95 text-zinc-100 shadow-[0_0_16px_rgba(0,0,0,0.8)]">
-                <span className="text-[15px] font-mono font-black leading-none text-zinc-100">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 transition-all duration-200 relative overflow-hidden",
+                isDeviceFlat ? "border-emerald-500 text-emerald-400 bg-zinc-950" : "border-zinc-700 bg-zinc-950/95 text-zinc-100"
+              )}>
+                <div
+                  className={cn("absolute w-2.5 h-2.5 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400" : "bg-white/40")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-mono font-black leading-none z-10">{displayAngle}°</span>
+                <span className="text-[6.5px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5 z-10">
+                  {isDeviceFlat ? 'LEVEL' : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : variantId === 'ios_nautical' ? (
-              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-[#D4AF37] bg-gradient-to-br from-[#1C2833] via-[#0E161D] to-[#050A0E] text-[#F3E5AB] shadow-[0_0_18px_rgba(212,175,55,0.4)]">
-                <span className="text-[15px] font-serif font-black leading-none text-[#F3E5AB]">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-[#D4AF37] mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 transition-all duration-200 relative overflow-hidden",
+                isDeviceFlat
+                  ? "border-emerald-400 bg-[#0A1A12] shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+                  : "border-[#D4AF37] bg-gradient-to-br from-[#1C2833] via-[#0E161D] to-[#050A0E] shadow-[0_0_18px_rgba(212,175,55,0.4)]"
+              )}>
+                <div
+                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-amber-400/60")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-serif font-black leading-none text-[#F3E5AB] z-10">{displayAngle}°</span>
+                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400 font-black" : "text-[#D4AF37]")}>
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : styleId === 'cyberpunk' ? (
-              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-cyan-400 bg-[#050b14]/95 text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.65),inset_0_0_10px_rgba(6,182,212,0.2)]">
-                <span className="text-[15px] font-mono font-black leading-none text-cyan-200">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-fuchsia-400 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 relative overflow-hidden",
+                isDeviceFlat
+                  ? "border-emerald-400 bg-[#031510]/95 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.7)]"
+                  : "border-cyan-400 bg-[#050b14]/95 text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.65)]"
+              )}>
+                <div
+                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-cyan-400/70 shadow-[0_0_6px_#22d3ee]")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-mono font-black leading-none z-10">{displayAngle}°</span>
+                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-fuchsia-400")}>
+                  {isDeviceFlat ? 'LOCK' : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : styleId === 'cosmic_galaxy' ? (
-              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-indigo-400 bg-[#0D0820]/95 text-indigo-100 shadow-[0_0_18px_rgba(129,140,248,0.6),inset_0_0_10px_rgba(129,140,248,0.2)]">
-                <span className="text-[15px] font-mono font-black leading-none text-indigo-200">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-purple-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 relative overflow-hidden",
+                isDeviceFlat ? "border-emerald-400 bg-[#061814]/95 text-emerald-200" : "border-indigo-400 bg-[#0D0820]/95 text-indigo-100"
+              )}>
+                <div
+                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400" : "bg-purple-400/60")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-mono font-black leading-none z-10">{displayAngle}°</span>
+                <span className="text-[6.5px] font-bold uppercase tracking-widest text-purple-300 mt-0.5 z-10">
+                  {isDeviceFlat ? 'ALIGN' : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : styleId === 'vedic_mandala' ? (
-              <div className="flex flex-col items-center justify-center h-11 w-11 rounded-full border-[1.5px] border-amber-400 bg-gradient-to-br from-[#2E1202] via-[#180A02] to-[#0A0400] text-amber-100 shadow-[0_0_16px_rgba(245,158,11,0.7),inset_0_1px_3px_rgba(254,240,138,0.5)]">
-                <span className="text-[12px] font-mono font-black leading-none text-[#FDE047] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">{displayAngle}°</span>
-                <span className="text-[6.5px] font-bold uppercase tracking-wider text-amber-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-11 w-11 rounded-full border-[1.5px] relative overflow-hidden",
+                isDeviceFlat
+                  ? "border-emerald-400 bg-gradient-to-br from-[#0a2318] to-[#04100b] text-emerald-200 shadow-[0_0_16px_rgba(16,185,129,0.7)]"
+                  : "border-amber-400 bg-gradient-to-br from-[#2E1202] via-[#180A02] to-[#0A0400] text-amber-100 shadow-[0_0_16px_rgba(245,158,11,0.7)]"
+              )}>
+                <div
+                  className={cn("absolute w-2.5 h-2.5 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400" : "bg-amber-400/70")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[12px] font-mono font-black leading-none z-10">{displayAngle}°</span>
+                <span className={cn("text-[6px] font-bold uppercase tracking-wider mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-amber-300")}>
+                  {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : styleId === 'sandalwood' ? (
-              <div className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 border-[#C9A67E] bg-[#FAF3E8]/95 text-[#3E2718] shadow-[0_0_16px_rgba(140,98,57,0.3)]">
-                <span className="text-[15px] font-black text-[#3E2718] leading-none font-serif">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-red-700 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 relative overflow-hidden",
+                isDeviceFlat ? "border-emerald-600 bg-emerald-50 text-emerald-900" : "border-[#C9A67E] bg-[#FAF3E8]/95 text-[#3E2718]"
+              )}>
+                <div
+                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-500/70" : "bg-amber-600/40")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-black leading-none font-serif z-10">{displayAngle}°</span>
+                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-700 font-black" : "text-red-700")}>
+                  {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : styleId === 'color_palette' && activeVariant ? (
               <div 
-                className="flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 bg-stone-950/90 shadow-lg"
-                style={{ borderColor: activeVariant.primaryColor, boxShadow: `0 0 16px ${activeVariant.primaryColor}55` }}
+                className={cn(
+                  "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 bg-stone-950/90 shadow-lg relative overflow-hidden",
+                  isDeviceFlat && "border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.7)]"
+                )}
+                style={!isDeviceFlat ? { borderColor: activeVariant.primaryColor, boxShadow: `0 0 16px ${activeVariant.primaryColor}55` } : undefined}
               >
-                <span className="text-[15px] font-black font-mono leading-none" style={{ color: activeVariant.primaryColor }}>{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-stone-300 mt-0.5">{get16WindName(displayHeading)}</span>
+                <div
+                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-white/40")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-black font-mono leading-none z-10" style={{ color: isDeviceFlat ? '#34D399' : activeVariant.primaryColor }}>
+                  {displayAngle}°
+                </span>
+                <span className="text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10 text-stone-300">
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                </span>
               </div>
             ) : (
-              <div className="w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 border-emerald-300/80 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.6)]">
-                <span className="text-[14px] font-black text-emerald-100 leading-none">{displayAngle}°</span>
-                <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5">{get16WindName(displayHeading)}</span>
+              <div className={cn(
+                "w-14 h-14 rounded-full flex flex-col items-center justify-center border-2 relative overflow-hidden",
+                isDeviceFlat
+                  ? "border-emerald-400 bg-emerald-950 shadow-[0_0_22px_rgba(52,211,153,0.85)]"
+                  : "border-emerald-300/80 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.6)]"
+              )}>
+                <div
+                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-emerald-400/50")}
+                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
+                />
+                <span className="text-[14px] font-black text-emerald-100 leading-none z-10">{displayAngle}°</span>
+                <span className="text-[6.5px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5 z-10">
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                </span>
               </div>
             )}
           </button>

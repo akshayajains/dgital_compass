@@ -49,6 +49,7 @@ import { NumerologyPanel } from '@/components/compass/NumerologyPanel';
 import { VastuEnhancements } from '@/components/compass/VastuEnhancements';
 import { DevtaPadaModal } from '@/components/compass/DevtaPadaModal';
 import { VastuPada32 } from '@/lib/vastu32Devta';
+import { VastuAuditScorecard } from './VastuAuditScorecard';
 
 // Lazy-loaded heavy modals (only fetched when first opened)
 const ARVastuScanner = React.lazy(() => import('@/components/compass/ARVastuScanner').then(m => ({ default: m.ARVastuScanner })));
@@ -887,6 +888,13 @@ export const VastuOthersView: React.FC<Props> = ({
               </div>
             </div>
           </div>
+          {/* Interactive Vastu Live Audit Scorecard */}
+          <VastuAuditScorecard
+            language={language}
+            theme={theme}
+            currentHeading={currentHeading}
+            onHaptic={triggerHaptic}
+          />
 
           <VastuPanel
             language={language}

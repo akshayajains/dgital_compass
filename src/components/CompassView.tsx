@@ -59,6 +59,7 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { Share } from '@capacitor/share';
 import { DevtaPadaModal } from '@/components/compass/DevtaPadaModal';
+import { calculateMagneticDeclination } from '@/lib/wmmDeclination';
 
 // Lazy-loaded heavy views (only fetched when their tab is first opened)
 const AdvancedLevelView = React.lazy(() => import('@/components/level/AdvancedLevelView').then(m => ({ default: m.AdvancedLevelView })));
@@ -499,8 +500,7 @@ export const CompassView = () => {
     return () => window.clearInterval(id);
   }, []);
 
-  // Magnetic declination — fetched from NOAA WMM when location is known,
-  // cached locally, with a rough approximation as offline fallback.
+  // Magnetic declination — offline WMM calculation with NOAA online refinement
   const [declination, setDeclination] = useState<number>(() => {
     try {
       const saved = localStorage.getItem('com.spiritual.compass.app_declination');
@@ -514,6 +514,11 @@ export const CompassView = () => {
     const lat = location.latitude;
     const lon = location.longitude;
     const now = Date.now();
+
+    // 1. Immediate offline World Magnetic Model (WMM) calculation
+    const wmmDec = calculateMagneticDeclination(lat, lon);
+    setDeclination(wmmDec);
+    try { localStorage.setItem('com.spiritual.compass.app_declination', wmmDec.toString()); } catch {}
 
     // Throttle: don't refetch NOAA declination if fetched within 5 minutes and moved < 25km
     if (lastDeclinationFetchRef.current) {
@@ -544,9 +549,7 @@ export const CompassView = () => {
         }
       })
       .catch(() => {
-        if (cancelled) return;
-        const calc = (28 - lat) * 0.1 + (lon - 77) * 0.05 - 0.2;
-        setDeclination(parseFloat(calc.toFixed(1)));
+        // Fallback already satisfied by offline WMM calculation
       });
     return () => { cancelled = true; };
   }, [location?.latitude, location?.longitude]);
@@ -1277,6 +1280,9 @@ export const CompassView = () => {
               useTrueNorth={useTrueNorth}
               targetBearing={targetHeading}
               variantId={selectedVariant}
+              pitch={pitch}
+              roll={roll}
+              isLevel={isLevel}
               onSelectPada={handleSelectPada}
               onRecenter={handleRecenter}
               onPointerDown={handlePointerDown}
@@ -1715,11 +1721,21 @@ export const CompassView = () => {
                       <button
                         onClick={() => {
                           setUseTrueNorth(!useTrueNorth);
-                          triggerHapticFeedback();
+                          triggerHapticFeedback(ImpactStyle.Medium);
                         }}
-                        className={cn("px-2.5 py-1.5 rounded-full border text-[9.5px] font-black uppercase tracking-wider transition-colors shadow-sm shrink-0", box.btn)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full border text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 shadow-sm shrink-0 flex items-center gap-1.5",
+                          useTrueNorth
+                            ? "bg-amber-500 text-stone-950 border-amber-400 font-black shadow-[0_0_12px_rgba(245,158,11,0.5)]"
+                            : box.btn
+                        )}
+                        title={useTrueNorth ? (language === 'hi' ? 'भौगोलिक उत्तर सक्रिय (WMM मॉडल)' : 'True North Active (WMM Model)') : (language === 'hi' ? 'चुंबकीय उत्तर' : 'Magnetic North')}
                       >
-                        {useTrueNorth ? 'True North' : 'Magnetic'}
+                        <Compass className="w-3 h-3 shrink-0" />
+                        <span>{useTrueNorth ? (language === 'hi' ? 'भौगोलिक (True)' : 'True North') : (language === 'hi' ? 'चुंबकीय' : 'Magnetic')}</span>
+                        <span className="text-[8.5px] opacity-80 font-mono font-bold">
+                          {declination >= 0 ? `+${declination.toFixed(1)}°` : `${declination.toFixed(1)}°`}
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -2519,6 +2535,10 @@ export const CompassView = () => {
             onClose={() => setShowCalibrationModal(false)}
             theme={theme}
             language={language}
+            onCalibrationComplete={() => {
+              smoothedVectorRef.current = null;
+              triggerHapticFeedback(ImpactStyle.Heavy);
+            }}
           />
         </React.Suspense>
       )}
