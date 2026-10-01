@@ -1,0 +1,18 @@
+:root{color-scheme:light}
+@supports (padding:env(safe-area-inset-top)){
+  .app-shell{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);min-height:100dvh}
+  .sidebar{top:env(safe-area-inset-top);bottom:env(safe-area-inset-bottom)}
+  .modal-scrim{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .toast{bottom:calc(18px + env(safe-area-inset-bottom))}
+}
+@media(max-width:760px){
+  .app-shell{min-height:100dvh}
+  .nav-item{min-height:46px}
+  .toggle{width:44px;height:26px;padding:3px}
+  .toggle span{width:20px;height:20px}
+  .toggle.on span{transform:translateX(18px)}
+  .modal-scrim{overflow-y:auto;align-items:center}
+  .modal-card{max-height:calc(100dvh - 32px);overflow-y:auto}
+  .field-label input{min-height:44px;font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

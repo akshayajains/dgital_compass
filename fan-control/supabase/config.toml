@@ -1,0 +1,4 @@
+[functions.fan-device]
+# This function authenticates dashboard calls with Supabase Auth itself and
+# hardware calls with per-device credentials. The gateway must let both reach it.
+verify_jwt = false

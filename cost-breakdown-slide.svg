@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07152e"/><stop offset="1" stop-color="#102a54"/></linearGradient>
+ <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#27d8d0"/><stop offset="1" stop-color="#69f0b1"/></linearGradient>
+ <style>.sans{font-family:Inter,Arial,sans-serif}.muted{fill:#a9bad4}.white{fill:#f5f8ff}.caps{font-weight:700;letter-spacing:2px}.node{fill:#132b50;stroke:#355176;stroke-width:2}.line{fill:none;stroke:#62dfcf;stroke-width:3;stroke-linecap:round;stroke-dasharray:7 9}</style>
+</defs>
+<rect width="1600" height="900" fill="url(#bg)"/><circle cx="1480" cy="60" r="260" fill="#17345d" opacity=".35"/><circle cx="10" cy="870" r="250" fill="#0c3f58" opacity=".2"/>
+<text x="88" y="80" class="sans caps" font-size="18" fill="#68e7dc">HYDRAULIC FAN • COST AT SCALE</text>
+<text x="88" y="160" class="sans white" font-size="52" font-weight="750">₹1,090 prototype → ₹273–₹382 at scale</text>
+<text x="90" y="204" class="sans muted" font-size="22">Estimated feature cost per unit at 10,000+ units (65–75% reduction)</text>
+<!-- compact flow -->
+<rect x="88" y="270" width="440" height="240" rx="24" class="node"/>
+<text x="124" y="319" class="sans caps" font-size="16" fill="#b9c8dd">PROTOTYPE FEATURE</text>
+<text x="124" y="405" class="sans white" font-size="66" font-weight="760">₹1,090</text>
+<text x="126" y="454" class="sans muted" font-size="21">parts cost per unit</text>
+<path d="M547 390 H620 M600 378 l18 12 -18 12" class="line"/>
+<rect x="642" y="270" width="410" height="240" rx="24" class="node"/>
+<text x="680" y="319" class="sans caps" font-size="16" fill="#b9c8dd">10,000+ UNITS</text>
+<text x="680" y="393" class="sans white" font-size="44" font-weight="760">−65% to −75%</text>
+<text x="680" y="435" class="sans muted" font-size="20">feature parts cost reduction</text>
+<text x="680" y="482" class="sans" font-size="28" font-weight="700" fill="#67e5bc">₹273–₹382 / unit</text>
+<path d="M1071 390 H1144 M1127 378 l18 12 -18 12" class="line"/>
+<rect x="1166" y="270" width="346" height="240" rx="24" fill="url(#hero)"/>
+<text x="1200" y="319" class="sans caps" font-size="15" fill="#07333e">EST. TOTAL WITH BASE FAN</text>
+<text x="1200" y="391" class="sans" font-size="39" font-weight="780" fill="#062b37">₹2,773–₹2,882</text>
+<text x="1200" y="431" class="sans" font-size="18" fill="#164957">Assuming base stays ₹2,500</text>
+<text x="1200" y="478" class="sans" font-size="28" font-weight="760" fill="#062b37">+11% to +15%</text>
+<!-- concise cost breakdown -->
+<text x="90" y="591" class="sans caps" font-size="16" fill="#b9c8dd">PROTOTYPE COST MIX • ₹1,090 TOTAL</text>
+<rect x="90" y="619" width="1420" height="24" rx="12" fill="#243c60"/>
+<rect x="90" y="619" width="273" height="24" rx="12" fill="#5ce1d0"/><rect x="363" y="619" width="260" height="24" fill="#a890ff"/><rect x="623" y="619" width="456" height="24" fill="#56c9aa"/><rect x="1079" y="619" width="431" height="24" rx="12" fill="#f2bd68"/>
+<g class="sans" font-size="17" fill="#eaf0fb">
+ <circle cx="99" cy="697" r="7" fill="#5ce1d0"/><text x="118" y="703">Microfiber &amp; syringe set</text><text x="118" y="733" fill="#a9bad4">₹210 • 19%</text>
+ <circle cx="470" cy="697" r="7" fill="#a890ff"/><text x="489" y="703">Hydraulic tubing &amp; manifold</text><text x="489" y="733" fill="#a9bad4">₹200 • 18%</text>
+ <circle cx="900" cy="697" r="7" fill="#56c9aa"/><text x="919" y="703">Motor &amp; ESP32</text><text x="919" y="733" fill="#a9bad4">₹350 • 32%</text>
+ <circle cx="1190" cy="697" r="7" fill="#f2bd68"/><text x="1209" y="703">Other listed parts</text><text x="1209" y="733" fill="#a9bad4">₹330 • 30%</text>
+</g>
+<rect x="88" y="788" width="1424" height="64" rx="16" fill="#102443" stroke="#284366"/>
+<text x="118" y="827" class="sans" font-size="17" fill="#e2eaf6">Planning estimate: savings apply to feature parts only; base fan held at ₹2,500. Supplier quotes may vary.</text>
+</svg>

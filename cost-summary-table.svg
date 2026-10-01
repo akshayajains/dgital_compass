@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#18365b"/><stop offset="100%" stop-color="#28517b"/></linearGradient>
+ <linearGradient id="highlight" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#164fbd"/><stop offset="55%" stop-color="#0c43ae"/><stop offset="1" stop-color="#123982"/></linearGradient>
+ <style>.s{font-family:Arial,Helvetica,sans-serif}</style>
+</defs>
+<rect width="1600" height="900" fill="url(#bg)"/>
+<circle cx="1475" cy="58" r="280" fill="#64a5ff" opacity=".09"/>
+<circle cx="55" cy="860" r="280" fill="#58c8ff" opacity=".07"/>
+<text x="80" y="77" class="s" font-size="16" font-weight="700" letter-spacing="2" fill="#67ddd5">HYDRAULIC FAN • COST SUMMARY</text>
+<text x="80" y="138" class="s" font-size="42" font-weight="700" fill="#f6f8fc">Prototype to mass production</text>
+<text x="82" y="175" class="s" font-size="19" fill="#afc1d9">Prototype parts cost and estimated scaled unit economics</text>
+<!-- compact item table -->
+<rect x="80" y="210" width="1440" height="43" rx="9" fill="#3a6891"/>
+<text x="104" y="238" class="s" font-size="15" font-weight="700" letter-spacing=".8" fill="#eaf4ff">ITEM</text><text x="830" y="238" class="s" font-size="15" font-weight="700" fill="#eaf4ff" text-anchor="end">QTY</text><text x="1010" y="238" class="s" font-size="15" font-weight="700" fill="#eaf4ff" text-anchor="end">PROTOTYPE (₹)</text><text x="1190" y="238" class="s" font-size="15" font-weight="700" fill="#eaf4ff" text-anchor="end">SCALED* (₹)</text>
+<g class="s" font-size="17" fill="#f3f6fb">
+<rect x="80" y="253" width="1440" height="34" fill="#24466d"/><text x="104" y="276">Microfiber</text><text x="830" y="276" text-anchor="end">3</text><text x="1010" y="276" text-anchor="end">30</text><text x="1190" y="276" text-anchor="end">8–11</text>
+<rect x="80" y="287" width="1440" height="34" fill="#2b5278"/><text x="104" y="310">Zig-zag mechanism</text><text x="830" y="310" text-anchor="end">3</text><text x="1010" y="310" text-anchor="end">90</text><text x="1190" y="310" text-anchor="end">23–32</text>
+<rect x="80" y="321" width="1440" height="34" fill="#24466d"/><text x="104" y="344">Slave syringes</text><text x="830" y="344" text-anchor="end">3</text><text x="1010" y="344" text-anchor="end">90</text><text x="1190" y="344" text-anchor="end">23–32</text>
+<rect x="80" y="355" width="1440" height="34" fill="#2b5278"/><text x="104" y="378">Hydraulic tubing + manifold + connectors</text><text x="830" y="378" text-anchor="end">—</text><text x="1010" y="378" text-anchor="end">200</text><text x="1190" y="378" text-anchor="end">50–70</text>
+<rect x="80" y="389" width="1440" height="34" fill="#24466d"/><text x="104" y="412">Master syringe</text><text x="830" y="412" text-anchor="end">1</text><text x="1010" y="412" text-anchor="end">30</text><text x="1190" y="412" text-anchor="end">8–11</text>
+<rect x="80" y="423" width="1440" height="34" fill="#2b5278"/><text x="104" y="446">DC motor</text><text x="830" y="446" text-anchor="end">1</text><text x="1010" y="446" text-anchor="end">150</text><text x="1190" y="446" text-anchor="end">38–53</text>
+<rect x="80" y="457" width="1440" height="34" fill="#24466d"/><text x="104" y="480">ESP32</text><text x="830" y="480" text-anchor="end">1</text><text x="1010" y="480" text-anchor="end">200</text><text x="1190" y="480" text-anchor="end">50–70</text>
+<rect x="80" y="491" width="1440" height="34" fill="#2b5278"/><text x="104" y="514">Lead screw + coupling</text><text x="830" y="514" text-anchor="end">—</text><text x="1010" y="514" text-anchor="end">100</text><text x="1190" y="514" text-anchor="end">25–35</text>
+<rect x="80" y="525" width="1440" height="34" fill="#24466d"/><text x="104" y="548">Wiring, mounts, fasteners, etc.</text><text x="830" y="548" text-anchor="end">—</text><text x="1010" y="548" text-anchor="end">100</text><text x="1190" y="548" text-anchor="end">25–35</text>
+<rect x="80" y="559" width="1440" height="34" fill="#2b5278"/><text x="104" y="582">Motor driver + limit switches</text><text x="830" y="582" text-anchor="end">—</text><text x="1010" y="582" text-anchor="end">100</text><text x="1190" y="582" text-anchor="end">25–35</text></g>
+<rect x="80" y="593" width="1440" height="42" fill="#d9e8f2"/><text x="104" y="621" class="s" font-size="18" font-weight="700" fill="#102644">FEATURE TOTAL</text><text x="1010" y="621" class="s" font-size="19" font-weight="700" fill="#102644" text-anchor="end">1,090</text><text x="1190" y="621" class="s" font-size="19" font-weight="700" fill="#102644" text-anchor="end">272–381</text>
+<!-- main final impact -->
+<rect x="80" y="667" width="1440" height="164" rx="18" fill="url(#highlight)" stroke="#55d6ce" stroke-width="2"/>
+<text x="112" y="705" class="s" font-size="15" font-weight="700" letter-spacing="1.8" fill="#75e3dc">THE FINAL IMPACT</text>
+<text x="112" y="758" class="s" font-size="29" font-weight="700" fill="#ffffff">Feature adds just</text>
+<text x="112" y="799" class="s" font-size="34" font-weight="700" fill="#75e3dc">₹272–₹381</text>
+<line x1="515" y1="696" x2="515" y2="804" stroke="#527491" stroke-width="2"/>
+<text x="560" y="705" class="s" font-size="15" font-weight="700" letter-spacing="1.5" fill="#b8cbe0">MASS PRODUCTION • 10,000+ UNITS</text>
+<text x="560" y="762" class="s" font-size="39" font-weight="700" fill="#ffffff">₹2,772–₹2,881</text>
+<text x="560" y="798" class="s" font-size="18" fill="#d2deeb">estimated total per fan</text>
+<line x1="1065" y1="696" x2="1065" y2="804" stroke="#527491" stroke-width="2"/>
+<text x="1106" y="705" class="s" font-size="15" font-weight="700" letter-spacing="1.5" fill="#b8cbe0">FEATURE PREMIUM</text>
+<text x="1106" y="767" class="s" font-size="43" font-weight="700" fill="#75e3dc">11%–15%</text>
+<text x="1106" y="799" class="s" font-size="18" fill="#d2deeb">over ₹2,500 base fan</text>
+<rect x="80" y="842" width="1440" height="44" rx="9" fill="#d9e8f2"/>
+<rect x="80" y="842" width="8" height="44" rx="4" fill="#55d6ce"/>
+<text x="108" y="870" class="s" font-size="18" font-weight="700" fill="#102644">Prototype: ₹3,590 total</text>
+<text x="380" y="870" class="s" font-size="16" fill="#284966">₹2,500 base fan + ₹1,090 feature · Scaled estimate assumes 65–75% lower component cost; supplier pricing may vary.</text>
+</svg>
