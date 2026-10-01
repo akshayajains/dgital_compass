@@ -5,6 +5,9 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
+# ── App & Widget Classes ──
+-keep class com.spiritual.compass.** { *; }
+
 # ── Capacitor / WebView ──
 # Capacitor bridges JS to native via reflection; keep all Capacitor classes.
 -keep class com.getcapacitor.** { *; }

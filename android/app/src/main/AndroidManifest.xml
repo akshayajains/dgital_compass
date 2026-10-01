@@ -30,6 +30,16 @@
 
         </activity>
 
+        <!-- Invisible 1x1 pixel sensor reader for Home Screen Widget in-place updates (never opens MainActivity) -->
+        <activity
+            android:name=".WidgetSensorActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:taskAffinity=""
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
