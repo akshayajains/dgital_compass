@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, X, Sparkles, AlertTriangle, CheckCircle2, RefreshCw, Zap, Download } from 'lucide-react';
+import { Camera, X, Sparkles, AlertTriangle, CheckCircle2, RefreshCw, Zap, Download, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getDevtaPadaAtDegree } from '@/data/devtaData';
 import { toast } from 'sonner';
@@ -19,58 +19,58 @@ const ROOM_VASTU_DATA: Record<string, { label: string; labelHi: string; goodZone
   entrance: {
     label: 'Main Door / Entrance',
     labelHi: 'मुख्य द्वार',
-    goodZones: ['N', 'NE', 'E', 'NW'],
-    badZones: ['S', 'SW', 'SE'],
-    remedy: 'Place a brass Swastika or a pair of marigold garlands outside.',
-    remedyHi: 'प्रवेश द्वार पर पीतल का स्वस्तिक अथवा तांबे का पिरामिड लगाएं।'
+    goodZones: ['N', 'NNE', 'NE', 'ENE', 'E', 'W', 'WNW', 'NNW'],
+    badZones: ['S', 'SSW', 'SW', 'WSW', 'SE', 'SSE', 'ESE'],
+    remedy: 'Supreme Entrance Padas: N3, N4, E3, E4, S4, W3, W4. Place a brass Swastika or copper threshold strip.',
+    remedyHi: 'श्रेष्ठ मुख्य द्वार पद: N3, N4, E3, E4, S4, W3, W4। चौखट पर पीतल का स्वस्तिक अथवा तांबे की पट्टी लगाएं।'
   },
   pooja: {
     label: 'Pooja / Mandir',
     labelHi: 'पूजा घर / मंदिर',
-    goodZones: ['NE', 'E', 'N'],
-    badZones: ['S', 'SW', 'NW', 'SE'],
-    remedy: 'Keep the idols facing East or West, ensure a brass Diya is lit daily in Ishanya.',
-    remedyHi: 'मंदिर में शुद्ध जल का कलश रखें और दीप ईशान कोण में प्रज्वलित करें।'
+    goodZones: ['NE', 'NNE', 'ENE', 'E', 'N', 'W'],
+    badZones: ['S', 'SSW', 'SW', 'SE', 'SSE', 'WNW'],
+    remedy: 'Keep idols facing East or West in Ishanya (NE), and light a brass Diya daily.',
+    remedyHi: 'मंदिर ईशान कोण (NE) में रखें, शुद्ध जल का कलश रखें और प्रतिदिन दीप प्रज्वलित करें।'
   },
   kitchen: {
     label: 'Kitchen / Stove',
     labelHi: 'रसोईघर / चूल्हा',
-    goodZones: ['SE', 'NW'],
-    badZones: ['NE', 'SW', 'N'],
-    remedy: 'Place a natural green marble stone or copper plate beneath the stove.',
-    remedyHi: 'चूल्हे के नीचे प्राकृतिक हरा मार्बल या तांबे की प्लेट रखें।'
+    goodZones: ['SE', 'SSE', 'NW'],
+    badZones: ['NE', 'NNE', 'SW', 'SSW', 'N'],
+    remedy: 'Place a natural green marble stone or Baroda green slab beneath the stove if in NE/N.',
+    remedyHi: 'यदि चूल्हा उत्तर/ईशान में हो तो उसके नीचे प्राकृतिक हरा मार्बल (बड़ौदा ग्रीन) रखें।'
   },
   master_bedroom: {
     label: 'Master Bedroom',
     labelHi: 'मास्टर बेडरूम',
-    goodZones: ['SW', 'S', 'W'],
-    badZones: ['NE', 'SE', 'NW'],
+    goodZones: ['SW', 'S', 'W', 'WSW'],
+    badZones: ['NE', 'SE', 'SSW', 'ESE', 'WNW'],
     remedy: 'Sleep with head towards South or East. Avoid mirrors facing the bed.',
     remedyHi: 'सिर दक्षिण अथवा पूर्व दिशा में रखकर सोएं। बिस्तर के सामने दर्पण न रखें।'
   },
   cash: {
     label: 'Cash Locker / Wealth',
     labelHi: 'तिजोरी / धन स्थान',
-    goodZones: ['N', 'NE', 'E'],
-    badZones: ['S', 'SW', 'SE'],
-    remedy: 'Face the locker door towards North (Kubera direction) with a silver coin inside.',
-    remedyHi: 'तिजोरी का मुख उत्तर की ओर रखें और अंदर चांदी का सिक्का रखें।'
+    goodZones: ['N', 'NNE', 'SW', 'W'],
+    badZones: ['SSW', 'SE', 'ESE', 'WNW'],
+    remedy: 'Place locker in SW/South wall opening towards North (Kubera direction) with a silver coin inside.',
+    remedyHi: 'तिजोरी का मुख उत्तर (कुबेर दिशा) की ओर खुलने वाला रखें और अंदर चांदी का सिक्का रखें।'
   },
   study: {
     label: 'Study / Library',
     labelHi: 'अध्ययन कक्ष',
-    goodZones: ['NE', 'E', 'W', 'N'],
-    badZones: ['S', 'SW'],
-    remedy: 'Sit facing East or North while studying with a crystal pyramid on table.',
-    remedyHi: 'अध्ययन करते समय मुख उत्तर अथवा पूर्व की ओर रखें।'
+    goodZones: ['WSW', 'NE', 'E', 'N', 'W'],
+    badZones: ['SSW', 'SE', 'ESE', 'WNW'],
+    remedy: 'WSW (Vidya zone) and NE are supreme for study. Sit facing East or North.',
+    remedyHi: 'अध्ययन के लिए WSW (विद्या क्षेत्र) और ईशान (NE) सर्वश्रेष्ठ हैं। पढ़ते समय मुख पूर्व या उत्तर रखें।'
   },
   bathroom: {
     label: 'Toilet / Bathroom',
     labelHi: 'शौचालय / बाथरूम',
-    goodZones: ['NW', 'W', 'S'],
-    badZones: ['NE', 'SW', 'SE'],
-    remedy: 'Keep a bowl of coarse sea salt inside and replace weekly.',
-    remedyHi: 'बाथरूम में समुद्री नमक का कटोरा रखें और साप्ताहिक बदलें।'
+    goodZones: ['SSW', 'WNW', 'ESE'],
+    badZones: ['NE', 'NNE', 'SW', 'N', 'E', 'S', 'SE'],
+    remedy: 'Only SSW (Disposal) & WNW (Detox) are ideal for toilets. Keep sea salt & apply metal strip around the frame.',
+    remedyHi: 'शौचालय के लिए केवल SSW (विसर्जन) और WNW उत्तम हैं। समुद्री नमक का कटोरा रखें।'
   }
 };
 
@@ -140,25 +140,27 @@ export const ARVastuScanner = ({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [torchOn, setTorchOn] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [frozenHeading, setFrozenHeading] = useState<number | null>(null);
 
-  const curDeg = heading !== null ? heading : 0;
+  const liveDeg = heading !== null ? heading : 0;
+  const curDeg = frozenHeading !== null ? frozenHeading : liveDeg;
   const currentDevta = getDevtaPadaAtDegree(curDeg);
   const roomConfig = ROOM_VASTU_DATA[selectedRoom] || ROOM_VASTU_DATA.entrance;
 
-  // Determine current cardinal sector (N, NE, E, SE, S, SW, W, NW)
-  const getSectorCode = (deg: number): string => {
+  // Determine exact 16-Zone MahaVastu sector (22.5° each)
+  const get16ZoneCode = (deg: number): string => {
+    const zones16 = [
+      'N', 'NNE', 'NE', 'ENE',
+      'E', 'ESE', 'SE', 'SSE',
+      'S', 'SSW', 'SW', 'WSW',
+      'W', 'WNW', 'NW', 'NNW'
+    ];
     const d = ((deg % 360) + 360) % 360;
-    if (d >= 337.5 || d < 22.5) return 'N';
-    if (d >= 22.5 && d < 67.5) return 'NE';
-    if (d >= 67.5 && d < 112.5) return 'E';
-    if (d >= 112.5 && d < 157.5) return 'SE';
-    if (d >= 157.5 && d < 202.5) return 'S';
-    if (d >= 202.5 && d < 247.5) return 'SW';
-    if (d >= 247.5 && d < 292.5) return 'W';
-    return 'NW';
+    const index = Math.floor(((d + 11.25) % 360) / 22.5);
+    return zones16[index];
   };
 
-  const sectorCode = getSectorCode(curDeg);
+  const sectorCode = get16ZoneCode(curDeg);
   const isAuspicious = roomConfig.goodZones.includes(sectorCode);
   const isSevereDosha = roomConfig.badZones.includes(sectorCode);
 
@@ -286,6 +288,29 @@ export const ARVastuScanner = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onHaptic();
+                if (frozenHeading !== null) {
+                  setFrozenHeading(null);
+                  toast.info(language === 'hi' ? 'लाइव AR स्कैनर जारी' : 'Live AR Scanner Resumed');
+                } else {
+                  setFrozenHeading(liveDeg);
+                  toast.success(language === 'hi' ? `रीडिंग स्थिर: ${Math.round(liveDeg)}° (${sectorCode})` : `Reading Held at ${Math.round(liveDeg)}° (${sectorCode})`);
+                }
+              }}
+              className={cn(
+                "px-3 py-1.5 rounded-full border backdrop-blur-md active:scale-90 transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider",
+                frozenHeading !== null
+                  ? "bg-amber-500 border-amber-300 text-stone-950 shadow-[0_0_14px_rgba(245,158,11,0.6)]"
+                  : "bg-black/60 border-white/20 text-white"
+              )}
+              title={language === 'hi' ? 'रीडिंग स्थिर करें (Hold / Freeze)' : 'Hold / Freeze Reading'}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              <span>{frozenHeading !== null ? (language === 'hi' ? 'स्थिर' : 'HELD') : (language === 'hi' ? 'होल्ड' : 'HOLD')}</span>
+            </button>
+
             <button
               onClick={onClose}
               className="p-2.5 rounded-full bg-black/60 border border-white/20 text-white backdrop-blur-md active:scale-90 transition-transform"

@@ -35,6 +35,8 @@ interface Props {
   onSelectPada?: (pada: VastuPada32) => void;
   /** Re-center callback: resets compass baseline like Google Maps' recenter button */
   onRecenter?: () => void;
+  needleTracksNorth?: boolean;
+  isFrozen?: boolean;
   onPointerDown: (e: React.PointerEvent) => void;
   onPointerMove: (e: React.PointerEvent) => void;
   onPointerUp: (e: React.PointerEvent) => void;
@@ -93,16 +95,14 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   const activeVariant: CompassStyleVariant | null = variantId ? getVariant(styleId, variantId) : null;
   const isGrouped = activeVariant !== null;
 
-  // Graphite is now an iOS Compass variant (was a standalone theme)
-  const isGraphite = styleId === 'ios_compass' && variantId === 'ios_graphite';
-  // Vintage Nautical is now an iOS Compass variant (was a standalone theme)
-  const isNautical = styleId === 'ios_compass' && variantId === 'ios_nautical';
-  // Minimal Onyx is now an iOS Compass variant (was a standalone theme)
-  const isMinimalOnyx = styleId === 'ios_compass' && variantId === 'ios_minimal';
+  // Variant helpers (merged under color_palette)
+  const isGraphite = variantId === 'ios_graphite';
+  const isNautical = variantId === 'ios_nautical';
+  const isMinimalOnyx = variantId === 'ios_minimal';
+  const isLightDial = styleId === 'sandalwood' || styleId === 'royal_gold' || variantId === 'ios_white' || variantId === 'ios_nautical';
 
   // ── Standalone styles that render their own center needle ──
   const STANDALONE_NEEDLE_STYLES = new Set([
-    'cyberpunk', 'cosmic_galaxy',
     'satellite_earth', 'vedic_mandala', 'sandalwood', 'royal_gold',
   ] as CompassStyleId[]);
 
@@ -111,11 +111,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
   // Per-style apex Y coordinate for the center needle (easier to fine-tune per-theme)
   const APEX_Y_MAP: Record<string, number> = {
-    cyberpunk: 30,
-    cosmic_galaxy: 30,
     satellite_earth: 30,
     vedic_mandala: 30,
-    sandalwood: 30,
+    sandalwood: 34,
     royal_gold: 32,
     ios_compass: activeVariant?.apexY ?? 32,
     color_palette: activeVariant?.apexY ?? 30,
@@ -179,12 +177,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
         return 'border-[20px] sm:border-[24px] border-[#C9A67E] shadow-[0_20px_60px_rgba(78,53,36,0.7),inset_0_3px_8px_rgba(255,255,255,0.7),inset_0_-8px_16px_rgba(78,53,36,0.95)] bg-gradient-to-br from-[#E8D7C2] via-[#C9A67E] to-[#8C6239]';
       case 'royal_gold':
         return 'border-[18px] sm:border-[22px] border-transparent shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_55px_rgba(212,175,55,0.65),inset_0_2px_8px_rgba(255,255,230,0.95),inset_0_-8px_20px_rgba(60,35,10,0.95)] bg-[linear-gradient(135deg,#5C380C_0%,#A87818_15%,#FFE680_35%,#FFFDF5_46%,#D4AF37_60%,#9E6C18_80%,#4A2A08_100%)] bg-origin-border';
-      case 'cyberpunk':
-        return 'border-[14px] sm:border-[18px] border-[#0F172A] shadow-[0_0_40px_rgba(0,240,255,0.4),inset_0_0_20px_rgba(0,240,255,0.3)] bg-gradient-to-tr from-[#020617] via-[#0b1329] to-[#020617]';
       case 'vedic_mandala':
         return 'border-[18px] sm:border-[22px] border-[#D97706] shadow-[0_20px_60px_rgba(0,0,0,0.95),inset_0_3px_8px_rgba(254,240,138,0.7),inset_0_-8px_16px_rgba(180,83,9,0.9)] bg-gradient-to-tr from-[#D97706] via-[#FBBF24] to-[#B45309]';
-      case 'cosmic_galaxy':
-        return 'border-[16px] sm:border-[20px] border-[#1E1238] shadow-[0_0_45px_rgba(129,140,248,0.35),inset_0_0_20px_rgba(192,132,252,0.2)] bg-gradient-to-tr from-[#0A0517] via-[#1A0C38] to-[#070312]';
       default:
         return 'border-[16px] sm:border-[20px] border-stone-800 bg-stone-950';
     }
@@ -202,12 +196,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FAF3E8] via-[#EFE2CE] to-[#DCBF9E]';
       case 'royal_gold':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FFFDF0] via-[#FCE38A] 35%, via-[#E5B53A] 70%, to-[#9E6E18] shadow-[inset_0_0_40px_rgba(90,55,10,0.5)]';
-      case 'cyberpunk':
-        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#081226] via-[#040914] to-[#010308]';
       case 'vedic_mandala':
         return 'bg-[#0B131B]';
-      case 'cosmic_galaxy':
-        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#190F36] via-[#0E0720] to-[#05020D]';
       default:
         return 'bg-[#0A0A0A]';
     }
@@ -306,37 +296,100 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
           {styleId === 'sandalwood' && (
             <>
-              {/* Concentric Sandalwood rings */}
-              <div className="absolute inset-2.5 rounded-full border border-[#8C6239]/40 pointer-events-none" />
-              <div className="absolute inset-8 rounded-full border border-[#8C6239]/25 pointer-events-none" />
-              <div className="absolute inset-16 rounded-full border border-dashed border-[#8C6239]/20 pointer-events-none" />
-              <div className="absolute inset-24 rounded-full border border-[#8C6239]/15 pointer-events-none" />
+              {/* Concentric Sandalwood rings & wood grain lathe grooves */}
+              <div className="absolute inset-2 rounded-full border border-[#8C6239]/40 pointer-events-none" />
+              <div className="absolute inset-6 rounded-full border border-[#8C6239]/25 pointer-events-none" />
+              <div className="absolute inset-12 rounded-full border border-dashed border-[#8C6239]/20 pointer-events-none" />
+              <div className="absolute inset-20 rounded-full border border-[#8C6239]/20 pointer-events-none" />
+              <div className="absolute inset-28 rounded-full border border-dashed border-[#8C6239]/15 pointer-events-none" />
 
-              {/* 8-Point Faceted Compass Rose Star */}
+              {/* 16-Petal Carved Sandalwood Lotus Medallion (Floral Chakra) */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 200 200">
-                {/* 4 Major Points */}
-                <polygon points="100,18 100,100 90,100" fill="#E6C885" opacity="0.95" />
-                <polygon points="100,18 100,100 110,100" fill="#8C6239" opacity="0.9" />
-                <polygon points="182,100 100,100 100,90" fill="#E6C885" opacity="0.95" />
-                <polygon points="182,100 100,100 100,110" fill="#8C6239" opacity="0.9" />
-                <polygon points="100,182 100,100 110,100" fill="#E6C885" opacity="0.95" />
-                <polygon points="100,182 100,100 90,100" fill="#8C6239" opacity="0.9" />
-                <polygon points="18,100 100,100 100,110" fill="#E6C885" opacity="0.95" />
-                <polygon points="18,100 100,100 100,90" fill="#8C6239" opacity="0.9" />
+                <defs>
+                  {/* Outer Petal Light & Shadow Gradients */}
+                  <linearGradient id="chandan-petal-light" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#C9A67E" />
+                    <stop offset="40%" stopColor="#DFCCA9" />
+                    <stop offset="100%" stopColor="#FFF9EB" />
+                  </linearGradient>
+                  <linearGradient id="chandan-petal-shade" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#DFCCA9" />
+                    <stop offset="60%" stopColor="#9E7448" />
+                    <stop offset="100%" stopColor="#5E3E1C" />
+                  </linearGradient>
 
-                {/* 4 Diagonal Points */}
-                <polygon points="155,45 100,100 96,96" fill="#F0DC9E" opacity="0.8" />
-                <polygon points="155,45 100,100 104,104" fill="#6B4724" opacity="0.8" />
-                <polygon points="155,155 100,100 104,96" fill="#F0DC9E" opacity="0.8" />
-                <polygon points="155,155 100,100 96,104" fill="#6B4724" opacity="0.8" />
-                <polygon points="45,155 100,100 104,104" fill="#F0DC9E" opacity="0.8" />
-                <polygon points="45,155 100,100 96,96" fill="#6B4724" opacity="0.8" />
-                <polygon points="45,45 100,100 96,104" fill="#F0DC9E" opacity="0.8" />
-                <polygon points="45,45 100,100 104,96" fill="#6B4724" opacity="0.8" />
+                  {/* Inner Petal Gradients */}
+                  <linearGradient id="chandan-inner-light" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#D9B78F" />
+                    <stop offset="50%" stopColor="#EFE3CB" />
+                    <stop offset="100%" stopColor="#FFFDF5" />
+                  </linearGradient>
+                  <linearGradient id="chandan-inner-shade" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#C9A275" />
+                    <stop offset="60%" stopColor="#8A6038" />
+                    <stop offset="100%" stopColor="#4A2F14" />
+                  </linearGradient>
+                </defs>
 
-                {/* Coordinate Lines */}
-                <circle cx="100" cy="100" r="32" fill="none" stroke="#8C6239" strokeWidth="0.5" opacity="0.4" />
-                <circle cx="100" cy="100" r="62" fill="none" stroke="#8C6239" strokeWidth="0.5" strokeDasharray="3 3" opacity="0.3" />
+                {/* Outer Circular Lathe Grooves */}
+                <circle cx="100" cy="100" r="74" fill="none" stroke="#8C6239" strokeWidth="0.4" opacity="0.35" />
+                <circle cx="100" cy="100" r="66" fill="none" stroke="#8C6239" strokeWidth="0.5" strokeDasharray="2 3" opacity="0.3" />
+                <circle cx="100" cy="100" r="58" fill="none" stroke="#8C6239" strokeWidth="0.4" opacity="0.25" />
+
+                {/* 1. LAYER 1: 8 Minor Intermediate Lotus Petals (Rotated 22.5°) */}
+                {Array.from({ length: 8 }).map((_, i) => {
+                  const angle = i * 45 + 22.5;
+                  return (
+                    <g key={`petal-minor-${i}`} transform={`rotate(${angle}, 100, 100)`}>
+                      {/* Left Light Petal Half */}
+                      <path
+                        d="M 100,56 C 96,68 96,82 100,90 Z"
+                        fill="url(#chandan-inner-light)"
+                        stroke="#785028"
+                        strokeWidth="0.25"
+                      />
+                      {/* Right Shadow Petal Half */}
+                      <path
+                        d="M 100,56 C 104,68 104,82 100,90 Z"
+                        fill="url(#chandan-inner-shade)"
+                        stroke="#5A3816"
+                        strokeWidth="0.25"
+                      />
+                      {/* Center Petal Ridge */}
+                      <line x1="100" y1="56" x2="100" y2="88" stroke="#FFFFFF" strokeWidth="0.5" opacity="0.75" />
+                    </g>
+                  );
+                })}
+
+                {/* 2. LAYER 2: 8 Major Cardinal/Intercardinal Lotus Petals (Rotated 0°, 45°, 90°...) */}
+                {Array.from({ length: 8 }).map((_, i) => {
+                  const angle = i * 45;
+                  return (
+                    <g key={`petal-major-${i}`} transform={`rotate(${angle}, 100, 100)`}>
+                      {/* Left Light Petal Half */}
+                      <path
+                        d="M 100,48 C 94,64 94,82 100,92 Z"
+                        fill="url(#chandan-petal-light)"
+                        stroke="#8C6239"
+                        strokeWidth="0.3"
+                      />
+                      {/* Right Shadow Petal Half */}
+                      <path
+                        d="M 100,48 C 106,64 106,82 100,92 Z"
+                        fill="url(#chandan-petal-shade)"
+                        stroke="#5E3E1C"
+                        strokeWidth="0.3"
+                      />
+                      {/* Petal Central Crease Highlight */}
+                      <line x1="100" y1="48" x2="100" y2="90" stroke="#FFFFFF" strokeWidth="0.7" opacity="0.9" />
+                    </g>
+                  );
+                })}
+
+                {/* Concentric Center Calyx Collar Rings */}
+                <circle cx="100" cy="100" r="30" fill="none" stroke="#8C6239" strokeWidth="0.6" opacity="0.4" />
+                <circle cx="100" cy="100" r="26" fill="none" stroke="#8C6239" strokeWidth="0.8" opacity="0.5" />
+                <circle cx="100" cy="100" r="22" fill="none" stroke="#C9A67E" strokeWidth="0.5" opacity="0.4" />
               </svg>
             </>
           )}
@@ -452,19 +505,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </>
           )}
 
-          {styleId === 'cyberpunk' && (
-            <>
-              <div className="absolute inset-3 rounded-full border border-cyan-400/40 pointer-events-none shadow-[0_0_20px_rgba(0,240,255,0.2)]" />
-              <div className="absolute inset-10 rounded-full border border-dashed border-magenta-500/30 pointer-events-none" />
-              <div className="absolute inset-20 rounded-full border border-cyan-400/20 pointer-events-none" />
-              <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="35" fill="none" stroke="#00F0FF" strokeWidth="0.5" strokeDasharray="4 2" />
-                {/* vertical guide removed for cyberpunk to avoid long needle visual */}
-                <line x1="10" y1="100" x2="190" y2="100" stroke="#00F0FF" strokeWidth="0.4" strokeDasharray="5 5" />
-                <rect x="70" y="70" width="60" height="60" fill="none" stroke="#00F0FF" strokeWidth="0.4" strokeDasharray="2 2" />
-              </svg>
-            </>
-          )}
+
 
           {styleId === 'vedic_mandala' && (
             <>
@@ -583,7 +624,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
 
 
-          {styleId === 'cosmic_galaxy' && (
+          {activeVariant?.id === 'cp_cosmic' && (
             <>
               <div className="absolute inset-3 rounded-full border border-indigo-400/35 pointer-events-none shadow-[0_0_25px_rgba(129,140,248,0.3)]" />
               <div className="absolute inset-10 rounded-full border border-dashed border-purple-400/25 pointer-events-none" />
@@ -627,52 +668,112 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </>
           )}
 
-          {/* Vastu Grid Overlay (for Vedic/Dark/Any when enabled) */}
-          {vastuGridEnabled && (
+          {/* Vastu Grid Overlay (when enabled) */}
+          {vastuGridEnabled && styleId !== 'vedic_mandala' && (
             <>
-              {/* Diagonal cross lines — always shown (Minimal keeps only these lines) */}
+              {/* Diagonal cross lines */}
               <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-white/10" />
-                <div className="absolute top-1/2 left-0 right-0 h-px -translate-y-1/2 bg-white/10" />
-                <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 rotate-45 bg-white/10" />
-                <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 -rotate-45 bg-white/10" />
+                <div className={cn("absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2", styleId === 'sandalwood' ? "bg-[#8C6239]/25" : variantId === 'ios_white' ? "bg-slate-400/25" : "bg-white/15")} />
+                <div className={cn("absolute top-1/2 left-0 right-0 h-px -translate-y-1/2", styleId === 'sandalwood' ? "bg-[#8C6239]/25" : variantId === 'ios_white' ? "bg-slate-400/25" : "bg-white/15")} />
+                <div className={cn("absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 rotate-45", styleId === 'sandalwood' ? "bg-[#8C6239]/25" : variantId === 'ios_white' ? "bg-slate-400/25" : "bg-white/15")} />
+                <div className={cn("absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 -rotate-45", styleId === 'sandalwood' ? "bg-[#8C6239]/25" : variantId === 'ios_white' ? "bg-slate-400/25" : "bg-white/15")} />
               </div>
 
-              {/* Direction labels — hidden for minimal_onyx */}
+              {/* Room designation tags — hidden for minimal_onyx; direction names are never duplicated here since dial already shows them */}
               {(styleId as string) !== 'minimal_onyx' && !isMinimalOnyx && (
-              <>
-              <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(45deg)' }}>
-                <div className="flex flex-col items-center mt-14 select-none">
-                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-amber-400 shadow-[0_0_6px_#f59e0b]")} />
-                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-amber-400")}>{isHi ? 'ईशान' : 'NE'}</span>
-                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-amber-300/90")}>{isHi ? 'मंदिर' : 'Temple'}</span>
-                </div>
-              </div>
+                <>
+                  {/* NE / 45°: मंदिर (Temple) - sits clearly below ईशान */}
+                  <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(45deg)' }}>
+                    <div className="flex flex-col items-center mt-[3.85rem] select-none">
+                      <div className={cn(
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        isLightDial
+                          ? "bg-[#FFFFFF]/90 border-[#8C6239]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
+                          : "bg-black/75 border-amber-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                      )}>
+                        <div className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          isLightDial ? "bg-[#B45309] shadow-[0_0_4px_rgba(180,83,9,0.8)]" : "bg-amber-400 shadow-[0_0_8px_#f59e0b]"
+                        )} />
+                        <span className={cn(
+                          "text-[8.5px] font-black tracking-wide leading-none",
+                          isLightDial ? "text-[#78350F]" : "text-amber-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+                        )}>
+                          {isHi ? 'मंदिर' : 'Temple'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(135deg)' }}>
-                <div className="flex flex-col items-center mt-14 select-none">
-                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-orange-400 shadow-[0_0_6px_#f97316]")} />
-                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-orange-400")}>{isHi ? 'आग्नेय' : 'SE'}</span>
-                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-orange-300/90")}>{isHi ? 'रसोई' : 'Kitchen'}</span>
-                </div>
-              </div>
+                  {/* SE / 135°: रसोई (Kitchen) - sits clearly below आग्नेय */}
+                  <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(135deg)' }}>
+                    <div className="flex flex-col items-center mt-[3.85rem] select-none">
+                      <div className={cn(
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        isLightDial
+                          ? "bg-[#FFFFFF]/90 border-[#C2410C]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
+                          : "bg-black/75 border-orange-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                      )}>
+                        <div className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          isLightDial ? "bg-[#C2410C] shadow-[0_0_4px_rgba(194,65,12,0.8)]" : "bg-orange-500 shadow-[0_0_8px_#f97316]"
+                        )} />
+                        <span className={cn(
+                          "text-[8.5px] font-black tracking-wide leading-none",
+                          isLightDial ? "text-[#9A3412]" : "text-orange-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+                        )}>
+                          {isHi ? 'रसोई' : 'Kitchen'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(225deg)' }}>
-                <div className="flex flex-col items-center mt-14 select-none">
-                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-yellow-400 shadow-[0_0_6px_#eab308]")} />
-                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-yellow-400")}>{isHi ? 'नैऋत्य' : 'SW'}</span>
-                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-yellow-300/90")}>{isHi ? 'शयन' : 'Master'}</span>
-                </div>
-              </div>
+                  {/* SW / 225°: शयन (Master) - sits clearly below नैऋत्य */}
+                  <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(225deg)' }}>
+                    <div className="flex flex-col items-center mt-[3.85rem] select-none">
+                      <div className={cn(
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        isLightDial
+                          ? "bg-[#FFFFFF]/90 border-[#A16207]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
+                          : "bg-black/75 border-yellow-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                      )}>
+                        <div className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          isLightDial ? "bg-[#A16207] shadow-[0_0_4px_rgba(161,98,7,0.8)]" : "bg-yellow-400 shadow-[0_0_8px_#eab308]"
+                        )} />
+                        <span className={cn(
+                          "text-[8.5px] font-black tracking-wide leading-none",
+                          isLightDial ? "text-[#713F12]" : "text-yellow-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+                        )}>
+                          {isHi ? 'शयन' : 'Master'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(315deg)' }}>
-                <div className="flex flex-col items-center mt-14 select-none">
-                  <div className={cn("w-1.5 h-1.5 rounded-full mb-0.5", styleId === 'royal_gold' ? "bg-[#88001B] shadow-[0_0_6px_#e11d48]" : "bg-sky-400 shadow-[0_0_6px_#38bdf8]")} />
-                  <span className={cn("text-[9px] font-black leading-none", styleId === 'royal_gold' ? "text-[#3B1F05] drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" : "text-sky-400")}>{isHi ? 'वायव्य' : 'NW'}</span>
-                  <span className={cn("text-[7.5px] font-bold tracking-wide leading-none mt-0.5", styleId === 'royal_gold' ? "text-[#6E420C]" : "text-sky-300/90")}>{isHi ? 'अतिथि' : 'Guest'}</span>
-                </div>
-              </div>
-              </>
+                  {/* NW / 315°: अतिथि (Guest) - sits clearly below वायव्य */}
+                  <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(315deg)' }}>
+                    <div className="flex flex-col items-center mt-[3.85rem] select-none">
+                      <div className={cn(
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        isLightDial
+                          ? "bg-[#FFFFFF]/90 border-[#0369A1]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
+                          : "bg-black/75 border-sky-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                      )}>
+                        <div className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          isLightDial ? "bg-[#0369A1] shadow-[0_0_4px_rgba(3,105,161,0.8)]" : "bg-sky-400 shadow-[0_0_8px_#38bdf8]"
+                        )} />
+                        <span className={cn(
+                          "text-[8.5px] font-black tracking-wide leading-none",
+                          isLightDial ? "text-[#0C4A6E]" : "text-sky-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+                        )}>
+                          {isHi ? 'अतिथि' : 'Guest'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </>
               )}
             </>
           )}
@@ -695,7 +796,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     isMajor
                     ? (vTickMajor
                         ? `w-[2.5px] h-3.5`
-                        : styleId === 'cyberpunk' ? "w-[2.5px] h-3.5 bg-cyan-400 shadow-[0_0_6px_#00F0FF]"
                         : isNautical ? "w-[2.5px] h-3.5 bg-[#8C5824]"
                         : styleId === 'royal_gold' ? "w-[2.5px] h-4 bg-[#3E2205] shadow-[0_0_3px_rgba(255,255,255,0.6)]"
                         : styleId === 'sandalwood' ? "w-[2.5px] h-3.5 bg-[#8C6239] shadow-[0_0_4px_rgba(140,98,57,0.4)]"
@@ -704,7 +804,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     : isMid
                     ? (vTickMid
                         ? "w-[1.8px] h-2.5"
-                        : styleId === 'cyberpunk' ? "w-[1.8px] h-3 bg-magenta-400/80"
                         : styleId === 'royal_gold' ? "w-[1.8px] h-3 bg-[#5C360A]"
                         : isNautical ? "w-[1.5px] h-2.5 bg-[#8C5824]"
                         : styleId === 'sandalwood' ? "w-[1.8px] h-2.5 bg-[#8C6239]/60"
@@ -712,7 +811,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                         : "w-[1.8px] h-2.5 bg-white/60")
                     : (vTickMinor
                         ? "w-[1px] h-1.5"
-                        : styleId === 'cyberpunk' ? "w-[1px] h-1.5 bg-cyan-400/30"
                         : isNautical ? "w-[1px] h-1.5 bg-[#8C5824]/40"
                         : styleId === 'royal_gold' ? "w-[1px] h-1.5 bg-[#78470E]/70"
                         : styleId === 'sandalwood' ? "w-[1px] h-1.5 bg-[#8C6239]/30"
@@ -725,17 +823,17 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             );
           })}
 
-          {/* 30-Degree Numerical Labels */}
-          {styleId !== 'vedic_mandala' && [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((deg) => (
+          {/* 15-Degree Numerical Angle Labels (Every 15° for comprehensive, clear compass degrees) */}
+          {styleId !== 'vedic_mandala' && [0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345].map((deg) => (
             <div key={deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${deg}deg)` }}>
-              <div className="flex flex-col items-center select-none mt-1">
+              <div className="flex flex-col items-center select-none mt-1 sm:mt-1.5">
                 <span className={cn(
-                  "font-mono font-bold text-[0.52rem] drop-shadow-md",
-                  styleId === 'cyberpunk' ? "text-cyan-300 font-mono" :
-                  styleId === 'cosmic_galaxy' ? "text-indigo-200" :
+                  "font-mono font-bold text-[0.6rem] sm:text-[0.66rem] tracking-tight leading-none",
                   styleId === 'royal_gold' ? "text-[#3B1F05] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" :
-                  isGraphite ? "text-slate-300 font-semibold" :
-                  activeVariant?.degreeColor ? activeVariant.degreeColor : "text-stone-300 font-semibold"
+                  styleId === 'sandalwood' ? "text-[#4A2810] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]" :
+                  variantId === 'ios_white' ? "text-[#0F172A] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]" :
+                  isGraphite ? "text-slate-200 font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" :
+                  activeVariant?.degreeColor ? activeVariant.degreeColor : "text-stone-200 font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]"
                 )}>
                   {deg}
                 </span>
@@ -743,40 +841,36 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </div>
           ))}
 
-          {/* Cardinal Badges */}
           {styleId === 'vedic_mandala' ? null : styleId === 'sandalwood' ? (
-            [
-              { en: 'N', hi: 'उत्तर', deg: 0, isCardinal: true },
-              { en: 'NE', hi: 'ईशान्य', deg: 45, isCardinal: false },
-              { en: 'E', hi: 'पूर्व', deg: 90, isCardinal: true },
-              { en: 'SE', hi: 'आग्नेय', deg: 135, isCardinal: false },
-              { en: 'S', hi: 'दक्षिण', deg: 180, isCardinal: true },
-              { en: 'SW', hi: 'नैऋत्य', deg: 225, isCardinal: false },
-              { en: 'W', hi: 'पश्चिम', deg: 270, isCardinal: true },
-              { en: 'NW', hi: 'वायव्य', deg: 315, isCardinal: false }
-            ].map((pt) => (
-              <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
-                <div className="flex flex-col items-center select-none mt-4">
-                  {pt.isCardinal && (
-                    <div className="w-1 h-3 bg-red-600 mb-0.5 rounded-full shadow-sm" />
-                  )}
-                  <span className={cn(
-                    "font-serif font-black tracking-tight leading-none",
-                    pt.isCardinal ? "text-red-700 text-sm font-black" : "text-[#4A2E16] text-xs font-bold"
-                  )}>
-                    {pt.en}
-                  </span>
-                  <span className="font-serif font-bold text-[8.5px] text-[#5C3A1E] leading-none mt-0.5 tracking-tight">
-                    {pt.hi}
-                  </span>
-                  {pt.isCardinal && (
-                    <span className="font-mono text-[7px] font-bold text-red-600 mt-0.5">
-                      {pt.deg}°
+            <>
+              {/* Outer 8 Directions (उत्तर, ईशान, पूर्व, आग्नेय, दक्षिण, नैऋत्य, पश्चिम, वायव्य) */}
+              {[
+                { label: 'उत्तर', deg: 0, isNorth: true },
+                { label: 'ईशान', deg: 45, isNorth: false },
+                { label: 'पूर्व', deg: 90, isNorth: false },
+                { label: 'आग्नेय', deg: 135, isNorth: false },
+                { label: 'दक्षिण', deg: 180, isNorth: false },
+                { label: 'नैऋत्य', deg: 225, isNorth: false },
+                { label: 'पश्चिम', deg: 270, isNorth: false },
+                { label: 'वायव्य', deg: 315, isNorth: false }
+              ].map((pt) => (
+                <div key={`outer-${pt.deg}`} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
+                  <div className="flex flex-col items-center select-none mt-3.5">
+                    {pt.isNorth && (
+                      <div className="w-1 h-2.5 bg-[#8C1D24] mb-0.5 rounded-full shadow-sm" />
+                    )}
+                    <span className={cn(
+                      "font-serif font-black tracking-tight leading-none",
+                      pt.isNorth
+                        ? "text-[#8C1D24] text-lg font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)] scale-105"
+                        : "text-[#3D2512] text-sm font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]"
+                    )}>
+                      {pt.label}
                     </span>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </>
           ) : (
             cardinalPoints.map((pt) => (
               <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
@@ -791,8 +885,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                       ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444] animate-pulse-subtle"
                       : styleId === 'satellite_earth'
                       ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
-                      : styleId === 'cyberpunk'
-                      ? "text-cyan-300 text-sm"
                       : isGraphite
                       ? "text-slate-200 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                       : activeVariant?.cardinalColor
@@ -931,32 +1023,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 2. Cyberpunk Laser HUD Needle */}
-          {styleId === 'cyberpunk' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_0_20px_rgba(0,240,255,0.8)]" viewBox="0 0 200 200">
-                <line x1="100" y1={apexY} x2="100" y2="70" stroke="#00F0FF" strokeWidth="3" strokeLinecap="round" className="animate-pulse" />
-                <polygon points={`100,${apexY} 92,${apexY + 20} 108,${apexY + 20}`} fill="#00F0FF" />
-              <circle cx="100" cy="100" r="18" fill="none" stroke="#00F0FF" strokeWidth="1.5" strokeDasharray="5 3" />
-              <circle cx="100" cy="100" r="12" fill="none" stroke="#FF0055" strokeWidth="1" />
-            </svg>
-          )}
 
-          {/* 3. Minimal Stealth Pointer (for iOS Minimal Onyx variant) */}
-          {isMinimalOnyx && (
-            <div className="absolute inset-x-0 top-4 flex flex-col items-center pointer-events-none z-30">
-              <div className="w-[4px] h-10 bg-gradient-to-b from-red-500 to-orange-500 rounded-full shadow-[0_0_14px_#ef4444]" />
-              <div className="w-2 h-2 rounded-full bg-white shadow-[0_0_8px_#ffffff] -mt-1" />
-            </div>
-          )}
-
-          {/* 6. Cosmic Galaxy Pulsar Needle */}
-          {styleId === 'cosmic_galaxy' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_0_20px_rgba(192,132,252,0.8)]" viewBox="0 0 200 200">
-              <polygon points={`100,${apexY} 86,78 100,65`} fill="#C084FC" />
-              <polygon points={`100,${apexY} 100,65 114,78`} fill="#818CF8" />
-              <circle cx="100" cy="100" r="16" fill="none" stroke="#C084FC" strokeWidth="1.5" />
-            </svg>
-          )}
 
           {/* 7. Satellite Earth 3D Needle */}
           {styleId === 'satellite_earth' && (
@@ -1038,21 +1105,119 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 9. Sandalwood 3D Faceted Needle (Red & Gold North) */}
+          {/* 9. Sandalwood Authentic Ornate 3D Faceted Needle (matching user reference) */}
           {styleId === 'sandalwood' && (
-            <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(78,53,36,0.85)]" viewBox="0 0 200 200">
-              {/* North Red/Crimson Faceted Spear */}
-              <polygon points={`100,${apexY} 88,100 100,96`} fill="#EF4444" className="drop-shadow-[0_0_14px_rgba(239,68,68,0.7)]" />
-              <polygon points={`100,${apexY} 112,100 100,96`} fill="#B91C1C" />
+            <svg className="w-full h-full p-2 drop-shadow-[0_10px_25px_rgba(62,35,12,0.95)]" viewBox="0 0 200 200">
+              <defs>
+                {/* Authentic Sandalwood Wood Grain / Gold Border Gradient */}
+                <linearGradient id="chandan-wood-border" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8C5C2E" />
+                  <stop offset="30%" stopColor="#C99450" />
+                  <stop offset="70%" stopColor="#E0B678" />
+                  <stop offset="100%" stopColor="#5C3615" />
+                </linearGradient>
 
-              {/* Center Pivot Ring */}
-              <circle cx="100" cy="100" r="14" fill="none" stroke="#D4AF37" strokeWidth="2" className="drop-shadow-md" />
-              <circle cx="100" cy="100" r="11" fill="none" stroke="#FDE047" strokeWidth="0.8" opacity="0.8" />
+                {/* Left Vermilion / Crimson Facet */}
+                <linearGradient id="chandan-red-left" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#B91C1C" />
+                  <stop offset="45%" stopColor="#DC2626" />
+                  <stop offset="100%" stopColor="#EF4444" />
+                </linearGradient>
+
+                {/* Right Deep Auburn / Dark Burgundy Shadow Facet */}
+                <linearGradient id="chandan-red-right" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8C1D24" />
+                  <stop offset="40%" stopColor="#6E1217" />
+                  <stop offset="85%" stopColor="#4A080C" />
+                  <stop offset="100%" stopColor="#2E0406" />
+                </linearGradient>
+
+                {/* Crescent Wing Carved Sandalwood Gradient */}
+                <linearGradient id="chandan-crescent-wing" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FFF2D6" />
+                  <stop offset="30%" stopColor="#D9A86C" />
+                  <stop offset="70%" stopColor="#96612D" />
+                  <stop offset="100%" stopColor="#4D2E12" />
+                </linearGradient>
+
+                {/* Gold Bezel Hub Gradient */}
+                <radialGradient id="chandan-gold-hub" cx="35%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#FFFBEB" />
+                  <stop offset="35%" stopColor="#FBBF24" />
+                  <stop offset="70%" stopColor="#D97706" />
+                  <stop offset="100%" stopColor="#78350F" />
+                </radialGradient>
+              </defs>
+
+              {/* 1. Outer Sculpted Sandalwood Chiseled Edges (Bevel Border) */}
+              <polygon
+                points={`100,${apexY} 85,86 100,82`}
+                fill="#C99450"
+                stroke="#633C17"
+                strokeWidth="0.4"
+              />
+              <polygon
+                points={`100,${apexY} 115,86 100,82`}
+                fill="#633C17"
+                stroke="#3E220B"
+                strokeWidth="0.4"
+              />
+
+              {/* 2. Main Crimson Spear - Left Light Facet */}
+              <polygon
+                points={`100,${apexY} 87.5,85 100,81`}
+                fill="url(#chandan-red-left)"
+              />
+              {/* Main Crimson Spear - Right Dark Facet */}
+              <polygon
+                points={`100,${apexY} 112.5,85 100,81`}
+                fill="url(#chandan-red-right)"
+              />
+
+              {/* 3. Dual Gold Inlaid Pinstripes running down both facets */}
+              <line x1="97" y1={apexY + 14} x2="93.5" y2="82" stroke="#FDE047" strokeWidth="0.9" opacity="0.95" />
+              <line x1="103" y1={apexY + 14} x2="106.5" y2="82" stroke="#EAB308" strokeWidth="0.9" opacity="0.85" />
+
+              {/* 4. Bold White Specular Spine Line (Tip to Center) */}
+              <line
+                x1="100"
+                y1={apexY + 1}
+                x2="100"
+                y2="83"
+                stroke="#FFFFFF"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                className="drop-shadow-[0_0_3px_#ffffff]"
+              />
+
+              {/* 5. Crescent Crossguard Wings at Base (sitting right atop the reticle) */}
+              <path
+                d="M 76,82 Q 100,92 124,82 Q 114,89 100,90 Q 86,89 76,82 Z"
+                fill="url(#chandan-crescent-wing)"
+                stroke="#5C3615"
+                strokeWidth="0.6"
+                className="drop-shadow-md"
+              />
+
+              {/* Base Mount Pedestal */}
+              <polygon points="89,88 111,88 107,94 93,94" fill="#78471A" stroke="#4A2A0C" strokeWidth="0.5" />
+
+              {/* 6. Concentric Jewel Eye Center Pivot Collet */}
+              {/* Outer Golden Bronze Ring */}
+              <circle cx="100" cy="87.5" r="7.5" fill="url(#chandan-gold-hub)" stroke="#5C3615" strokeWidth="0.7" className="drop-shadow-sm" />
+              {/* Ivory Bezel Inset */}
+              <circle cx="100" cy="87.5" r="5.6" fill="#FFFDF7" stroke="#92400E" strokeWidth="0.4" />
+              {/* Radiant Amber-Gold Iris */}
+              <circle cx="100" cy="87.5" r="4.2" fill="#F59E0B" />
+              {/* Vermilion Ruby Core */}
+              <circle cx="100" cy="87.5" r="2.8" fill="#B91C1C" stroke="#7F1D1D" strokeWidth="0.3" />
+              {/* Specular White Highlight Glint */}
+              <circle cx="98.8" cy="86.3" r="0.9" fill="#FFFFFF" opacity="0.95" />
             </svg>
           )}
 
           {/* 10. iOS Clean Precision Needle (Red North Half Only) */}
-          {(styleId === 'ios_compass' && activeVariant?.needleType === 'ios_needle') && (
+          {activeVariant?.needleType === 'ios_needle' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.5)]" viewBox="0 0 200 200">
               {/* North Red Spear */}
               <polygon points={`100,${apexY} 88,100 100,94`} fill="#EF4444" className="drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]" />
@@ -1066,7 +1231,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           )}
 
           {/* 10b. Metal Needle (Silver/Dark classic Half Needle) */}
-          {(styleId === 'ios_compass' && activeVariant?.needleType === 'metal_needle') && (
+          {activeVariant?.needleType === 'metal_needle' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_8px_24px_rgba(0,0,0,0.65)]" viewBox="0 0 200 200">
               <defs>
                 <linearGradient id="metal-n-l" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -1258,15 +1423,37 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             </svg>
           )}
 
-          {/* 12. 3D Bicolor Delta Arrow — all color_palette variants + ios_black variant */}
+          {/* 12. 3D Bicolor Delta Arrow — all color_palette variants in their respective theme colors */}
           {activeVariant?.needleType === 'delta_bicolor' && (
             <svg className="w-full h-full p-2.5 drop-shadow-[0_12px_28px_rgba(0,0,0,0.95)]" viewBox="0 0 200 200">
               <defs>
-                {/* Left half: Color Palette uses the selected variant's theme color; iOS black keeps white/silver */}
+                {/* Left facet gradient: tailored per variant to maintain ideal contrast and metallic sheen */}
                 <linearGradient id={`needleTheme-${activeVariant.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor={styleId === 'color_palette' ? activeVariant.primaryColor : '#FFFFFF'} />
-                  <stop offset="60%" stopColor={styleId === 'color_palette' ? activeVariant.primaryColor : '#E2E8F0'} stopOpacity="0.75" />
-                  <stop offset="100%" stopColor={styleId === 'color_palette' ? activeVariant.primaryColor : '#CBD5E1'} stopOpacity="0.55" />
+                  {activeVariant.id === 'ios_black' || activeVariant.primaryColor === '#000000' ? (
+                    <>
+                      <stop offset="0%" stopColor="#FFFFFF" />
+                      <stop offset="50%" stopColor="#F1F5F9" />
+                      <stop offset="100%" stopColor="#CBD5E1" />
+                    </>
+                  ) : activeVariant.id === 'ios_white' ? (
+                    <>
+                      <stop offset="0%" stopColor="#CBD5E1" />
+                      <stop offset="50%" stopColor="#94A3B8" />
+                      <stop offset="100%" stopColor="#64748B" />
+                    </>
+                  ) : activeVariant.id === 'ios_nautical' ? (
+                    <>
+                      <stop offset="0%" stopColor="#EAD8BE" />
+                      <stop offset="40%" stopColor="#D4B08C" />
+                      <stop offset="100%" stopColor="#8C6239" />
+                    </>
+                  ) : (
+                    <>
+                      <stop offset="0%" stopColor={activeVariant.primaryColor} />
+                      <stop offset="60%" stopColor={activeVariant.primaryColor} stopOpacity="0.85" />
+                      <stop offset="100%" stopColor={activeVariant.primaryColor} stopOpacity="0.65" />
+                    </>
+                  )}
                 </linearGradient>
                 <linearGradient id="needleCrimson" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#EF4444" />
@@ -1275,14 +1462,24 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 </linearGradient>
               </defs>
 
+              {/* Left wing (Silver/White on black dial, Slate on white dial, Antique Bronze on nautical, or respective theme color) */}
               <polygon
                 points={`100,${apexY} 78,76 100,64`}
                 fill={`url(#needleTheme-${activeVariant.id})`}
-                stroke={styleId === 'color_palette' ? activeVariant.primaryColor : '#94A3B8'}
+                stroke={
+                  activeVariant.id === 'ios_black' || activeVariant.primaryColor === '#000000'
+                    ? '#E2E8F0'
+                    : activeVariant.id === 'ios_white'
+                    ? '#475569'
+                    : activeVariant.id === 'ios_nautical'
+                    ? '#8C6239'
+                    : activeVariant.primaryColor
+                }
                 strokeWidth="0.8"
                 strokeLinejoin="round"
                 className="drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
               />
+              {/* Right wing (Crimson Red) */}
               <polygon
                 points={`100,${apexY} 100,64 122,76`}
                 fill="url(#needleCrimson)"
@@ -1291,8 +1488,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 strokeLinejoin="round"
                 className="drop-shadow-[0_4px_16px_rgba(239,68,68,0.7)]"
               />
-              <line x1="100" y1="34" x2="100" y2="64" stroke="#475569" strokeWidth="1" />
-              <circle cx="100" cy="100" r="14" fill="none" stroke="#D4AF37" strokeWidth="1.8" />
+              {/* Center spine highlight */}
+              <line x1="100" y1={apexY + 2} x2="100" y2="64" stroke="#FFFFFF" strokeWidth="1.2" strokeLinecap="round" opacity="0.95" />
             </svg>
           )}
         </div>
@@ -1416,36 +1613,6 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
                 </span>
               </div>
-            ) : styleId === 'cyberpunk' ? (
-              <div className={cn(
-                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 relative overflow-hidden",
-                isDeviceFlat
-                  ? "border-emerald-400 bg-[#031510]/95 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.7)]"
-                  : "border-cyan-400 bg-[#050b14]/95 text-cyan-300 shadow-[0_0_18px_rgba(6,182,212,0.65)]"
-              )}>
-                <div
-                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-cyan-400/70 shadow-[0_0_6px_#22d3ee]")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
-                <span className="text-[14px] font-mono font-black leading-none z-10">{displayAngle}°</span>
-                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-fuchsia-400")}>
-                  {isDeviceFlat ? 'LOCK' : get16WindName(displayHeading)}
-                </span>
-              </div>
-            ) : styleId === 'cosmic_galaxy' ? (
-              <div className={cn(
-                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 relative overflow-hidden",
-                isDeviceFlat ? "border-emerald-400 bg-[#061814]/95 text-emerald-200" : "border-indigo-400 bg-[#0D0820]/95 text-indigo-100"
-              )}>
-                <div
-                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400" : "bg-purple-400/60")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
-                <span className="text-[14px] font-mono font-black leading-none z-10">{displayAngle}°</span>
-                <span className="text-[6.5px] font-bold uppercase tracking-widest text-purple-300 mt-0.5 z-10">
-                  {isDeviceFlat ? 'ALIGN' : get16WindName(displayHeading)}
-                </span>
-              </div>
             ) : styleId === 'vedic_mandala' ? (
               <div className={cn(
                 "flex flex-col items-center justify-center h-11 w-11 rounded-full border-[1.5px] relative overflow-hidden",
@@ -1464,16 +1631,18 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               </div>
             ) : styleId === 'sandalwood' ? (
               <div className={cn(
-                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 relative overflow-hidden",
-                isDeviceFlat ? "border-emerald-600 bg-emerald-50 text-emerald-900" : "border-[#C9A67E] bg-[#FAF3E8]/95 text-[#3E2718]"
+                "flex flex-col items-center justify-center h-14 w-14 rounded-full border-[2.5px] relative overflow-hidden shadow-md",
+                isDeviceFlat
+                  ? "border-emerald-600 bg-emerald-50 text-emerald-950"
+                  : "border-[#8C6239] bg-gradient-to-br from-[#FFFDF7] via-[#FAF3E8] to-[#EAD9C2] text-[#3D2512]"
               )}>
                 <div
-                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-500/70" : "bg-amber-600/40")}
+                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-600/40")}
                   style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
                 />
-                <span className="text-[14px] font-black leading-none font-serif z-10">{displayAngle}°</span>
-                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-700 font-black" : "text-red-700")}>
-                  {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : get16WindName(displayHeading)}
+                <span className="text-[15px] font-black leading-none font-serif z-10 text-[#3D2512] drop-shadow-sm">{displayAngle}°</span>
+                <span className={cn("text-[8px] font-black uppercase tracking-wider mt-0.5 z-10", isDeviceFlat ? "text-emerald-700" : "text-red-700")}>
+                  {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : 'N'}
                 </span>
               </div>
             ) : styleId === 'color_palette' && activeVariant ? (
@@ -1482,13 +1651,16 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 bg-stone-950/90 shadow-lg relative overflow-hidden",
                   isDeviceFlat && "border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.7)]"
                 )}
-                style={!isDeviceFlat ? { borderColor: activeVariant.primaryColor, boxShadow: `0 0 16px ${activeVariant.primaryColor}55` } : undefined}
+                style={!isDeviceFlat ? { 
+                  borderColor: activeVariant.id === 'ios_black' ? '#E2E8F0' : activeVariant.primaryColor, 
+                  boxShadow: `0 0 16px ${activeVariant.id === 'ios_black' ? '#FFFFFF' : activeVariant.primaryColor}55` 
+                } : undefined}
               >
                 <div
                   className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-white/40")}
                   style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
                 />
-                <span className="text-[14px] font-black font-mono leading-none z-10" style={{ color: isDeviceFlat ? '#34D399' : activeVariant.primaryColor }}>
+                <span className="text-[14px] font-black font-mono leading-none z-10" style={{ color: isDeviceFlat ? '#34D399' : (activeVariant.id === 'ios_black' ? '#FFFFFF' : activeVariant.primaryColor) }}>
                   {displayAngle}°
                 </span>
                 <span className="text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10 text-stone-300">

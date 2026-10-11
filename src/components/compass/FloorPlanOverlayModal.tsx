@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, RotateCw, ZoomIn, Eye, Sparkles, Check, Download, Layers } from 'lucide-react';
+import { Upload, X, RotateCw, ZoomIn, Eye, Sparkles, Check, Download, Layers, Compass } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -21,10 +21,27 @@ export const FloorPlanOverlayModal = ({
 }: FloorPlanOverlayModalProps) => {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [rotation, setRotation] = useState<number>(currentHeading !== null ? -currentHeading : 0);
+  const [followCompass, setFollowCompass] = useState<boolean>(false);
   const [scale, setScale] = useState<number>(1);
-  const [gridOpacity, setGridOpacity] = useState<number>(0.8);
+  const [gridOpacity, setGridOpacity] = useState<number>(0.85);
   const [gridType, setGridType] = useState<'9grid' | '16radial'>('9grid');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Sync initial rotation to live compass heading whenever the modal opens
+  useEffect(() => {
+    if (isOpen && currentHeading !== null) {
+      setRotation(-currentHeading);
+    }
+  }, [isOpen]);
+
+  // Continuously track live compass when Follow Compass mode is active
+  useEffect(() => {
+    if (isOpen && followCompass && currentHeading !== null) {
+      setRotation(-currentHeading);
+    }
+  }, [isOpen, followCompass, currentHeading]);
+
+  const effectiveRotation = ((rotation % 360) + 360) % 360;
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,6 +49,9 @@ export const FloorPlanOverlayModal = ({
       const reader = new FileReader();
       reader.onload = (event) => {
         setImageSrc(event.target?.result as string);
+        if (currentHeading !== null) {
+          setRotation(-currentHeading);
+        }
         toast.success(language === 'hi' ? 'नक्शा लोड हुआ!' : 'Floor plan uploaded successfully!');
       };
       reader.readAsDataURL(file);
@@ -41,7 +61,13 @@ export const FloorPlanOverlayModal = ({
   const autoAlignToCompass = () => {
     if (currentHeading !== null) {
       setRotation(-currentHeading);
-      toast.success(language === 'hi' ? `कंपास (${Math.round(currentHeading)}°) से संरेखित हुआ` : `Aligned to Compass (${Math.round(currentHeading)}°)`);
+      setFollowCompass(p => !p);
+      const deg = Math.round(((currentHeading % 360) + 360) % 360) % 360;
+      toast.success(
+        language === 'hi'
+          ? `कंपास (${deg}°) से संरेखित हुआ`
+          : `Aligned to Compass (${deg}°)`
+      );
     }
   };
 
@@ -99,14 +125,14 @@ export const FloorPlanOverlayModal = ({
 
                 {/* Overlaid Rotating Vastu Grid */}
                 <div
-                  className="absolute w-[80%] aspect-square pointer-events-none border-2 border-amber-400 transition-transform duration-200 ease-out"
+                  className="absolute w-[80%] aspect-square pointer-events-none border-2 border-amber-400"
                   style={{
-                    transform: `rotate(${rotation}deg)`,
+                    transform: `rotate(${effectiveRotation}deg)`,
                     opacity: gridOpacity,
                   }}
                 >
                   {gridType === '9grid' ? (
-                    // 9x9 Vastu Purusha Mandala Grid
+                    // 9x9 Vastu Purusha Mandala Grid (with counter-rotated text so labels stay upright!)
                     <div className="w-full h-full grid grid-cols-3 grid-rows-3 border border-amber-400">
                       {[
                         { code: 'NW', label: language === 'hi' ? 'वायव्य (वायु)' : 'NW (Air)', color: 'bg-sky-500/20' },
@@ -126,8 +152,13 @@ export const FloorPlanOverlayModal = ({
                             item.color
                           )}
                         >
-                          <span className="text-[11px] font-black text-amber-300 drop-shadow">{item.code}</span>
-                          <span className="text-[8px] font-bold text-white/90 leading-tight">{item.label}</span>
+                          <div
+                            className="flex flex-col items-center justify-center"
+                            style={{ transform: `rotate(${-effectiveRotation}deg)` }}
+                          >
+                            <span className="text-[11px] font-black text-amber-300 drop-shadow">{item.code}</span>
+                            <span className="text-[8px] font-bold text-white/90 leading-tight">{item.label}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -135,10 +166,10 @@ export const FloorPlanOverlayModal = ({
                     // 16-Radial Zone Wheel
                     <div className="w-full h-full rounded-full border-2 border-amber-400 relative flex items-center justify-center">
                       <div className="absolute inset-0 rounded-full border border-dashed border-amber-300/50" />
-                      <div className="absolute top-2 font-black text-[10px] text-emerald-400">TRUE NORTH (0°)</div>
-                      <div className="absolute bottom-2 font-black text-[10px] text-red-400">SOUTH (180°)</div>
-                      <div className="absolute right-2 font-black text-[10px] text-orange-400">EAST (90°)</div>
-                      <div className="absolute left-2 font-black text-[10px] text-stone-300">WEST (270°)</div>
+                      <div className="absolute top-2 font-black text-[10px] text-emerald-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>TRUE NORTH (0°)</div>
+                      <div className="absolute bottom-2 font-black text-[10px] text-red-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>SOUTH (180°)</div>
+                      <div className="absolute right-2 font-black text-[10px] text-orange-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>EAST (90°)</div>
+                      <div className="absolute left-2 font-black text-[10px] text-stone-300" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>WEST (270°)</div>
                     </div>
                   )}
 
@@ -182,21 +213,30 @@ export const FloorPlanOverlayModal = ({
               {/* Rotation Slider */}
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-black uppercase tracking-wider text-stone-400 w-16">
-                  {language === 'hi' ? 'घूर्णन' : 'Rotate'}: {Math.round((rotation % 360 + 360) % 360)}°
+                  {language === 'hi' ? 'घूर्णन' : 'Rotate'}: {Math.round(effectiveRotation) % 360}°
                 </span>
                 <input
                   type="range"
                   min="0"
                   max="360"
-                  value={(rotation % 360 + 360) % 360}
-                  onChange={(e) => setRotation(Number(e.target.value))}
+                  value={Math.round(effectiveRotation) % 360}
+                  onChange={(e) => {
+                    setFollowCompass(false);
+                    setRotation(Number(e.target.value));
+                  }}
                   className="flex-1 accent-amber-500"
                 />
                 <button
                   onClick={autoAlignToCompass}
-                  className="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase active:scale-90"
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase active:scale-90 flex items-center gap-1 transition-all",
+                    followCompass
+                      ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                      : "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  )}
                 >
-                  Auto GPS
+                  <Compass className={cn("w-3 h-3", followCompass && "animate-spin")} />
+                  <span>{followCompass ? (language === 'hi' ? 'लाइव चालू' : 'LIVE ON') : (language === 'hi' ? 'ऑटो कंपास' : 'Auto Compass')}</span>
                 </button>
               </div>
 

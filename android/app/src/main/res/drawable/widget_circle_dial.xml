@@ -1,8 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval">
-    <solid android:color="#121315" />
-    <stroke
-        android:width="1dp"
-        android:color="#282B30" />
-</shape>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="320"
+    android:viewportHeight="320">
+
+    <!-- Outer Bezel Ring -->
+    <path
+        android:strokeColor="#262B33"
+        android:strokeWidth="2.5"
+        android:pathData="M160,14 A146,146 0 1,1 159.9,14 Z" />
+
+    <!-- Fixed 12 o'clock Lubber Pointer Triangle + Jewel -->
+    <path
+        android:fillColor="#EF4444"
+        android:pathData="M160,17 L152,3 L168,3 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M160,2 A2.5,2.5 0 1,1 159.9,2 Z" />
+
+    <!-- 3D North Red Spear Needle (pointing to N) -->
+    <path
+        android:fillColor="#FF4D4D"
+        android:pathData="M160,46 L149.5,101 L160,97 Z" />
+    <path
+        android:fillColor="#B91C1C"
+        android:pathData="M160,46 L170.5,101 L160,97 Z" />
+
+    <!-- 3D South Silver-Titanium Spear Needle (pointing to S) -->
+    <path
+        android:fillColor="#CBD5E1"
+        android:pathData="M160,268 L149.5,219 L160,223 Z" />
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M160,268 L170.5,219 L160,223 Z" />
+
+    <!-- Center Hub Dark Backing & Gold + Emerald Spirit-Level Rings -->
+    <path
+        android:fillColor="#11151C"
+        android:pathData="M160,104 A56,56 0 1,1 159.9,104 Z" />
+    <path
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="2.2"
+        android:pathData="M160,102 A58,58 0 1,1 159.9,102 Z" />
+    <path
+        android:strokeColor="#10B981"
+        android:strokeWidth="2.0"
+        android:pathData="M160,106.5 A53.5,53.5 0 1,1 159.9,106.5 Z" />
+</vector>

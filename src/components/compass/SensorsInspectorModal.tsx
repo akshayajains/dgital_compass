@@ -28,6 +28,7 @@ interface SensorsInspectorModalProps {
   language: string;
   theme: string;
   magneticField?: number | null;
+  compassAccuracy?: number | null;
   heading?: number | null;
   pitch?: number;
   roll?: number;
@@ -51,6 +52,7 @@ export const SensorsInspectorModal = ({
   language,
   theme,
   magneticField = 42,
+  compassAccuracy = null,
   heading = 0,
   pitch = 0,
   roll = 0,
@@ -145,6 +147,9 @@ export const SensorsInspectorModal = ({
   if (!isOpen) return null;
 
   const currentMag = magneticField && magneticField > 0 ? magneticField : 43;
+  const normHeading = Math.round((((heading || 0) % 360) + 360) % 360) % 360;
+  const accDeg = compassAccuracy != null && compassAccuracy > 0 ? compassAccuracy : 1.5;
+  const accLabel = accDeg <= 5 ? `±${accDeg.toFixed(1)}° (High Level 3)` : accDeg <= 15 ? `±${Math.round(accDeg)}° (Medium Level 2)` : `±${Math.round(accDeg)}° (Needs Calibration)`;
 
   const sensorsList: SensorItem[] = [
     {
@@ -175,10 +180,10 @@ export const SensorsInspectorModal = ({
       getTestStatus: () => 'CALIBRATED',
       getTelemetry: () => ({
         'Total Field': `${Math.round(currentMag)} µT`,
-        'X (East-West)': `${(Math.sin((heading || 0) * Math.PI / 180) * currentMag).toFixed(1)} µT`,
-        'Y (North-South)': `${(Math.cos((heading || 0) * Math.PI / 180) * currentMag).toFixed(1)} µT`,
+        'X (East-West)': `${(Math.sin(normHeading * Math.PI / 180) * currentMag).toFixed(1)} µT`,
+        'Y (North-South)': `${(Math.cos(normHeading * Math.PI / 180) * currentMag).toFixed(1)} µT`,
         'Z (Vertical)': `${(currentMag * 0.82).toFixed(1)} µT`,
-        'Calibration': 'Optimal (Level 3)'
+        'Calibration': currentMag > 75 || currentMag < 20 ? 'High EMI / Metal Nearby' : accLabel
       })
     },
     {
@@ -204,13 +209,13 @@ export const SensorsInspectorModal = ({
       type: 'android.sensor.rotation_vector',
       icon: Cpu,
       description: language === 'hi' ? 'एक्सेलेरोमीटर, जाइरो और मैग्नेटोमीटर का 9-DOF फ़्यूज़न' : 'Quaternion 9-DOF fused spatial orientation matrix',
-      getLiveValue: () => `${Math.round(heading || 0)}° ±0.5°`,
+      getLiveValue: () => `${normHeading}° ±${accDeg <= 5 ? accDeg.toFixed(1) : Math.round(accDeg)}°`,
       getTestStatus: () => 'PASS',
       getTelemetry: () => ({
-        'Fused Heading': `${Math.round(heading || 0)}°`,
+        'Fused Heading': `${normHeading}°`,
         'Pitch': `${pitch.toFixed(1)}°`,
         'Roll': `${roll.toFixed(1)}°`,
-        'Accuracy': '±0.5° (High)'
+        'Accuracy': accLabel
       })
     },
     {
@@ -220,10 +225,10 @@ export const SensorsInspectorModal = ({
       type: 'android.sensor.geomagnetic_rotation_vector',
       icon: Navigation,
       description: language === 'hi' ? 'कम ऊर्जा वाला भू-चुंबकीय रोटेशन वेक्टर' : 'Ultra low-power magnetic orientation vector',
-      getLiveValue: () => `${Math.round(heading || 0)}°`,
+      getLiveValue: () => `${normHeading}°`,
       getTestStatus: () => 'ACTIVE',
       getTelemetry: () => ({
-        'Heading Vector': `${Math.round(heading || 0)}°`,
+        'Heading Vector': `${normHeading}°`,
         'Power Draw': '0.04 mA',
         'Stability': 'Optimal'
       })

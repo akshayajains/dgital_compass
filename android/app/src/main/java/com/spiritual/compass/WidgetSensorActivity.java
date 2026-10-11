@@ -36,10 +36,13 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
 
     private final float[] gravity = new float[3];
     private final float[] geomagnetic = new float[3];
+    private final float[] orientationAngles = new float[3];
     private boolean hasGravity = false;
     private boolean hasMag = false;
 
     private float latestHeading = -1f;
+    private float latestPitch = 0f;
+    private float latestRoll = 0f;
     private long lastWidgetPushTime = 0L;
     private boolean finished = false;
 
@@ -79,7 +82,11 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
 
         // Immediately show "Live Measuring..." on the widget
         float prevHeading = CompassWidgetProvider.getSavedHeading(this);
-        CompassWidgetProvider.updateAllWidgets(this, prevHeading, "● Live Measuring...", true);
+        float prevPitch = CompassWidgetProvider.getSavedPitch(this);
+        float prevRoll = CompassWidgetProvider.getSavedRoll(this);
+        latestPitch = prevPitch;
+        latestRoll = prevRoll;
+        CompassWidgetProvider.updateAllWidgets(this, prevHeading, prevPitch, prevRoll, "● Live Measuring...", true);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager == null) {
@@ -114,15 +121,15 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
         if (finished) return;
 
         float computedHeading = -1f;
+        float[] R = new float[9];
+        boolean hasMatrix = false;
 
         if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR ||
             event.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR) {
-            float[] rotationMatrix = new float[9];
-            SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
-            float[] orientation = new float[3];
-            SensorManager.getOrientation(rotationMatrix, orientation);
-            float azimuth = (float) Math.toDegrees(orientation[0]);
-            computedHeading = ((azimuth % 360f) + 360f) % 360f;
+            SensorManager.getRotationMatrixFromVector(R, event.values);
+            if (R[0] != 0f || R[4] != 0f || R[8] != 0f) {
+                hasMatrix = true;
+            }
         } else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             System.arraycopy(event.values, 0, gravity, 0, 3);
             hasGravity = true;
@@ -131,14 +138,57 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
             hasMag = true;
         }
 
-        if (computedHeading < 0f && hasGravity && hasMag) {
-            float[] R = new float[9];
+        if (!hasMatrix && hasGravity && hasMag) {
             float[] I = new float[9];
             if (SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)) {
-                float[] orientation = new float[3];
-                SensorManager.getOrientation(R, orientation);
-                float azimuth = (float) Math.toDegrees(orientation[0]);
-                computedHeading = ((azimuth % 360f) + 360f) % 360f;
+                hasMatrix = true;
+            }
+        }
+
+        if (hasMatrix) {
+            float[] screenR = new float[9];
+            int rotation = android.view.Surface.ROTATION_0;
+            try {
+                WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+                if (wm != null && wm.getDefaultDisplay() != null) {
+                    rotation = wm.getDefaultDisplay().getRotation();
+                }
+            } catch (Exception ignored) {}
+
+            int worldX = SensorManager.AXIS_X;
+            int worldY = SensorManager.AXIS_Y;
+            if (rotation == android.view.Surface.ROTATION_90) {
+                worldX = SensorManager.AXIS_Y;
+                worldY = SensorManager.AXIS_MINUS_X;
+            } else if (rotation == android.view.Surface.ROTATION_180) {
+                worldX = SensorManager.AXIS_MINUS_X;
+                worldY = SensorManager.AXIS_MINUS_Y;
+            } else if (rotation == android.view.Surface.ROTATION_270) {
+                worldX = SensorManager.AXIS_MINUS_Y;
+                worldY = SensorManager.AXIS_X;
+            }
+            SensorManager.remapCoordinateSystem(R, worldX, worldY, screenR);
+
+            float wY = Math.max(0f, screenR[8]);
+            float wZ = Math.max(0f, screenR[7]);
+            float eastFwd = (wY + wZ > 0.15f) ? (wY * screenR[1] - wZ * screenR[2]) : screenR[1];
+            float northFwd = (wY + wZ > 0.15f) ? (wY * screenR[4] - wZ * screenR[5]) : screenR[4];
+
+            float azimuth = (float) Math.toDegrees(Math.atan2(eastFwd, northFwd));
+            computedHeading = ((azimuth % 360f) + 360f) % 360f;
+
+            // Compute live pitch & roll for the Spirit-Level Flatness indicator (with gimbal-lock guard)
+            SensorManager.getOrientation(screenR, orientationAngles);
+            float rawPitch = (float) -Math.toDegrees(orientationAngles[1]);
+            float rawRoll = (float) Math.toDegrees(orientationAngles[2]);
+            float gravY = screenR[7];
+            float gravX = screenR[6];
+            if (Math.abs(gravY) > 0.92f) {
+                latestPitch = rawPitch;
+                latestRoll = (float) Math.toDegrees(Math.atan2(gravX, Math.abs(gravY)));
+            } else {
+                latestPitch = rawPitch;
+                latestRoll = rawRoll;
             }
         }
 
@@ -148,7 +198,7 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
             // Throttle RemoteViews updates to ~6 FPS (every 160ms) for smooth Home Screen dial rotation
             if (now - lastWidgetPushTime >= 160L) {
                 lastWidgetPushTime = now;
-                CompassWidgetProvider.updateAllWidgets(this, latestHeading, "● Live Updating...", true);
+                CompassWidgetProvider.updateAllWidgets(this, latestHeading, latestPitch, latestRoll, "● Live Updating...", true);
             }
         }
     }
@@ -178,7 +228,7 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
 
         float finalHeading = latestHeading >= 0f ? latestHeading : CompassWidgetProvider.getSavedHeading(this);
         String timeStr = new SimpleDateFormat("h:mm a", Locale.getDefault()).format(new Date());
-        CompassWidgetProvider.updateAllWidgets(this, finalHeading, "Updated " + timeStr, false);
+        CompassWidgetProvider.updateAllWidgets(this, finalHeading, latestPitch, latestRoll, "Updated " + timeStr, false);
 
         finish();
         overridePendingTransition(0, 0);

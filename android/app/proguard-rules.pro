@@ -1,63 +1,78 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Precision ProGuard / R8 rules for Digital Compass
+# Optimizes, obfuscates, and shrinks unused code while keeping necessary reflection entry points.
+# Addresses Google Play Console "improve your app's memory and performance with R8" warning.
 
-# ── App & Widget Classes ──
--keep class com.spiritual.compass.** { *; }
+# ── Optimization Configuration ──
+-repackageclasses ''
+-allowaccessmodification
 
-# ── Capacitor / WebView ──
-# Capacitor bridges JS to native via reflection; keep all Capacitor classes.
--keep class com.getcapacitor.** { *; }
--keep class com.getcapacitor.plugin.** { *; }
--keep class com.getcapacitor.community.** { *; }
--keep class com.capacitorjs.** { *; }
+# ── App & Widget Entry Points ──
+# AndroidManifest components (Activities, Receivers, Services) are kept automatically by AAPT rules.
+# Keep Widget provider and sensor activity methods needed by Android OS RemoteViews:
+-keep class com.spiritual.compass.CompassWidgetProvider {
+    public *;
+}
+-keep class com.spiritual.compass.WidgetSensorActivity {
+    public *;
+}
+-keepclassmembers class com.spiritual.compass.MainActivity {
+    public *;
+}
 
-# Keep all plugin classes (they are loaded reflectively by Capacitor).
--keep class * extends com.getcapacitor.Plugin { *; }
+# ── Capacitor Core & Reflection ──
+# Keep plugin classes and methods that Capacitor discovers reflectively:
+-keep public class * extends com.getcapacitor.Plugin {
+    public *;
+}
+-keep public class * extends com.getcapacitor.annotation.CapacitorPlugin
+-keep @interface com.getcapacitor.annotation.CapacitorPlugin
+-keep @interface com.getcapacitor.PluginMethod
 
-# Keep the JavaScript interface methods used by the WebView.
+-keepclassmembers class * extends com.getcapacitor.Plugin {
+    @com.getcapacitor.PluginMethod public *;
+}
+
+# Keep the JavaScript interface methods used by the WebView:
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# ── Cordova plugins ──
--keep class org.apache.cordova.** { *; }
--keep class * extends org.apache.cordova.CordovaPlugin { *; }
+# Keep Capacitor bridge structures passed across JNI / JS bridge:
+-keep class com.getcapacitor.Bridge { public *; }
+-keep class com.getcapacitor.PluginHandle { public *; }
+-keep class com.getcapacitor.JSObject { *; }
+-keep class com.getcapacitor.JSArray { *; }
+-keep class com.getcapacitor.PluginCall { public *; }
+-keep class com.getcapacitor.PluginResult { public *; }
+-keep class com.getcapacitor.PluginConfig { *; }
 
-# ── AndroidX / AppCompat ──
--keep class androidx.appcompat.** { *; }
--keep class androidx.core.** { *; }
--keep class androidx.coordinatorlayout.** { *; }
--keep class androidx.fragment.** { *; }
+# ── Cordova Plugin Compatibility ──
+-keep public class * extends org.apache.cordova.CordovaPlugin {
+    public *;
+}
 
-# ── Splash Screen ──
--keep class androidx.core.splashscreen.** { *; }
-
-# ── Keep line numbers for debugging stack traces ──
+# ── Keep line numbers for debugging stack traces & crash reports ──
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
 
-# ── Keep annotations (needed by some libraries) ──
+# ── Keep essential annotations & reflection metadata ──
 -keepattributes *Annotation*
 -keepattributes JavascriptInterface
 -keepattributes Signature
 -keepattributes InnerClasses,EnclosingMethod
 
-# ── Gson / JSON (used by Capacitor) ──
--keep class com.google.gson.** { *; }
+# ── Gson / JSON Serialization ──
+# Keep serialized fields and custom serializers:
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
 -keep class * implements com.google.gson.JsonSerializer { *; }
 -keep class * implements com.google.gson.JsonDeserializer { *; }
+-keepclassmembers enum * { *; }
 
-# ── OkHttp (used by some plugins) ──
+# ── Suppress harmless third-party build-time warnings ──
 -dontwarn okhttp3.**
 -dontwarn okio.**
--keep class okhttp3.** { *; }
--keep class okio.** { *; }
-
-# ── Avoid warnings for missing optional dependencies ──
 -dontwarn com.google.errorprone.annotations.**
 -dontwarn javax.annotation.**
 -dontwarn org.codehaus.mojo.animal_sniffer.**

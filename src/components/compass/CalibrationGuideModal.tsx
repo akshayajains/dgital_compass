@@ -9,6 +9,9 @@ interface CalibrationGuideModalProps {
   onClose: () => void;
   language: string;
   theme: string;
+  heading?: number | null;
+  pitch?: number;
+  roll?: number;
   magneticInterference?: boolean;
   onCalibrationComplete?: () => void;
 }
@@ -18,6 +21,9 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   onClose,
   language,
   theme,
+  heading = null,
+  pitch = 0,
+  roll = 0,
   magneticInterference,
   onCalibrationComplete
 }) => {
@@ -33,6 +39,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   const [hasSensorInput, setHasSensorInput] = useState<boolean>(false);
 
   // Min-max tracking across figure-8
+  const initialCapturedRef = useRef<boolean>(false);
   const pitchMinRef = useRef<number>(0);
   const pitchMaxRef = useRef<number>(0);
   const rollMinRef = useRef<number>(0);
@@ -43,6 +50,61 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   // Total Progress
   const totalProgress = Math.min(100, Math.round(pitchProgress * 0.35 + rollProgress * 0.35 + yawProgress * 0.30));
 
+  const ingestOrientationSample = (beta: number, gamma: number, alpha: number | null | undefined) => {
+    setHasSensorInput(true);
+    setCurrentPitch(Math.round(beta));
+    setCurrentRoll(Math.round(gamma));
+
+    if (!initialCapturedRef.current) {
+      pitchMinRef.current = beta;
+      pitchMaxRef.current = beta;
+      rollMinRef.current = gamma;
+      rollMaxRef.current = gamma;
+      initialCapturedRef.current = true;
+    }
+
+    // Track Pitch Excursion (Target: 40° span)
+    pitchMinRef.current = Math.min(pitchMinRef.current, beta);
+    pitchMaxRef.current = Math.max(pitchMaxRef.current, beta);
+    const pitchSpan = Math.abs(pitchMaxRef.current - pitchMinRef.current);
+    const pScore = Math.min(100, Math.round((pitchSpan / 40) * 100));
+    setPitchProgress(pScore);
+
+    // Track Roll Excursion (Target: 45° span)
+    rollMinRef.current = Math.min(rollMinRef.current, gamma);
+    rollMaxRef.current = Math.max(rollMaxRef.current, gamma);
+    const rollSpan = Math.abs(rollMaxRef.current - rollMinRef.current);
+    const rScore = Math.min(100, Math.round((rollSpan / 45) * 100));
+    setRollProgress(rScore);
+
+    // Track Yaw Quadrant Coverage (Target: 3 or 4 quadrants)
+    let yScore = yawProgress;
+    if (alpha !== null && alpha !== undefined) {
+      const quadrant = Math.floor(((alpha % 360 + 360) % 360) / 90);
+      yawQuadrantsRef.current.add(quadrant);
+      yScore = Math.min(100, Math.round((yawQuadrantsRef.current.size / 3.5) * 100));
+      setYawProgress(yScore);
+    }
+
+    // Check Calibration Completion
+    if (!completedRef.current && pScore >= 95 && rScore >= 95 && (yawQuadrantsRef.current.size >= 3 || yScore >= 85)) {
+      completedRef.current = true;
+      setIsCalibrated(true);
+      try {
+        Haptics.impact({ style: ImpactStyle.Heavy });
+      } catch {}
+      onCalibrationComplete?.();
+    }
+  };
+
+  // Drive calibration gauges from native Android hardware sensor props when open
+  useEffect(() => {
+    if (!isOpen) return;
+    if (heading !== null || pitch !== 0 || roll !== 0) {
+      ingestOrientationSample(pitch, roll, heading);
+    }
+  }, [isOpen, heading, pitch, roll]);
+
   useEffect(() => {
     if (!isOpen) {
       setPitchProgress(0);
@@ -51,6 +113,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
       setIsCalibrated(false);
       setHasSensorInput(false);
       completedRef.current = false;
+      initialCapturedRef.current = false;
       pitchMinRef.current = 0;
       pitchMaxRef.current = 0;
       rollMinRef.current = 0;
@@ -59,64 +122,16 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
       return;
     }
 
-    let initialOrientationCaptured = false;
-
     const handleOrientation = (e: DeviceOrientationEvent) => {
-      const beta = e.beta;   // Pitch (-180 to 180)
-      const gamma = e.gamma; // Roll (-90 to 90)
-      const alpha = e.alpha; // Yaw (0 to 360)
-
-      if (beta === null || gamma === null) return;
-      setHasSensorInput(true);
-      setCurrentPitch(Math.round(beta));
-      setCurrentRoll(Math.round(gamma));
-
-      if (!initialOrientationCaptured) {
-        pitchMinRef.current = beta;
-        pitchMaxRef.current = beta;
-        rollMinRef.current = gamma;
-        rollMaxRef.current = gamma;
-        initialOrientationCaptured = true;
-      }
-
-      // Track Pitch Excursion (Target: 40° span)
-      pitchMinRef.current = Math.min(pitchMinRef.current, beta);
-      pitchMaxRef.current = Math.max(pitchMaxRef.current, beta);
-      const pitchSpan = Math.abs(pitchMaxRef.current - pitchMinRef.current);
-      const pScore = Math.min(100, Math.round((pitchSpan / 40) * 100));
-      setPitchProgress(pScore);
-
-      // Track Roll Excursion (Target: 45° span)
-      rollMinRef.current = Math.min(rollMinRef.current, gamma);
-      rollMaxRef.current = Math.max(rollMaxRef.current, gamma);
-      const rollSpan = Math.abs(rollMaxRef.current - rollMinRef.current);
-      const rScore = Math.min(100, Math.round((rollSpan / 45) * 100));
-      setRollProgress(rScore);
-
-      // Track Yaw Quadrant Coverage (Target: 3 or 4 quadrants)
-      if (alpha !== null && alpha !== undefined) {
-        const quadrant = Math.floor(((alpha % 360 + 360) % 360) / 90);
-        yawQuadrantsRef.current.add(quadrant);
-        const yScore = Math.min(100, Math.round((yawQuadrantsRef.current.size / 3.5) * 100));
-        setYawProgress(yScore);
-      }
-
-      // Check Calibration Completion
-      if (!completedRef.current && pScore >= 95 && rScore >= 95 && (yawQuadrantsRef.current.size >= 3 || yawProgress >= 85)) {
-        completedRef.current = true;
-        setIsCalibrated(true);
-        try {
-          Haptics.impact({ style: ImpactStyle.Heavy });
-        } catch {}
-        onCalibrationComplete?.();
-      }
+      if (e.beta === null || e.gamma === null) return;
+      ingestOrientationSample(e.beta, e.gamma, e.alpha);
     };
 
     window.addEventListener('deviceorientation', handleOrientation);
 
     // Desktop/fallback gradual simulation if no physical sensor events received
     const timeout = setTimeout(() => {
-      if (!hasSensorInput && !completedRef.current) {
+      if (!initialCapturedRef.current && !completedRef.current) {
         // Fallback simulation timer for desktops or devices with permissions disabled
         const interval = setInterval(() => {
           setPitchProgress(p => {

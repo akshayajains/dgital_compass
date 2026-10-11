@@ -42,16 +42,16 @@ import { VASTU_16_ZONES } from '@/data/vastuKnowledgeBase';
 import { get32Pada } from '@/lib/vastu32Devta';
 import { getChoghadiyaData, VEDIC_RASHIS } from '@/lib/choghadiya';
 import { VastuPanel } from '@/components/compass/VastuPanel';
-import { JainPanel } from '@/components/compass/JainPanel';
-import { FengShuiPanel } from '@/components/compass/FengShuiPanel';
-import { JyotishPanel } from '@/components/compass/JyotishPanel';
-import { NumerologyPanel } from '@/components/compass/NumerologyPanel';
 import { VastuEnhancements } from '@/components/compass/VastuEnhancements';
 import { DevtaPadaModal } from '@/components/compass/DevtaPadaModal';
 import { VastuPada32 } from '@/lib/vastu32Devta';
 import { VastuAuditScorecard } from './VastuAuditScorecard';
 
-// Lazy-loaded heavy modals (only fetched when first opened)
+// Lazy-loaded secondary sub-tabs & heavy modals (only fetched when opened)
+const JainPanel = React.lazy(() => import('@/components/compass/JainPanel').then(m => ({ default: m.JainPanel })));
+const FengShuiPanel = React.lazy(() => import('@/components/compass/FengShuiPanel').then(m => ({ default: m.FengShuiPanel })));
+const JyotishPanel = React.lazy(() => import('@/components/compass/JyotishPanel').then(m => ({ default: m.JyotishPanel })));
+const NumerologyPanel = React.lazy(() => import('@/components/compass/NumerologyPanel').then(m => ({ default: m.NumerologyPanel })));
 const ARVastuScanner = React.lazy(() => import('@/components/compass/ARVastuScanner').then(m => ({ default: m.ARVastuScanner })));
 const FloorPlanOverlayModal = React.lazy(() => import('@/components/compass/FloorPlanOverlayModal').then(m => ({ default: m.FloorPlanOverlayModal })));
 const WeatherModal = React.lazy(() => import('@/components/compass/WeatherModal').then(m => ({ default: m.WeatherModal })));
@@ -72,10 +72,18 @@ interface Props {
   weather?: any;
   location?: any;
   declination?: number;
+  useTrueNorth?: boolean;
+  onRecenter?: () => void;
   triggerHaptic: () => void;
   onCopyCoordinates?: () => void;
   onToggleTorch?: () => void;
   isTorchOn?: boolean;
+  isHeadingLocked?: boolean;
+  onToggleHeadingLock?: () => void;
+  activeSubTab?: VastuSubTab;
+  onSubTabChange?: (tab: VastuSubTab) => void;
+  openARScannerSignal?: number;
+  openFloorPlanSignal?: number;
 }
 
 export type VastuSubTab = 'vastu' | 'jyotish' | 'numerology' | 'sadhana' | 'feng_shui' | 'qibla';
@@ -108,10 +116,18 @@ export const VastuOthersView: React.FC<Props> = ({
   weather,
   location,
   declination = -0.2,
+  useTrueNorth = true,
+  onRecenter,
   triggerHaptic,
   onCopyCoordinates = () => {},
   onToggleTorch = () => {},
-  isTorchOn = false
+  isTorchOn = false,
+  isHeadingLocked = false,
+  onToggleHeadingLock,
+  activeSubTab,
+  onSubTabChange,
+  openARScannerSignal,
+  openFloorPlanSignal,
 }) => {
   const { language } = useLanguage();
   const { theme } = useTheme();
@@ -122,12 +138,20 @@ export const VastuOthersView: React.FC<Props> = ({
 
   // Active Sub-tab (Vastu | Jyotish | Numerology | Sadhana | Feng Shui | Qibla)
   const [activeTab, setActiveTab] = useState<VastuSubTab>(() => {
+    if (activeSubTab) return activeSubTab;
     try {
       const saved = localStorage.getItem(VASTU_TAB_STORAGE_KEY);
       if (saved === 'vastu' || saved === 'jyotish' || saved === 'numerology' || saved === 'sadhana' || saved === 'feng_shui' || saved === 'qibla') return saved;
     } catch {}
     return 'vastu';
   });
+
+  // Sync external tab navigation
+  useEffect(() => {
+    if (activeSubTab && activeSubTab !== activeTab) {
+      setActiveTab(activeSubTab);
+    }
+  }, [activeSubTab]);
 
   // Reverse Finder Activity (ONLY for VASTU)
   const [targetActivity, setTargetActivity] = useState<string>('study');
@@ -218,6 +242,19 @@ export const VastuOthersView: React.FC<Props> = ({
     try { localStorage.setItem('com.spiritual.compass.app_saved_rooms', JSON.stringify(savedRooms)); } catch {}
   }, [savedRooms]);
 
+  // Handle external signals from FeatureExplorer
+  useEffect(() => {
+    if (openARScannerSignal && openARScannerSignal > 0) {
+      setShowARScanner(true);
+    }
+  }, [openARScannerSignal]);
+
+  useEffect(() => {
+    if (openFloorPlanSignal && openFloorPlanSignal > 0) {
+      setShowFloorPlan(true);
+    }
+  }, [openFloorPlanSignal]);
+
   const reduceToSingle = (n: number): number => {
     let sum = n;
     while (sum > 9) {
@@ -282,25 +319,28 @@ export const VastuOthersView: React.FC<Props> = ({
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distanceKm = Math.round(R * c);
 
-    const headingDiff = Math.abs(((currentHeading || 0) - qiblaBearing + 540) % 360 - 180);
-    const isFacingQibla = headingDiff < 4;
+    const rawH = currentHeading || 0;
+    const trueH = useTrueNorth ? rawH : ((rawH + declination) % 360 + 360) % 360;
+    const headingDiff = Math.abs(((trueH - qiblaBearing + 540) % 360) - 180);
+    const isFacingQibla = headingDiff <= 3.5;
 
     return { qiblaBearing: Math.round(qiblaBearing), distanceKm, isFacingQibla };
-  }, [location, currentHeading]);
+  }, [location, currentHeading, useTrueNorth, declination]);
 
   // Display Heading & Tilts
-  const displayDeg = currentHeading !== null ? Math.round(((currentHeading % 360) + 360) % 360) : 0;
+  const normHeading = currentHeading !== null ? ((currentHeading % 360) + 360) % 360 : 0;
+  const displayDeg = currentHeading !== null ? Math.round(normHeading) % 360 : 0;
   const totalTilt = Math.sqrt(pitch * pitch + roll * roll);
 
   // Live Zone & Pada
   const liveZone = useMemo(() => {
     return VASTU_16_ZONES.find(z => {
       if (z.code === 'N') {
-        return displayDeg >= 348.75 || displayDeg < 11.25;
+        return normHeading >= 348.75 || normHeading < 11.25;
       }
-      return displayDeg >= z.startDeg && displayDeg < z.endDeg;
+      return normHeading >= z.startDeg && normHeading < z.endDeg;
     }) || VASTU_16_ZONES[0];
-  }, [displayDeg]);
+  }, [normHeading]);
 
   const livePada = useMemo(() => get32Pada(currentHeading), [currentHeading]);
   const analyzerPada = useMemo(() => get32Pada(analyzerDegrees), [analyzerDegrees]);
@@ -540,31 +580,63 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {/* 1. THE 6 SUB-TABS (Vastu | Jyotish | Numerology | Sadhana | Feng Shui | Qibla) */}
       {/* ========================================================================= */}
+      <div className="w-full max-w-sm flex items-center justify-between px-1 mb-1 text-[9.5px] font-black uppercase tracking-wider">
+        <span className={theme === 'light' ? 'text-stone-700' : 'text-stone-300'}>
+          {language === 'hi' ? '6 आध्यात्मिक व ज्योतिष विधाएं' : '6 SPIRITUAL & ASTRO SUITES'}
+        </span>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => {
+              setShowARScanner(true);
+              triggerHaptic();
+            }}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-500/15 text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 active:scale-95 transition-all text-[9px] font-bold"
+            title="AR Vastu Camera"
+          >
+            <Camera className="w-3 h-3 text-purple-400" />
+            <span>AR Vastu</span>
+          </button>
+          <button
+            onClick={() => {
+              setShowFloorPlan(true);
+              triggerHaptic();
+            }}
+            className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25 active:scale-95 transition-all text-[9px] font-bold"
+            title="Floor Plan Blueprint"
+          >
+            <Layers className="w-3 h-3 text-cyan-400" />
+            <span>{language === 'hi' ? 'नक्शा' : 'Blueprint'}</span>
+          </button>
+        </div>
+      </div>
+
       <div 
         className="w-full max-w-sm flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1 touch-pan-x"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {[
-          { id: 'vastu', label: language === 'hi' ? 'वास्तु' : 'Vastu', icon: '✨', activeBg: 'bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.4)]' },
-          { id: 'jyotish', label: language === 'hi' ? 'ज्योतिष' : 'Jyotish', icon: '⭐', activeBg: 'bg-purple-600 text-white border-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.4)]' },
-          { id: 'numerology', label: language === 'hi' ? 'अंक शास्त्र' : 'Numerology', icon: '#', activeBg: 'bg-cyan-500 text-stone-950 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.4)]' },
-          { id: 'sadhana', label: language === 'hi' ? 'साधना' : 'Sadhana', icon: '⊙', activeBg: 'bg-orange-500 text-white border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.4)]' },
-          { id: 'feng_shui', label: language === 'hi' ? 'फेंग शुई' : 'Feng Shui', icon: '🧭', activeBg: 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)]' },
-          { id: 'qibla', label: language === 'hi' ? 'किबला' : 'Qibla', icon: '↗', activeBg: 'bg-teal-600 text-white border-teal-400 shadow-[0_0_12px_rgba(13,148,136,0.4)]' }
+          { id: 'vastu', label: language === 'hi' ? 'वास्तु' : 'Vastu', icon: '✨', activeBg: 'bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.5)]', inactiveLight: 'bg-amber-50 text-amber-900 border-amber-200', inactiveDark: 'bg-amber-500/10 text-amber-300 border-amber-500/25' },
+          { id: 'jyotish', label: language === 'hi' ? 'ज्योतिष' : 'Jyotish', icon: '⭐', activeBg: 'bg-purple-600 text-white border-purple-400 shadow-[0_0_14px_rgba(168,85,247,0.5)]', inactiveLight: 'bg-purple-50 text-purple-900 border-purple-200', inactiveDark: 'bg-purple-500/10 text-purple-300 border-purple-500/25' },
+          { id: 'numerology', label: language === 'hi' ? 'अंक शास्त्र' : 'Numerology', icon: '#', activeBg: 'bg-cyan-500 text-stone-950 border-cyan-400 shadow-[0_0_14px_rgba(6,182,212,0.5)]', inactiveLight: 'bg-cyan-50 text-cyan-900 border-cyan-200', inactiveDark: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25' },
+          { id: 'sadhana', label: language === 'hi' ? 'साधना' : 'Sadhana', icon: '⊙', activeBg: 'bg-orange-500 text-white border-orange-400 shadow-[0_0_14px_rgba(249,115,22,0.5)]', inactiveLight: 'bg-orange-50 text-orange-900 border-orange-200', inactiveDark: 'bg-orange-500/10 text-orange-300 border-orange-500/25' },
+          { id: 'feng_shui', label: language === 'hi' ? 'फेंग शुई' : 'Feng Shui', icon: '🧭', activeBg: 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.5)]', inactiveLight: 'bg-emerald-50 text-emerald-900 border-emerald-200', inactiveDark: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' },
+          { id: 'qibla', label: language === 'hi' ? 'किबला' : 'Qibla', icon: '↗', activeBg: 'bg-teal-600 text-white border-teal-400 shadow-[0_0_14px_rgba(13,148,136,0.5)]', inactiveLight: 'bg-teal-50 text-teal-900 border-teal-200', inactiveDark: 'bg-teal-500/10 text-teal-300 border-teal-500/25' }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => {
-                setActiveTab(tab.id as VastuSubTab);
+                const newTab = tab.id as VastuSubTab;
+                setActiveTab(newTab);
+                onSubTabChange?.(newTab);
                 triggerHaptic();
               }}
               className={cn(
                 "px-3.5 py-1.5 rounded-full text-[11px] font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 shadow-sm active:scale-95",
                 isActive
                   ? `${tab.activeBg} scale-[1.03]`
-                  : (theme === 'light' ? "bg-white text-stone-600 border-stone-300 hover:text-stone-900 hover:border-stone-400" : "bg-stone-950/80 text-stone-400 border-white/10 hover:text-white hover:border-white/25")
+                  : (theme === 'light' ? `${tab.inactiveLight} hover:scale-[1.02]` : `${tab.inactiveDark} hover:scale-[1.02]`)
               )}
             >
               <span className="text-xs">{tab.icon}</span>
@@ -591,6 +663,15 @@ export const VastuOthersView: React.FC<Props> = ({
           isFacingQibla={qiblaData?.isFacingQibla ?? false}
           vastuGridEnabled={true}
           isLevel={isLevel}
+          declination={declination}
+          useTrueNorth={useTrueNorth}
+          needleTracksNorth={false}
+          isFrozen={isHeadingLocked}
+          onSelectPada={(pada) => {
+            triggerHaptic();
+            setSelectedPadaModal(pada);
+          }}
+          onRecenter={onRecenter}
           dialRef={effectiveDialRef}
           customAccentColor={customAccentColor}
           variantId={variantId}
@@ -598,6 +679,31 @@ export const VastuOthersView: React.FC<Props> = ({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
         />
+
+        {/* Quick Hold / Freeze Reading Pill directly below Vastu Dial */}
+        {onToggleHeadingLock && (
+          <div className="flex items-center justify-center gap-2 mt-1">
+            <button
+              onClick={onToggleHeadingLock}
+              className={cn(
+                "px-3.5 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md",
+                isHeadingLocked
+                  ? "bg-amber-500 text-stone-950 border-amber-300 shadow-[0_0_16px_rgba(245,158,11,0.55)]"
+                  : theme === 'light'
+                    ? "bg-white/95 text-stone-800 border-stone-300 hover:border-amber-400"
+                    : "bg-stone-900/90 text-stone-200 border-white/15 hover:border-amber-500/40"
+              )}
+              title={language === 'hi' ? 'वास्तु रीडिंग पढ़ने के लिए दिशा स्थिर करें (Hold / Freeze)' : 'Hold / Freeze compass reading while inspecting Vastu remedies'}
+            >
+              <Lock className={cn("w-3.5 h-3.5", isHeadingLocked ? "text-stone-950" : "text-amber-400")} />
+              <span>
+                {isHeadingLocked
+                  ? (language === 'hi' ? `लॉक: ${displayDeg}° (${livePada.code})` : `HELD: ${displayDeg}° (${livePada.code})`)
+                  : (language === 'hi' ? 'रीडिंग होल्ड करें' : 'HOLD READING')}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Crimson Quick Dashboard Card */}
@@ -630,10 +736,10 @@ export const VastuOthersView: React.FC<Props> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            <button onClick={onCopyCoordinates} className={cn(
+            <button onClick={() => { setShowARScanner(true); triggerHaptic(); }} className={cn(
               "w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm",
               theme === 'light' ? "bg-amber-100 border-amber-400 text-amber-800" : "bg-amber-500/20 border-amber-500/40 text-amber-300"
-            )}>
+            )} title={language === 'hi' ? 'लाइव AR वास्तु स्कैनर' : 'Open AR Vastu Scanner'}>
               <Camera className={cn("w-4 h-4", theme === 'light' ? "text-amber-700" : "text-amber-400")} />
             </button>
             <button onClick={onToggleTorch} className={cn("w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm", isTorchOn ? "bg-emerald-500 text-stone-950 border-emerald-400" : (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"))}>
@@ -745,6 +851,64 @@ export const VastuOthersView: React.FC<Props> = ({
         <p className={cn("text-[11px] leading-relaxed", theme === 'light' ? "text-emerald-800" : "text-stone-300")}>
           {language === 'hi' ? 'इसके लिए आदर्श:' : 'Ideal for:'} {liveHeadingAdvice.idealFor}. {language === 'hi' ? 'इससे बचें:' : 'Avoid for:'} {liveHeadingAdvice.avoidFor}.
         </p>
+
+        {/* 32-Pada Main Entrance (Mukhya Dwar) Auspiciousness Finder Banner */}
+        {(() => {
+          const SUPREME_ENTRANCE_PADAS = ['N3', 'N4', 'E3', 'E4', 'S4', 'W3', 'W4', 'W5'];
+          const SEVERE_ENTRANCE_PADAS = ['S5', 'S6', 'S7', 'S8', 'W1', 'W2', 'E1', 'E8', 'N1', 'N8'];
+          const isBestEntrance = SUPREME_ENTRANCE_PADAS.includes(livePada.code);
+          const isSevereEntrance = SEVERE_ENTRANCE_PADAS.includes(livePada.code);
+          return (
+            <div
+              onClick={() => {
+                triggerHaptic();
+                setSelectedPadaModal(livePada);
+              }}
+              className={cn(
+                "mt-1.5 p-2.5 rounded-2xl border cursor-pointer transition-all active:scale-[0.99] flex flex-col gap-1",
+                isBestEntrance
+                  ? (theme === 'light' ? "bg-emerald-100/90 border-emerald-400 text-emerald-950" : "bg-emerald-500/15 border-emerald-400/50 text-emerald-100")
+                  : isSevereEntrance
+                  ? (theme === 'light' ? "bg-rose-50 border-rose-300 text-rose-950" : "bg-rose-950/50 border-rose-500/40 text-rose-100")
+                  : (theme === 'light' ? "bg-amber-50 border-amber-300 text-amber-950" : "bg-amber-500/10 border-amber-500/35 text-amber-100")
+              )}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                  <span>🚪</span>
+                  <span>
+                    {language === 'hi'
+                      ? `मुख्य द्वार निर्णय: ${livePada.code} (${livePada.nameHi})`
+                      : `Main Door Verdict: ${livePada.code} (${livePada.nameEn})`}
+                  </span>
+                </span>
+                <span className={cn(
+                  "px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase shrink-0",
+                  isBestEntrance
+                    ? "bg-emerald-500 text-stone-950 shadow-sm"
+                    : isSevereEntrance
+                    ? "bg-rose-600 text-white"
+                    : "bg-amber-500 text-stone-950"
+                )}>
+                  {isBestEntrance
+                    ? (language === 'hi' ? '✓ सर्वोच्च शुभ द्वार' : '✓ SUPREME ENTRANCE')
+                    : isSevereEntrance
+                    ? (language === 'hi' ? '⚠ वर्जित द्वार (उपाय करें)' : '⚠ AVOID / REMEDY')
+                    : (language === 'hi' ? 'सामान्य द्वार' : 'MODERATE DOOR')}
+                </span>
+              </div>
+              <p className="text-[10.5px] leading-snug opacity-90">
+                {isBestEntrance
+                  ? (language === 'hi'
+                      ? `32-पद वास्तु के अनुसार ${livePada.code} (${livePada.nameHi}) मुख्य प्रवेश द्वार के लिए 8 सर्वश्रेष्ठ शुभ पदों में से एक है।`
+                      : `Per 32-Pada Vastu, ${livePada.code} (${livePada.nameEn}) is one of the 8 Supreme Auspicious Main Entrance Padas (${SUPREME_ENTRANCE_PADAS.join(', ')}).`)
+                  : (language === 'hi'
+                      ? `सर्वश्रेष्ठ मुख्य द्वार पद: N3, N4, E3, E4, S4, W3, W4, W5। प्रभाव: ${livePada.resultHi}। उपाय: चौखट पर तांबे/पीतल की पट्टी या स्वस्तिक लगाएं।`
+                      : `Supreme Main Door Padas: N3, N4, E3, E4, S4, W3, W4, W5. Effect: ${livePada.resultEn}. Remedy: Apply brass/copper threshold strip or Swastika.`)}
+              </p>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ========================================================================= */}
@@ -963,13 +1127,15 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {activeTab === 'jyotish' && (
         <div className="w-full flex flex-col gap-3">
-          <JyotishPanel
-            language={language}
-            theme={theme}
-            jyotishRashi={jyotishRashi}
-            setJyotishRashi={setJyotishRashi}
-            onHaptic={triggerHaptic}
-          />
+          <React.Suspense fallback={null}>
+            <JyotishPanel
+              language={language}
+              theme={theme}
+              jyotishRashi={jyotishRashi}
+              setJyotishRashi={setJyotishRashi}
+              onHaptic={triggerHaptic}
+            />
+          </React.Suspense>
         </div>
       )}
 
@@ -978,25 +1144,27 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {activeTab === 'numerology' && (
         <div className="w-full flex flex-col gap-3">
-          <NumerologyPanel
-            language={language}
-            theme={theme}
-            numerologyDob={numerologyDob}
-            setNumerologyDob={setNumerologyDob}
-            mulank={numerologyFromDob.mulank}
-            numerologyNumber={numerologyFromDob.bhagyank}
-            loShuGrid={numerologyFromDob.loShuCounts}
-            numerologyPhone={numerologyPhone}
-            setNumerologyPhone={setNumerologyPhone}
-            phoneTotal={phoneTotal}
-            numerologyHouse={numerologyHouse}
-            setNumerologyHouse={setNumerologyHouse}
-            houseTotal={houseTotal}
-            numerologyVehicle={numerologyVehicle}
-            setNumerologyVehicle={setNumerologyVehicle}
-            vehicleTotal={vehicleTotal}
-            onHaptic={triggerHaptic}
-          />
+          <React.Suspense fallback={null}>
+            <NumerologyPanel
+              language={language}
+              theme={theme}
+              numerologyDob={numerologyDob}
+              setNumerologyDob={setNumerologyDob}
+              mulank={numerologyFromDob.mulank}
+              numerologyNumber={numerologyFromDob.bhagyank}
+              loShuGrid={numerologyFromDob.loShuCounts}
+              numerologyPhone={numerologyPhone}
+              setNumerologyPhone={setNumerologyPhone}
+              phoneTotal={phoneTotal}
+              numerologyHouse={numerologyHouse}
+              setNumerologyHouse={setNumerologyHouse}
+              houseTotal={houseTotal}
+              numerologyVehicle={numerologyVehicle}
+              setNumerologyVehicle={setNumerologyVehicle}
+              vehicleTotal={vehicleTotal}
+              onHaptic={triggerHaptic}
+            />
+          </React.Suspense>
         </div>
       )}
 
@@ -1005,18 +1173,20 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {activeTab === 'sadhana' && (
         <div className="w-full flex flex-col gap-3">
-          <JainPanel
-            language={language}
-            theme={theme}
-            jaapCount={japaCount}
-            incrementJaap={() => { setJapaCount(prev => (prev + 1) % 109); triggerHaptic(); }}
-            resetJaap={() => { setJapaCount(0); triggerHaptic(); }}
-            jainActivity={jainActivity}
-            setJainActivity={setJainActivity}
-            checklist={jainChecklist}
-            toggleChecklistItem={(key) => { setJainChecklist(prev => ({ ...prev, [key]: !prev[key] })); triggerHaptic(); }}
-            onHaptic={triggerHaptic}
-          />
+          <React.Suspense fallback={null}>
+            <JainPanel
+              language={language}
+              theme={theme}
+              jaapCount={japaCount}
+              incrementJaap={() => { setJapaCount(prev => (prev + 1) % 109); triggerHaptic(); }}
+              resetJaap={() => { setJapaCount(0); triggerHaptic(); }}
+              jainActivity={jainActivity}
+              setJainActivity={setJainActivity}
+              checklist={jainChecklist}
+              toggleChecklistItem={(key) => { setJainChecklist(prev => ({ ...prev, [key]: !prev[key] })); triggerHaptic(); }}
+              onHaptic={triggerHaptic}
+            />
+          </React.Suspense>
         </div>
       )}
 
@@ -1025,12 +1195,14 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* ========================================================================= */}
       {activeTab === 'feng_shui' && (
         <div className="w-full flex flex-col gap-3">
-          <FengShuiPanel
-            language={language}
-            theme={theme}
-            fengshuiDoor={fengshuiDoor}
-            setFengshuiDoor={setFengshuiDoor}
-          />
+          <React.Suspense fallback={null}>
+            <FengShuiPanel
+              language={language}
+              theme={theme}
+              fengshuiDoor={fengshuiDoor}
+              setFengshuiDoor={setFengshuiDoor}
+            />
+          </React.Suspense>
         </div>
       )}
 

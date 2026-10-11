@@ -18,9 +18,7 @@ export type CompassStyleId =
   | 'satellite_earth'
   | 'sandalwood'
   | 'royal_gold'
-  | 'cyberpunk'
-  | 'vedic_mandala'
-  | 'cosmic_galaxy';
+  | 'vedic_mandala';
 
 export interface CompassStyleVariant {
   id: string;

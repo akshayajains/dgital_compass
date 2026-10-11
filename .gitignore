@@ -37,3 +37,9 @@ android/app/src/main/assets/capacitor.config.json
 *.aab
 *.apk
 
+# Scratch and build cache
+tsconfig.app.tsbuildinfo
+tmp/
+output/
+network_analysis.*
+social_network_integrated/

@@ -27,24 +27,24 @@
   }
 
   .dark {
-    --background: 220 20% 6%;
-    --foreground: 60 9.1% 97.8%;
-    --card: 220 20% 8%;
-    --card-foreground: 60 9.1% 97.8%;
-    --popover: 220 20% 8%;
-    --popover-foreground: 60 9.1% 97.8%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 88%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 88%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 88%;
     --primary: 38 92% 50%;
     --primary-foreground: 48 96% 89%;
-    --secondary: 220 15% 15%;
-    --secondary-foreground: 60 9.1% 97.8%;
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 65%;
-    --accent: 220 15% 15%;
-    --accent-foreground: 60 9.1% 97.8%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 88%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 62%;
+    --accent: 0 0% 16%;
+    --accent-foreground: 0 0% 88%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
+    --destructive-foreground: 0 0% 88%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
     --ring: 38 92% 50%;
   }
 }
@@ -70,11 +70,11 @@
   }
 
   .dark .surface-readable {
-    @apply border-white/10 bg-slate-950/80 text-slate-50 shadow-[0_12px_32px_rgba(0,0,0,0.32)];
+    @apply border-white/10 bg-neutral-950/80 text-neutral-50 shadow-[0_12px_32px_rgba(0,0,0,0.32)];
   }
 
   .dark .text-muted-readable {
-    @apply text-slate-300;
+    @apply text-neutral-300;
   }
 
   .light .text-muted-readable {

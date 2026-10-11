@@ -34,9 +34,11 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
 }) => {
   const [internalMode, setInternalMode] = useState<'satellite' | 'map'>(mode === 'map' ? 'map' : 'satellite');
   const displayHeading = heading !== null ? ((heading % 360) + 360) % 360 : 0;
-  const city = location?.city ? `${location.city}${location.state ? `, ${location.state}` : ''}` : 'Los Angeles';
-  const lat = location?.latitude || 34.0522;
-  const lng = location?.longitude || -118.2437;
+  const city = location?.city
+    ? `${location.city}${location.state ? `, ${location.state}` : ''}`
+    : (language === 'hi' ? 'नई दिल्ली, भारत' : 'New Delhi, India');
+  const lat = location?.latitude || 28.6139;
+  const lng = location?.longitude || 77.2090;
   const currentMode = mode === 'map' || mode === 'satellite' ? mode : internalMode;
   const totalTilt = Math.sqrt(pitch * pitch + roll * roll);
   const levelQuality = totalTilt < 1 ? 'LOCKED' : totalTilt < 3 ? 'STABLE' : 'DRIFT';
@@ -146,7 +148,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
 
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-white p-0.5 shadow-[0_4px_12px_rgba(0,0,0,0.8)] flex items-center justify-center cursor-pointer active:scale-90 transition-transform" title="North Heading Indicator">
               <div className="w-full h-full rounded-full bg-[#1A222D] border border-stone-400 flex items-center justify-center relative overflow-hidden">
-                <div className="w-full h-full relative flex items-center justify-center transition-transform duration-200" style={{ transform: `rotate(${-displayHeading}deg)`, willChange: 'transform' }}>
+                <div className="w-full h-full relative flex items-center justify-center" style={{ transform: `rotate(${-displayHeading}deg)`, willChange: 'transform' }}>
                   <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[12px] border-b-red-600 absolute top-1.5 drop-shadow" />
                   <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[12px] border-t-stone-300 absolute bottom-1.5" />
                   <div className="w-2 h-2 rounded-full bg-white z-10 shadow border border-stone-300" />
@@ -184,7 +186,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
         <div className="absolute inset-3.5 rounded-full border border-white/25 pointer-events-none" />
         <div className="absolute inset-6 rounded-full border border-teal-400/30 pointer-events-none" />
 
-        <div className="absolute inset-0 flex items-center justify-center transition-transform duration-200 ease-out pointer-events-none" style={{ transform: `rotate(${-displayHeading}deg)`, willChange: 'transform' }}>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ transform: `rotate(${-displayHeading}deg)`, willChange: 'transform' }}>
           {[...Array(72)].map((_, i) => {
             const deg = i * 5;
             const isMajor = deg % 45 === 0;
@@ -236,7 +238,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
         </div>
 
         <div className="absolute z-20 flex flex-col items-center justify-center pointer-events-none mt-20">
-          <span className="text-xl sm:text-2xl font-black font-sans tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{Math.round(displayHeading)}° {getCardinal(displayHeading)}</span>
+          <span className="text-xl sm:text-2xl font-black font-sans tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{Math.round(displayHeading) % 360}° {getCardinal(displayHeading)}</span>
         </div>
       </div>
 
@@ -251,7 +253,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
               <span className="absolute right-1 text-[7px] font-black text-white leading-none">90°</span>
               <span className="absolute bottom-1 text-[7px] font-black text-white leading-none">180°</span>
               <span className="absolute left-1 text-[7px] font-black text-white leading-none">270°</span>
-              <div className={cn("absolute w-3 h-3 rounded-full shadow-[0_0_8px_currentColor] border border-white transition-transform duration-75", totalTilt < 1 ? "bg-emerald-400 text-emerald-400 shadow-emerald-400" : "bg-red-500 text-red-500 shadow-red-500")} style={{ transform: `translate(${Math.max(-18, Math.min(18, -roll * 1.5))}px, ${Math.max(-18, Math.min(18, -pitch * 1.5))}px)` }} />
+              <div className={cn("absolute w-3 h-3 rounded-full shadow-[0_0_8px_currentColor] border border-white transition-transform duration-75", totalTilt < 1 ? "bg-emerald-400 text-emerald-400 shadow-emerald-400" : "bg-red-500 text-red-500 shadow-red-500")} style={{ transform: `translate(${Math.max(-18, Math.min(18, -roll * 1.5))}px, ${Math.max(-18, Math.min(18, pitch * 1.5))}px)` }} />
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/35 rounded-full pointer-events-none" />
             </div>
           </div>
@@ -265,12 +267,12 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
           </div>
           <div className="w-14 sm:w-16 py-2 px-1 rounded-2xl bg-black/75 border border-white/15 backdrop-blur-md shadow-xl flex flex-col items-center justify-center text-center">
             <span className="text-[7.5px] uppercase font-bold text-amber-400 leading-tight text-center">{copy.trueHeading}</span>
-            <span className="text-xs font-mono font-black text-white mt-1 leading-none">{Math.round(displayHeading)} {getCardinal(displayHeading)}</span>
+            <span className="text-xs font-mono font-black text-white mt-1 leading-none">{Math.round(displayHeading) % 360} {getCardinal(displayHeading)}</span>
           </div>
           <div className="w-14 sm:w-16 py-2 px-1 rounded-2xl bg-black/75 border border-white/15 backdrop-blur-md shadow-xl flex flex-col items-center justify-center text-center">
             <span className="text-[7.5px] uppercase font-bold text-emerald-400 leading-tight text-center">{copy.axis}</span>
-            <span className="text-[9px] font-mono font-black text-white mt-1 leading-none">X {(-roll * 0.1).toFixed(2)}°</span>
-            <span className="text-[9px] font-mono font-black text-white mt-0.5 leading-none">Y {(pitch * 0.1).toFixed(2)}°</span>
+            <span className="text-[9px] font-mono font-black text-white mt-1 leading-none">X {(-roll).toFixed(1)}°</span>
+            <span className="text-[9px] font-mono font-black text-white mt-0.5 leading-none">Y {pitch.toFixed(1)}°</span>
           </div>
         </div>
       </div>

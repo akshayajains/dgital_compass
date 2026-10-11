@@ -8,15 +8,13 @@ interface Props {
   onCenterUser?: () => void;
 }
 
-// Slippy map tile math
-function lon2tile(lon: number, zoom: number) {
-  return Math.floor(((lon + 180) / 360) * Math.pow(2, zoom));
+// Slippy map exact fractional tile math
+function lon2tileExact(lon: number, zoom: number) {
+  return ((lon + 180) / 360) * Math.pow(2, zoom);
 }
-function lat2tile(lat: number, zoom: number) {
-  return Math.floor(
-    ((1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2) *
-      Math.pow(2, zoom)
-  );
+function lat2tileExact(lat: number, zoom: number) {
+  const latRad = (lat * Math.PI) / 180;
+  return ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, zoom);
 }
 
 export const MapCompassView: React.FC<Props> = ({
@@ -35,7 +33,8 @@ export const MapCompassView: React.FC<Props> = ({
   const isDragging = useRef<boolean>(false);
   const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-  const displayDeg = heading !== null ? Math.round(((heading % 360) + 360) % 360) : 0;
+  const normHeading = heading !== null ? ((heading % 360) + 360) % 360 : 0;
+  const displayDeg = heading !== null ? Math.round(normHeading) % 360 : 0;
 
   const handlePointerDown = (e: React.PointerEvent) => {
     isDragging.current = true;
@@ -58,19 +57,27 @@ export const MapCompassView: React.FC<Props> = ({
     setPanOffset({ x: 0, y: 0 });
   };
 
-  // Generate 3x3 tiles around center
-  const centerTileX = lon2tile(lon, zoom);
-  const centerTileY = lat2tile(lat, zoom);
+  // Generate 3x3 tiles around center and compute exact sub-tile pixel offset
+  // so the user's exact GPS coordinate sits at the center of the map view
+  const tileXExact = lon2tileExact(lon, zoom);
+  const tileYExact = lat2tileExact(lat, zoom);
+  const centerTileX = Math.floor(tileXExact);
+  const centerTileY = Math.floor(tileYExact);
+  const subTileOffsetX = (0.5 - (tileXExact - centerTileX)) * 256;
+  const subTileOffsetY = (0.5 - (tileYExact - centerTileY)) * 256;
   const tileRange = [-1, 0, 1];
 
   const getTileUrl = (x: number, y: number, z: number) => {
+    const n = Math.pow(2, z);
+    const wrappedX = ((x % n) + n) % n;
+    const clampedY = Math.max(0, Math.min(n - 1, y));
     switch (mapType) {
       case 'satellite':
-        return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;
+        return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${clampedY}/${wrappedX}`;
       case 'dark':
-        return `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`;
+        return `https://a.basemaps.cartocdn.com/dark_all/${z}/${wrappedX}/${clampedY}.png`;
       default:
-        return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
+        return `https://tile.openstreetmap.org/${z}/${wrappedX}/${clampedY}.png`;
     }
   };
 
@@ -91,77 +98,81 @@ export const MapCompassView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* 1. Map Canvas Container with Optional Heading-Up Rotation */}
-      <div 
-        className="absolute inset-0 flex items-center justify-center transition-transform duration-100 ease-out"
-        style={{
-          transform: headingUp ? `rotate(${-displayDeg}deg)` : undefined
-        }}
-      >
-        {/* Tile Grid Container */}
-        <div 
-          className="relative w-[768px] h-[768px] flex-shrink-0 grid grid-cols-3 grid-rows-3"
-          style={{
-            transform: `translate(${panOffset.x}px, ${panOffset.y}px)`
-          }}
-        >
-          {tileRange.map((dy) =>
-            tileRange.map((dx) => {
-              const tileX = centerTileX + dx;
-              const tileY = centerTileY + dy;
-              return (
-                <div key={`${tileX}-${tileY}-${zoom}`} className="w-[256px] h-[256px] relative overflow-hidden bg-slate-900 border border-white/5">
-                  <img
-                    src={getTileUrl(tileX, tileY, zoom)}
-                    alt=""
-                    className="w-full h-full object-cover select-none pointer-events-none"
-                    loading="lazy"
-                    onError={(e) => {
-                      // Fallback tile on network failure
-                      (e.target as HTMLImageElement).src = 'https://tile.openstreetmap.org/0/0/0.png';
-                    }}
-                  />
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
-      {/* 2. User Center Marker & Cone of Vision (Heading Beam) */}
-      <div 
-        className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+      {/* Unified Pan Wrapper: panning moves both the map and user GPS marker identically in screen space */}
+      <div
+        className="absolute inset-0 flex items-center justify-center"
         style={{
           transform: `translate(${panOffset.x}px, ${panOffset.y}px)`
         }}
       >
-        {/* Field of View Heading Cone */}
+        {/* 1. Map Canvas Container with Optional Heading-Up Rotation around exact GPS point */}
         <div 
-          className="absolute w-44 h-44 -translate-y-22 flex items-center justify-center transition-transform duration-75 ease-out"
+          className="absolute inset-0 flex items-center justify-center"
           style={{
-            transform: `rotate(${headingUp ? 0 : displayDeg}deg)`,
-            transformOrigin: '50% 100%',
+            transform: headingUp ? `rotate(${-normHeading}deg)` : undefined,
             willChange: 'transform'
           }}
         >
-          <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">
-            <defs>
-              <radialGradient id="coneGlow" cx="50%" cy="100%" r="90%">
-                <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.75" />
-                <stop offset="40%" stopColor="#00F0FF" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#00F0FF" stopOpacity="0" />
-              </radialGradient>
-            </defs>
-            <polygon points="50,100 10,0 90,0" fill="url(#coneGlow)" />
-            <line x1="50" y1="100" x2="50" y2="10" stroke="#00F0FF" strokeWidth="1.8" strokeDasharray="3 2" className="drop-shadow-[0_0_8px_#00f0ff]" />
-          </svg>
+          {/* Tile Grid Container shifted by exact sub-tile pixel offset */}
+          <div 
+            className="relative w-[768px] h-[768px] flex-shrink-0 grid grid-cols-3 grid-rows-3"
+            style={{
+              transform: `translate(${subTileOffsetX}px, ${subTileOffsetY}px)`
+            }}
+          >
+            {tileRange.map((dy) =>
+              tileRange.map((dx) => {
+                const tileX = centerTileX + dx;
+                const tileY = centerTileY + dy;
+                return (
+                  <div key={`${tileX}-${tileY}-${zoom}`} className="w-[256px] h-[256px] relative overflow-hidden bg-slate-900 border border-white/5">
+                    <img
+                      src={getTileUrl(tileX, tileY, zoom)}
+                      alt=""
+                      className="w-full h-full object-cover select-none pointer-events-none"
+                      loading="lazy"
+                      onError={(e) => {
+                        // Fallback tile on network failure
+                        (e.target as HTMLImageElement).src = 'https://tile.openstreetmap.org/0/0/0.png';
+                      }}
+                    />
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* User GPS Pin Pulsar */}
-        <div className="relative flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-cyan-400/30 animate-ping absolute" />
-          <div className="w-5 h-5 rounded-full bg-cyan-500 border-2 border-white shadow-[0_0_15px_#00f0ff] flex items-center justify-center">
-            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+        {/* 2. User Center Marker & Cone of Vision (Heading Beam) */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          {/* Field of View Heading Cone (no CSS transition so 359° -> 0° never spins backwards) */}
+          <div 
+            className="absolute w-44 h-44 -translate-y-22 flex items-center justify-center"
+            style={{
+              transform: `rotate(${headingUp ? 0 : normHeading}deg)`,
+              transformOrigin: '50% 100%',
+              willChange: 'transform'
+            }}
+          >
+            <svg className="w-full h-full overflow-visible" viewBox="0 0 100 100">
+              <defs>
+                <radialGradient id="coneGlow" cx="50%" cy="100%" r="90%">
+                  <stop offset="0%" stopColor="#00F0FF" stopOpacity="0.75" />
+                  <stop offset="40%" stopColor="#00F0FF" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#00F0FF" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              <polygon points="50,100 10,0 90,0" fill="url(#coneGlow)" />
+              <line x1="50" y1="100" x2="50" y2="10" stroke="#00F0FF" strokeWidth="1.8" strokeDasharray="3 2" className="drop-shadow-[0_0_8px_#00f0ff]" />
+            </svg>
+          </div>
+
+          {/* User GPS Pin Pulsar */}
+          <div className="relative flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-cyan-400/30 animate-ping absolute" />
+            <div className="w-5 h-5 rounded-full bg-cyan-500 border-2 border-white shadow-[0_0_15px_#00f0ff] flex items-center justify-center">
+              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+            </div>
           </div>
         </div>
       </div>
@@ -171,7 +182,7 @@ export const MapCompassView: React.FC<Props> = ({
         <div className="px-3 py-1.5 rounded-2xl bg-black/70 backdrop-blur-md border border-white/15 text-white flex items-center gap-2 shadow-lg">
           <MapPin className="w-3.5 h-3.5 text-red-500" />
           <span className="text-[11px] font-mono font-bold">
-            {lat.toFixed(4)}°N, {lon.toFixed(4)}°E
+            {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'}, {Math.abs(lon).toFixed(4)}°{lon >= 0 ? 'E' : 'W'}
           </span>
         </div>
 

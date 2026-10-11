@@ -232,15 +232,16 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
     setRoom(selectedRoom);
   }, [selectedRoom]);
 
-  const displayDeg = heading !== null ? Math.round(((heading % 360) + 360) % 360) : 0;
+  const normHeading = heading !== null ? ((heading % 360) + 360) % 360 : 0;
+  const displayDeg = heading !== null ? Math.round(normHeading) % 360 : 0;
 
   // ---- Vastu Suggestion computation ----
   const currentZone = VASTU_16_ZONES.find((z) => {
     if (z.startDeg <= z.endDeg) {
-      return displayDeg >= z.startDeg && displayDeg < z.endDeg;
+      return normHeading >= z.startDeg && normHeading < z.endDeg;
     }
-    // Wrap-around zone (e.g. N: 348-11)
-    return displayDeg >= z.startDeg || displayDeg < z.endDeg;
+    // Wrap-around zone (e.g. N: 348.75-11.25)
+    return normHeading >= z.startDeg || normHeading < z.endDeg;
   }) || VASTU_16_ZONES[0];
 
   const roomConfig = ROOM_VASTU_DATA[room] || ROOM_VASTU_DATA.entrance;
