@@ -234,21 +234,18 @@ export const CompassView = () => {
           if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
             audioCtxRef.current = new AudioContextClass();
           }
-          if (audioCtxRef.current.state === 'suspended') {
+          if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
             audioCtxRef.current.resume().catch(() => {});
           }
         }
       } catch {}
     };
-    window.addEventListener('pointerdown', markInteracted, { passive: true });
-    window.addEventListener('touchstart', markInteracted, { passive: true });
-    window.addEventListener('keydown', markInteracted, { passive: true });
-    window.addEventListener('click', markInteracted, { passive: true });
+    // Attach to real user click/tap gestures to comply with browser autoplay policy
+    window.addEventListener('click', markInteracted, { passive: true, once: true });
+    window.addEventListener('touchend', markInteracted, { passive: true, once: true });
     return () => {
-      window.removeEventListener('pointerdown', markInteracted);
-      window.removeEventListener('touchstart', markInteracted);
-      window.removeEventListener('keydown', markInteracted);
       window.removeEventListener('click', markInteracted);
+      window.removeEventListener('touchend', markInteracted);
     };
   }, []);
 
@@ -2051,27 +2048,7 @@ export const CompassView = () => {
 
                 {/* Right: Accuracy Badge (LOW) + COG + Speed readout in SAME row as LIVE */}
                 <div className="flex items-center gap-1.5 shrink-0 ml-auto">
-                  {location?.accuracy != null ? (
-                    <span className={cn(
-                      "text-[10px] sm:text-[11px] font-black uppercase tracking-wider flex items-center gap-1 px-2 py-1 rounded-xl border shadow-sm shrink-0 leading-none",
-                      location.accuracy <= 15
-                        ? (palette.isLight ? "bg-emerald-100 text-emerald-900 border-emerald-300 font-black" : "bg-emerald-950/60 text-emerald-300 border-emerald-500/40")
-                        : location.accuracy <= 50
-                        ? (palette.isLight ? "bg-amber-100 text-amber-900 border-amber-300 font-black" : "bg-amber-950/60 text-amber-300 border-amber-500/40")
-                        : (palette.isLight ? "bg-rose-100 text-rose-900 border-rose-300 font-black" : "bg-rose-950/60 text-rose-300 border-rose-500/40")
-                    )}>
-                      <Crosshair className="w-3 h-3 shrink-0" />
-                      <span>HIGH ±15m</span>
-                    </span>
-                  ) : (
-                    <span className={cn(
-                      "text-[10px] sm:text-[11px] font-black uppercase tracking-wider flex items-center gap-1 px-2 py-1 rounded-xl border shrink-0 leading-none",
-                      palette.isLight ? "bg-stone-100 border-stone-300 text-stone-700" : "bg-white/5 border-white/10 text-stone-400"
-                    )}>
-                      <Crosshair className="w-3 h-3 shrink-0" />
-                      <span>{locationError === 'ip' ? 'IP LOC' : 'ACC —'}</span>
-                    </span>
-                  )}
+
 
                   {location?.gpsHeading != null && (
                     <button
