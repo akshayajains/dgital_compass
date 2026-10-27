@@ -26,6 +26,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getAppThemePalette } from '@/lib/themePalettes';
 
 export const VASTU_ACTIVITIES = [
   { id: 'study', labelEn: 'Study', labelHi: 'अध्ययन', icon: '📚' },
@@ -46,6 +47,7 @@ import { VastuEnhancements } from '@/components/compass/VastuEnhancements';
 import { DevtaPadaModal } from '@/components/compass/DevtaPadaModal';
 import { VastuPada32 } from '@/lib/vastu32Devta';
 import { VastuAuditScorecard } from './VastuAuditScorecard';
+import { RoomVastuEngine } from './RoomVastuEngine';
 
 // Lazy-loaded secondary sub-tabs & heavy modals (only fetched when opened)
 const JainPanel = React.lazy(() => import('@/components/compass/JainPanel').then(m => ({ default: m.JainPanel })));
@@ -131,6 +133,7 @@ export const VastuOthersView: React.FC<Props> = ({
 }) => {
   const { language } = useLanguage();
   const { theme } = useTheme();
+  const palette = useMemo(() => getAppThemePalette(selectedStyle, variantId), [selectedStyle, variantId]);
   const isHi = language === 'hi';
 
   const fallbackDialRef = React.useRef<HTMLDivElement>(null);
@@ -142,7 +145,9 @@ export const VastuOthersView: React.FC<Props> = ({
     try {
       const saved = localStorage.getItem(VASTU_TAB_STORAGE_KEY);
       if (saved === 'vastu' || saved === 'jyotish' || saved === 'numerology' || saved === 'sadhana' || saved === 'feng_shui' || saved === 'qibla') return saved;
-    } catch {}
+    } catch (e) {
+      console.error('Failed to load Vastu tab preference:', e);
+    }
     return 'vastu';
   });
 
@@ -206,7 +211,9 @@ export const VastuOthersView: React.FC<Props> = ({
     try {
       const saved = localStorage.getItem(VASTU_ROOM_STORAGE_KEY);
       if (saved) return saved;
-    } catch {}
+    } catch (e) {
+      console.error('Failed to load Vastu room preference:', e);
+    }
     return 'entrance';
   });
   const [doorDegree, setDoorDegree] = useState<number>(() => {
@@ -233,13 +240,13 @@ export const VastuOthersView: React.FC<Props> = ({
 
   // Persist Vastu sub-tab + selected room across sessions
   useEffect(() => {
-    try { localStorage.setItem(VASTU_TAB_STORAGE_KEY, activeTab); } catch {}
+    try { localStorage.setItem(VASTU_TAB_STORAGE_KEY, activeTab); } catch (e) { console.error('Failed to save Vastu tab:', e); }
   }, [activeTab]);
   useEffect(() => {
-    try { localStorage.setItem(VASTU_ROOM_STORAGE_KEY, selectedRoom); } catch {}
+    try { localStorage.setItem(VASTU_ROOM_STORAGE_KEY, selectedRoom); } catch (e) { console.error('Failed to save Vastu room:', e); }
   }, [selectedRoom]);
   useEffect(() => {
-    try { localStorage.setItem('com.spiritual.compass.app_saved_rooms', JSON.stringify(savedRooms)); } catch {}
+    try { localStorage.setItem('com.spiritual.compass.app_saved_rooms', JSON.stringify(savedRooms)); } catch (e) { console.error('Failed to save Vastu rooms:', e); }
   }, [savedRooms]);
 
   // Handle external signals from FeatureExplorer
@@ -332,7 +339,23 @@ export const VastuOthersView: React.FC<Props> = ({
   const displayDeg = currentHeading !== null ? Math.round(normHeading) % 360 : 0;
   const totalTilt = Math.sqrt(pitch * pitch + roll * roll);
 
-  // Live Zone & Pada
+  // Live 8-Direction Zone (Primary 8 directions only: N, NE, E, SE, S, SW, W, NW)
+  const live8Zone = useMemo(() => {
+    const CARDINAL_8 = [
+      { code: 'N', nameEn: 'North', nameHi: 'उत्तर' },
+      { code: 'NE', nameEn: 'North-East', nameHi: 'ईशान' },
+      { code: 'E', nameEn: 'East', nameHi: 'पूर्व' },
+      { code: 'SE', nameEn: 'South-East', nameHi: 'आग्नेय' },
+      { code: 'S', nameEn: 'South', nameHi: 'दक्षिण' },
+      { code: 'SW', nameEn: 'South-West', nameHi: 'नैऋत्य' },
+      { code: 'W', nameEn: 'West', nameHi: 'पश्चिम' },
+      { code: 'NW', nameEn: 'North-West', nameHi: 'वायव्य' }
+    ];
+    const octant = Math.round(normHeading / 45) % 8;
+    return CARDINAL_8[octant];
+  }, [normHeading]);
+
+  // Live Zone & Pada (16 sub-zones for internal astrological advice lookup)
   const liveZone = useMemo(() => {
     return VASTU_16_ZONES.find(z => {
       if (z.code === 'N') {
@@ -573,54 +596,71 @@ export const VastuOthersView: React.FC<Props> = ({
 
   return (
     <div className={cn(
-      "w-full max-w-sm flex flex-col items-center select-none pb-14 animate-in fade-in",
-      theme === 'light' ? "text-stone-900" : "text-white"
+      "w-full max-w-xl flex flex-col items-center select-none pb-28 sm:pb-32 animate-in fade-in",
+      palette.isLight ? "text-stone-900" : "text-white"
     )}>
 
       {/* ========================================================================= */}
       {/* 1. THE 6 SUB-TABS (Vastu | Jyotish | Numerology | Sadhana | Feng Shui | Qibla) */}
       {/* ========================================================================= */}
-      <div className="w-full max-w-sm flex items-center justify-between px-1 mb-1 text-[9.5px] font-black uppercase tracking-wider">
-        <span className={theme === 'light' ? 'text-stone-700' : 'text-stone-300'}>
-          {language === 'hi' ? '6 आध्यात्मिक व ज्योतिष विधाएं' : '6 SPIRITUAL & ASTRO SUITES'}
-        </span>
+      <div className="w-full max-w-xl flex items-center justify-between px-1 mb-2">
         <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <span className={cn(
+            "text-[11px] sm:text-[11.5px] font-black uppercase tracking-wider",
+            palette.isLight ? 'text-stone-900 font-extrabold' : 'text-stone-100'
+          )}>
+            {language === 'hi' ? 'वास्तु 6-इन-1 सुइट' : 'VASTU 6-IN-1 SUITE'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => {
               setShowARScanner(true);
               triggerHaptic();
             }}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-purple-500/15 text-purple-400 border border-purple-500/30 hover:bg-purple-500/25 active:scale-95 transition-all text-[9px] font-bold"
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border font-black text-[11px] sm:text-xs tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer",
+              palette.isLight
+                ? "bg-purple-100 text-purple-950 border-purple-300 hover:bg-purple-200 shadow-purple-500/10"
+                : "bg-purple-600/30 text-purple-100 border-purple-400/60 hover:bg-purple-600/40 shadow-[0_0_12px_rgba(168,85,247,0.35)]"
+            )}
             title="AR Vastu Camera"
           >
-            <Camera className="w-3 h-3 text-purple-400" />
-            <span>AR Vastu</span>
+            <Camera className="w-3.5 h-3.5 shrink-0 stroke-[2.5] text-purple-700 dark:text-purple-300" />
+            <span>{language === 'hi' ? 'AR वास्तु' : 'AR Vastu'}</span>
           </button>
           <button
             onClick={() => {
               setShowFloorPlan(true);
               triggerHaptic();
             }}
-            className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/25 active:scale-95 transition-all text-[9px] font-bold"
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border font-black text-[11px] sm:text-xs tracking-wide transition-all shadow-sm active:scale-95 cursor-pointer",
+              palette.isLight
+                ? "bg-cyan-100 text-cyan-950 border-cyan-300 hover:bg-cyan-200 shadow-cyan-500/10"
+                : "bg-cyan-600/30 text-cyan-100 border-cyan-400/60 hover:bg-cyan-600/40 shadow-[0_0_12px_rgba(6,182,212,0.35)]"
+            )}
             title="Floor Plan Blueprint"
           >
-            <Layers className="w-3 h-3 text-cyan-400" />
-            <span>{language === 'hi' ? 'नक्शा' : 'Blueprint'}</span>
+            <Layers className="w-3.5 h-3.5 shrink-0 stroke-[2.5] text-cyan-700 dark:text-cyan-300" />
+            <span>{language === 'hi' ? 'नक्शा Blueprint' : 'Blueprint'}</span>
           </button>
         </div>
       </div>
 
       <div 
-        className="w-full max-w-sm flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1 touch-pan-x"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        className="w-full max-w-xl flex items-center gap-2 overflow-x-auto no-scrollbar py-1 my-1 touch-pan-x overscroll-contain"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+        onTouchMove={(e) => e.stopPropagation()}
       >
         {[
-          { id: 'vastu', label: language === 'hi' ? 'वास्तु' : 'Vastu', icon: '✨', activeBg: 'bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.5)]', inactiveLight: 'bg-amber-50 text-amber-900 border-amber-200', inactiveDark: 'bg-amber-500/10 text-amber-300 border-amber-500/25' },
-          { id: 'jyotish', label: language === 'hi' ? 'ज्योतिष' : 'Jyotish', icon: '⭐', activeBg: 'bg-purple-600 text-white border-purple-400 shadow-[0_0_14px_rgba(168,85,247,0.5)]', inactiveLight: 'bg-purple-50 text-purple-900 border-purple-200', inactiveDark: 'bg-purple-500/10 text-purple-300 border-purple-500/25' },
-          { id: 'numerology', label: language === 'hi' ? 'अंक शास्त्र' : 'Numerology', icon: '#', activeBg: 'bg-cyan-500 text-stone-950 border-cyan-400 shadow-[0_0_14px_rgba(6,182,212,0.5)]', inactiveLight: 'bg-cyan-50 text-cyan-900 border-cyan-200', inactiveDark: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25' },
-          { id: 'sadhana', label: language === 'hi' ? 'साधना' : 'Sadhana', icon: '⊙', activeBg: 'bg-orange-500 text-white border-orange-400 shadow-[0_0_14px_rgba(249,115,22,0.5)]', inactiveLight: 'bg-orange-50 text-orange-900 border-orange-200', inactiveDark: 'bg-orange-500/10 text-orange-300 border-orange-500/25' },
-          { id: 'feng_shui', label: language === 'hi' ? 'फेंग शुई' : 'Feng Shui', icon: '🧭', activeBg: 'bg-emerald-600 text-white border-emerald-400 shadow-[0_0_14px_rgba(16,185,129,0.5)]', inactiveLight: 'bg-emerald-50 text-emerald-900 border-emerald-200', inactiveDark: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' },
-          { id: 'qibla', label: language === 'hi' ? 'किबला' : 'Qibla', icon: '↗', activeBg: 'bg-teal-600 text-white border-teal-400 shadow-[0_0_14px_rgba(13,148,136,0.5)]', inactiveLight: 'bg-teal-50 text-teal-900 border-teal-200', inactiveDark: 'bg-teal-500/10 text-teal-300 border-teal-500/25' }
+          { id: 'vastu', label: language === 'hi' ? 'वास्तु' : 'Vastu', icon: '✨', activeBg: 'bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_14px_rgba(245,158,11,0.5)]', inactiveLight: 'bg-amber-100 text-amber-900 border-amber-300', inactiveDark: 'bg-amber-500/10 text-amber-300 border-amber-500/25' },
+          { id: 'jyotish', label: language === 'hi' ? 'ज्योतिष' : 'Jyotish', icon: '⭐', activeBg: 'bg-purple-600 text-white border-purple-400 shadow-[0_0_14px_rgba(168,85,247,0.5)]', inactiveLight: 'bg-purple-100 text-purple-900 border-purple-300', inactiveDark: 'bg-purple-500/10 text-purple-300 border-purple-500/25' },
+          { id: 'numerology', label: language === 'hi' ? 'अंक शास्त्र' : 'Numerology', icon: '#', activeBg: 'bg-cyan-500 text-stone-950 border-cyan-400 shadow-[0_0_14px_rgba(6,182,212,0.5)]', inactiveLight: 'bg-cyan-100 text-cyan-900 border-cyan-300', inactiveDark: 'bg-cyan-500/10 text-cyan-300 border-cyan-500/25' },
+          { id: 'sadhana', label: language === 'hi' ? 'साधना' : 'Sadhana', icon: '⊙', activeBg: 'bg-orange-500 text-white border-orange-400 shadow-[0_0_14px_rgba(249,115,22,0.5)]', inactiveLight: 'bg-orange-100 text-orange-900 border-orange-300', inactiveDark: 'bg-orange-500/10 text-orange-300 border-orange-500/25' },
+          { id: 'feng_shui', label: language === 'hi' ? 'फेंग शुई' : 'Feng Shui', icon: '🧭', activeBg: 'bg-teal-600 text-white border-teal-400 shadow-[0_0_14px_rgba(13,148,136,0.5)]', inactiveLight: 'bg-teal-100 text-teal-900 border-teal-300', inactiveDark: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/25' },
+          { id: 'qibla', label: language === 'hi' ? 'किबला' : 'Qibla', icon: '↗', activeBg: 'bg-teal-600 text-white border-teal-400 shadow-[0_0_14px_rgba(13,148,136,0.5)]', inactiveLight: 'bg-teal-100 text-teal-900 border-teal-300', inactiveDark: 'bg-teal-500/10 text-teal-300 border-teal-500/25' }
         ].map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -636,7 +676,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 "px-3.5 py-1.5 rounded-full text-[11px] font-black tracking-wider whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1.5 shadow-sm active:scale-95",
                 isActive
                   ? `${tab.activeBg} scale-[1.03]`
-                  : (theme === 'light' ? `${tab.inactiveLight} hover:scale-[1.02]` : `${tab.inactiveDark} hover:scale-[1.02]`)
+                  : (palette.isLight ? `${tab.inactiveLight} hover:scale-[1.02]` : `${tab.inactiveDark} hover:scale-[1.02]`)
               )}
             >
               <span className="text-xs">{tab.icon}</span>
@@ -689,7 +729,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 "px-3.5 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md",
                 isHeadingLocked
                   ? "bg-amber-500 text-stone-950 border-amber-300 shadow-[0_0_16px_rgba(245,158,11,0.55)]"
-                  : theme === 'light'
+                  : palette.isLight
                     ? "bg-white/95 text-stone-800 border-stone-300 hover:border-amber-400"
                     : "bg-stone-900/90 text-stone-200 border-white/15 hover:border-amber-500/40"
               )}
@@ -706,12 +746,11 @@ export const VastuOthersView: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Crimson Quick Dashboard Card */}
+      {/* Vastu Quick Dashboard Card — Matches active dial palette */}
       <div className={cn(
-        "w-full max-w-sm rounded-[28px] p-4 border flex flex-col gap-3 my-2",
-        theme === 'light'
-          ? "border-red-200 bg-gradient-to-b from-[#FFF7F7] via-[#FEF2F2] to-[#FDE8E8] shadow-[0_15px_50px_rgba(0,0,0,0.12)]"
-          : "border-red-900/60 bg-gradient-to-b from-[#18090C] via-[#120608] to-[#0A0304] shadow-[0_15px_50px_rgba(0,0,0,0.95)]"
+        "w-full max-w-xl rounded-[28px] p-4 border flex flex-col gap-3 my-2 transition-all duration-300",
+        palette.telemetryCardBg,
+        palette.telemetryCardBorder
       )}>
         {/* Top Badges & Actions */}
         <div className="w-full flex items-center justify-between">
@@ -720,17 +759,17 @@ export const VastuOthersView: React.FC<Props> = ({
               "text-[9px] font-black uppercase tracking-wider",
               location?.accuracy != null
                 ? location.accuracy <= 15
-                  ? (theme === 'light' ? "text-emerald-700" : "text-emerald-400")
+                  ? (palette.isLight ? "text-teal-700" : "text-emerald-400")
                   : location.accuracy <= 50
-                  ? (theme === 'light' ? "text-amber-700" : "text-amber-400")
+                  ? (palette.isLight ? "text-amber-700" : "text-amber-400")
                   : "text-red-400"
-                : (theme === 'light' ? "text-emerald-700" : "text-emerald-400")
+                : (palette.isLight ? "text-teal-700" : "text-emerald-400")
             )}>
               {location?.accuracy != null
                 ? `${location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±${Math.round(location.accuracy)}m`
                 : 'HIGH ACC'}
             </span>
-            <span className={cn("text-[9px] font-black uppercase tracking-wider", theme === 'light' ? "text-sky-700" : "text-sky-400")}>
+            <span className={cn("text-[9px] font-black uppercase tracking-wider", palette.isLight ? "text-sky-700" : "text-sky-400")}>
               Δ {declination > 0 ? `+${declination}°` : `${declination}°`}
             </span>
           </div>
@@ -738,39 +777,57 @@ export const VastuOthersView: React.FC<Props> = ({
           <div className="flex items-center gap-1.5">
             <button onClick={() => { setShowARScanner(true); triggerHaptic(); }} className={cn(
               "w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm",
-              theme === 'light' ? "bg-amber-100 border-amber-400 text-amber-800" : "bg-amber-500/20 border-amber-500/40 text-amber-300"
+              palette.isLight ? "bg-amber-100 border-amber-400 text-amber-800" : "bg-amber-500/20 border-amber-500/40 text-amber-300"
             )} title={language === 'hi' ? 'लाइव AR वास्तु स्कैनर' : 'Open AR Vastu Scanner'}>
-              <Camera className={cn("w-4 h-4", theme === 'light' ? "text-amber-700" : "text-amber-400")} />
+              <Camera className={cn("w-4 h-4", palette.isLight ? "text-amber-700" : "text-amber-400")} />
             </button>
-            <button onClick={onToggleTorch} className={cn("w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm", isTorchOn ? "bg-emerald-500 text-stone-950 border-emerald-400" : (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"))}>
+            <button onClick={onToggleTorch} className={cn("w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm", isTorchOn ? "bg-emerald-500 text-stone-950 border-emerald-400" : (palette.isLight ? "bg-teal-100 text-teal-800 border-teal-400" : "bg-emerald-950/60 text-emerald-400 border-emerald-500/40"))}>
               <Zap className="w-4 h-4" />
             </button>
             <button onClick={onCopyCoordinates} className={cn(
               "w-8 h-8 rounded-full border flex items-center justify-center active:scale-95 transition-all shadow-sm",
-              theme === 'light' ? "bg-white border-stone-300 text-stone-600" : "bg-stone-800/80 border-white/15 text-stone-300"
+              palette.isLight ? "bg-white border-stone-300 text-stone-700" : "bg-stone-800/80 border-white/15 text-stone-300"
             )}>
-              <Copy className={cn("w-4 h-4", theme === 'light' ? "text-stone-600" : "text-stone-300")} />
+              <Copy className={cn("w-4 h-4", palette.isLight ? "text-stone-700" : "text-stone-300")} />
             </button>
           </div>
         </div>
 
-        {/* Big Heading Readout Box: 89° East (E) True North */}
-        <div className="w-full p-2.5 rounded-2xl bg-gradient-to-r from-[#FBF3E8] via-[#EFE2CE] to-[#DCBF9E] text-stone-950 flex items-center justify-between shadow-lg">
-          <span className="text-xl font-black font-serif tracking-tight">
-            {displayDeg}° {language === 'hi' ? liveZone.nameHi.split(' ')[0] : liveZone.nameEn.split(' ')[0]} ({liveZone.code})
-          </span>
-          <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-stone-900/10 border border-stone-800/20 text-stone-900">
-            True North
+        {/* Big Heading Readout Box: 16 Authentic Vastu Zones (e.g. 336° North-North-West (NNW)) */}
+        <div className={cn(
+          "w-full p-2.5 rounded-2xl flex items-center justify-between shadow-md gap-2 border transition-all duration-300",
+          palette.isLight
+            ? "bg-white/80 border-stone-300/80 text-stone-900 shadow-sm"
+            : "bg-black/35 border-white/15 text-white"
+        )}>
+          <div className="flex flex-col text-left min-w-0">
+            <span className={cn("text-lg sm:text-xl font-black font-serif tracking-tight truncate", palette.headingText)}>
+              {displayDeg}° {language === 'hi' ? liveZone.nameHi : liveZone.nameEn} ({liveZone.code})
+            </span>
+            <span className={cn(
+              "text-[10px] font-bold tracking-wider",
+              palette.isLight ? "text-stone-600" : "text-stone-300"
+            )}>
+              {language === 'hi' ? `${liveZone.elementHi} • ${liveZone.deityHi}` : `${liveZone.element} • ${liveZone.deity}`} ({liveZone.startDeg}° - {liveZone.endDeg}°)
+            </span>
+          </div>
+          <span className={cn(
+            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shrink-0 border transition-colors",
+            palette.pillBg,
+            palette.pillBorder,
+            palette.pillUnitText
+          )}>
+            16 ZONES
           </span>
         </div>
 
-        {/* Location & Coordinates (single line to save space) */}
-        <div className="text-center">
-          <div className={cn("text-[11px] font-black uppercase tracking-wider", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
+        {/* Location & Coordinates (single clean line to save space) */}
+        <div className="text-center px-1">
+          <div className={cn("text-[11px] font-black uppercase tracking-wider truncate", palette.isLight ? "text-stone-700" : "text-stone-200")}>
             {location?.city
               ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}${location.state ? `, ${language === 'hi' ? location.state : (location.stateEn || location.state)}` : ''}`
               : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
-            <span className="text-[10px] font-mono font-bold text-stone-500 ml-1.5">
+            <span className={cn("text-[10px] font-mono font-bold ml-1.5", palette.isLight ? "text-stone-600" : "text-stone-400")}>
               • {location ? `${location.latitude.toFixed(4)}°N, ${location.longitude.toFixed(4)}°E` : ''}
             </span>
           </div>
@@ -783,73 +840,73 @@ export const VastuOthersView: React.FC<Props> = ({
               setSelectedPadaModal(livePada);
             }}
             className={cn(
-              "rounded-2xl border px-3 py-2 cursor-pointer transition-all active:scale-95 hover:border-amber-400",
-              theme === 'light' ? "border-stone-200 bg-white shadow-sm" : "border-white/10 bg-black/25"
+              "rounded-2xl border px-3 py-2 cursor-pointer transition-all active:scale-95",
+              palette.isLight ? "border-stone-300/80 bg-white/70 shadow-sm" : "border-white/10 bg-black/25"
             )}
             title="Tap to inspect Devta Pada"
           >
-            <div className={cn("flex items-center justify-between text-[9px] uppercase tracking-[0.18em]", theme === 'light' ? "text-stone-500" : "text-stone-500")}>
+            <div className={cn("flex items-center justify-between text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
               <div className="flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <ShieldCheck className={cn("w-3 h-3", palette.pillUnitText)} />
                 <span>Pada</span>
               </div>
-              <Sparkles className="w-2.5 h-2.5 text-amber-400 opacity-80" />
+              <Sparkles className="w-2.5 h-2.5 opacity-80" />
             </div>
-            <div className={cn("mt-1 text-sm font-black flex items-center justify-between", theme === 'light' ? "text-stone-900" : "text-white")}>
+            <div className={cn("mt-1 text-sm font-black flex items-center justify-between", palette.headingText)}>
               <span>{livePada.code}</span>
-              <span className="text-[10px] font-bold text-amber-400 font-sans">{language === 'hi' ? livePada.nameHi : livePada.nameEn}</span>
+              <span className={cn("text-[10px] font-bold font-sans", palette.pillUnitText)}>{language === 'hi' ? livePada.nameHi : livePada.nameEn}</span>
             </div>
           </div>
-          <div className={cn("rounded-2xl border px-3 py-2", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
-            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", theme === 'light' ? "text-stone-500" : "text-stone-500")}>
-              <Gauge className="w-3 h-3 text-cyan-400" />
+          <div className={cn("rounded-2xl border px-3 py-2", palette.isLight ? "border-stone-300/80 bg-white/70 shadow-sm" : "border-white/10 bg-black/25")}>
+            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+              <Gauge className={cn("w-3 h-3", palette.pillUnitText)} />
               <span>Tilt</span>
             </div>
-            <div className={cn("mt-1 text-sm font-black", theme === 'light' ? "text-stone-900" : "text-white")}>{totalTilt.toFixed(1)}°</div>
+            <div className={cn("mt-1 text-sm font-black", palette.headingText)}>{totalTilt.toFixed(1)}°</div>
           </div>
-          <div className={cn("rounded-2xl border px-3 py-2", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
-            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", theme === 'light' ? "text-stone-500" : "text-stone-500")}>
-              <MapPinned className="w-3 h-3 text-amber-400" />
+          <div className={cn("rounded-2xl border px-3 py-2", palette.isLight ? "border-stone-300/80 bg-white/70 shadow-sm" : "border-white/10 bg-black/25")}>
+            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+              <MapPinned className={cn("w-3 h-3", palette.pillUnitText)} />
               <span>Score</span>
             </div>
-            <div className={cn("mt-1 text-sm font-black", theme === 'light' ? "text-stone-900" : "text-white")}>{houseGridScore}%</div>
+            <div className={cn("mt-1 text-sm font-black", palette.headingText)}>{houseGridScore}%</div>
           </div>
         </div>
 
         {/* Pitch / Roll / Level integrated into bottom of dashboard */}
-        <div className={cn("w-full flex items-center justify-between px-3 py-2 rounded-2xl border", theme === 'light' ? "border-stone-200 bg-white" : "border-white/10 bg-black/25")}>
+        <div className={cn("w-full flex items-center justify-between px-3 py-2 rounded-2xl border", palette.isLight ? "border-stone-300/80 bg-white/70" : "border-white/10 bg-black/25")}>
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] uppercase tracking-[0.18em] text-stone-500">PITCH</span>
-            <span className={cn("text-sm font-black font-mono", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{Math.round(pitch)}°</span>
+            <span className={cn("text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>PITCH</span>
+            <span className={cn("text-sm font-black font-mono", palette.pillUnitText)}>{Math.round(pitch)}°</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] uppercase tracking-[0.18em] text-stone-500">ROLL</span>
-            <span className={cn("text-sm font-black font-mono", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{Math.round(roll)}°</span>
+            <span className={cn("text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>ROLL</span>
+            <span className={cn("text-sm font-black font-mono", palette.pillUnitText)}>{Math.round(roll)}°</span>
           </div>
           <span className={cn(
             "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border tracking-wider",
             isLevel
-              ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.4)]")
-              : (theme === 'light' ? "bg-rose-100 text-rose-700 border-rose-400" : "bg-rose-950/60 text-rose-300 border-rose-500/40")
+              ? (palette.isLight ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.4)]")
+              : (palette.isLight ? "bg-rose-100 text-rose-700 border-rose-400" : "bg-rose-950/60 text-rose-300 border-rose-500/40")
           )}>
             {isLevel ? 'LEVEL' : 'TILT'}
           </span>
         </div>
       </div>
 
+      {/* Live Premium Insight & 32-Pada Main Entrance Banner — Styled to active dial theme palette */}
       <div className={cn(
-        "w-full max-w-sm rounded-[26px] p-4 border flex flex-col gap-2 mb-2",
-        theme === 'light'
-          ? "border-emerald-500/30 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.10),transparent_35%),linear-gradient(180deg,#f0fdf4_0%,#dcfce7_100%)] shadow-[0_15px_40px_rgba(0,0,0,0.12)]"
-          : "border-emerald-500/20 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_35%),linear-gradient(180deg,#07130F_0%,#050806_100%)] shadow-[0_15px_40px_rgba(0,0,0,0.75)]"
+        "w-full max-w-xl rounded-[26px] p-4 border flex flex-col gap-2 mb-2 transition-all duration-300",
+        palette.telemetryCardBg,
+        palette.telemetryCardBorder
       )}>
-        <div className={cn("flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em]", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
+        <div className={cn("flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em]", palette.headingText)}>
           <ScanSearch className="w-3.5 h-3.5" />
           <span>{language === 'hi' ? 'लाइव प्रीमियम इनसाइट' : 'Live Premium Insight'}</span>
         </div>
-        <p className={cn("text-sm font-black", theme === 'light' ? "text-emerald-900" : "text-white")}>{premiumInsight}</p>
-        <p className={cn("text-[11px] leading-relaxed", theme === 'light' ? "text-emerald-800" : "text-stone-300")}>
-          {language === 'hi' ? 'इसके लिए आदर्श:' : 'Ideal for:'} {liveHeadingAdvice.idealFor}. {language === 'hi' ? 'इससे बचें:' : 'Avoid for:'} {liveHeadingAdvice.avoidFor}.
+        <p className={cn("text-sm font-black", palette.headingText)}>{premiumInsight}</p>
+        <p className={cn("text-[11px] leading-relaxed", palette.isLight ? "text-stone-700" : "text-stone-300")}>
+          {language === 'hi' ? 'इसके लिए आदर्श:' : 'Ideal for:'} <span className={palette.pillUnitText}>{liveHeadingAdvice.idealFor}</span>. {language === 'hi' ? 'इससे बचें:' : 'Avoid for:'} <span className={palette.dirText}>{liveHeadingAdvice.avoidFor}</span>.
         </p>
 
         {/* 32-Pada Main Entrance (Mukhya Dwar) Auspiciousness Finder Banner */}
@@ -865,16 +922,14 @@ export const VastuOthersView: React.FC<Props> = ({
                 setSelectedPadaModal(livePada);
               }}
               className={cn(
-                "mt-1.5 p-2.5 rounded-2xl border cursor-pointer transition-all active:scale-[0.99] flex flex-col gap-1",
-                isBestEntrance
-                  ? (theme === 'light' ? "bg-emerald-100/90 border-emerald-400 text-emerald-950" : "bg-emerald-500/15 border-emerald-400/50 text-emerald-100")
-                  : isSevereEntrance
-                  ? (theme === 'light' ? "bg-rose-50 border-rose-300 text-rose-950" : "bg-rose-950/50 border-rose-500/40 text-rose-100")
-                  : (theme === 'light' ? "bg-amber-50 border-amber-300 text-amber-950" : "bg-amber-500/10 border-amber-500/35 text-amber-100")
+                "mt-1.5 p-2.5 rounded-2xl border cursor-pointer transition-all active:scale-[0.99] flex flex-col gap-1 shadow-sm",
+                palette.isLight
+                  ? "bg-white/80 border-stone-300/80 text-stone-900"
+                  : "bg-black/35 border-white/15 text-stone-100"
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                <span className={cn("text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5", palette.headingText)}>
                   <span>🚪</span>
                   <span>
                     {language === 'hi'
@@ -883,12 +938,12 @@ export const VastuOthersView: React.FC<Props> = ({
                   </span>
                 </span>
                 <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase shrink-0",
+                  "px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase shrink-0 border",
                   isBestEntrance
-                    ? "bg-emerald-500 text-stone-950 shadow-sm"
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-black shadow-sm"
                     : isSevereEntrance
-                    ? "bg-rose-600 text-white"
-                    : "bg-amber-500 text-stone-950"
+                    ? "bg-rose-500/20 text-rose-400 border-rose-500/40 font-black"
+                    : `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText} font-black`
                 )}>
                   {isBestEntrance
                     ? (language === 'hi' ? '✓ सर्वोच्च शुभ द्वार' : '✓ SUPREME ENTRANCE')
@@ -897,7 +952,7 @@ export const VastuOthersView: React.FC<Props> = ({
                     : (language === 'hi' ? 'सामान्य द्वार' : 'MODERATE DOOR')}
                 </span>
               </div>
-              <p className="text-[10.5px] leading-snug opacity-90">
+              <p className={cn("text-[10.5px] leading-snug", palette.isLight ? "text-stone-700" : "text-stone-300")}>
                 {isBestEntrance
                   ? (language === 'hi'
                       ? `32-पद वास्तु के अनुसार ${livePada.code} (${livePada.nameHi}) मुख्य प्रवेश द्वार के लिए 8 सर्वश्रेष्ठ शुभ पदों में से एक है।`
@@ -920,12 +975,10 @@ export const VastuOthersView: React.FC<Props> = ({
           <div className={cn(
             "w-full rounded-[26px] p-4 border flex flex-col gap-3 transition-all duration-300 shadow-xl",
             isActivityMatched
-              ? (theme === 'light'
-                  ? "border-emerald-400 bg-gradient-to-br from-emerald-50 via-teal-50 to-white shadow-[0_10px_35px_rgba(16,185,129,0.15)]"
-                  : "border-emerald-500/50 bg-gradient-to-br from-[#062016] via-[#05150e] to-[#020805] shadow-[0_10px_35px_rgba(16,185,129,0.25)]")
-              : (theme === 'light'
-                  ? "border-stone-200 bg-white"
-                  : "border-white/10 bg-stone-950/80")
+              ? (palette.isLight
+                  ? "border-emerald-500/60 bg-emerald-50/80 shadow-[0_10px_35px_rgba(16,185,129,0.15)]"
+                  : "border-emerald-500/50 bg-emerald-950/40 shadow-[0_10px_35px_rgba(16,185,129,0.25)]")
+              : `${palette.telemetryCardBg} ${palette.telemetryCardBorder}`
           )}>
             {/* Top Row: Auspicious Status & Target Degree */}
             <div className="flex items-center justify-between gap-2">
@@ -936,28 +989,41 @@ export const VastuOthersView: React.FC<Props> = ({
                     {language === 'hi' ? '⭐ सर्वोत्तम दिशा सुमेलित' : '⭐ BEST DIRECTION MATCH'}
                   </span>
                 ) : isAuspiciousDirection ? (
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/20 border border-amber-500/50 text-amber-300">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                  <span className={cn(
+                    "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                    palette.pillBg,
+                    palette.pillBorder,
+                    palette.pillUnitText
+                  )}>
+                    <Sparkles className="w-3 h-3" />
                     {language === 'hi' ? `शुभ वास्तु क्षेत्र (${liveZone.code})` : `AUSPICIOUS ZONE (${liveZone.code})`}
                   </span>
                 ) : (
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-stone-800 border border-stone-700 text-stone-300">
+                  <span className={cn(
+                    "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                    palette.isLight ? "bg-white/60 border-stone-300 text-stone-700" : "bg-black/40 border-white/10 text-stone-300"
+                  )}>
                     {language === 'hi' ? `दिशा क्षेत्र: ${liveZone.code}` : `ZONE: ${liveZone.code}`}
                   </span>
                 )}
               </div>
 
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 text-[10px] font-mono font-bold">
+              <div className={cn(
+                "flex items-center gap-1 px-2.5 py-1 rounded-xl border text-[10px] font-mono font-bold",
+                palette.pillBg,
+                palette.pillBorder,
+                palette.pillUnitText
+              )}>
                 <span>{language === 'hi' ? 'लक्ष्य' : 'Target'}:</span>
-                <span className="font-black text-cyan-300">{Math.round(activityDirections.targetDeg)}°</span>
+                <span className="font-black">{Math.round(activityDirections.targetDeg)}°</span>
               </div>
             </div>
 
             {/* Quick Activity Selector Chips */}
             <div className="w-full flex flex-col gap-1.5">
-              <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-widest text-stone-400">
+              <div className={cn("flex items-center justify-between text-[9px] font-black uppercase tracking-widest", palette.isLight ? "text-stone-600" : "text-stone-400")}>
                 <span>{language === 'hi' ? 'उद्देश्य अनुसार दिशा जांचें' : 'Check Alignment For:'}</span>
-                <span className="text-amber-400 font-bold">{activityDirections.title}</span>
+                <span className={cn("font-bold", palette.headingText)}>{activityDirections.title}</span>
               </div>
               <div className="w-full flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                 {VASTU_ACTIVITIES.map(act => {
@@ -972,10 +1038,10 @@ export const VastuOthersView: React.FC<Props> = ({
                       className={cn(
                         "px-2.5 py-1 rounded-xl text-[10px] font-black whitespace-nowrap flex items-center gap-1 transition-all active:scale-95 shrink-0 border",
                         isSelected
-                          ? "bg-amber-500 text-stone-950 border-amber-400 shadow-md font-extrabold"
-                          : (theme === 'light'
-                              ? "bg-stone-100 border-stone-200 text-stone-700 hover:bg-stone-200"
-                              : "bg-stone-900 border-white/10 text-stone-300 hover:bg-stone-800")
+                          ? `${palette.pillBg} ${palette.pillBorder} ${palette.headingText} font-extrabold shadow-md scale-[1.02]`
+                          : (palette.isLight
+                              ? "bg-white/70 border-stone-300 text-stone-700 hover:bg-white"
+                              : "bg-black/35 border-white/10 text-stone-300 hover:bg-black/50")
                       )}
                     >
                       <span>{act.icon}</span>
@@ -990,10 +1056,10 @@ export const VastuOthersView: React.FC<Props> = ({
             <div className={cn(
               "w-full rounded-2xl p-3 border text-xs flex flex-col gap-2 shadow-md transition-all duration-300",
               isActivityMatched
-                ? (theme === 'light'
+                ? (palette.isLight
                     ? "border-emerald-300 bg-emerald-100/70 text-emerald-950 shadow-[0_0_20px_rgba(16,185,129,0.25)]"
                     : "border-emerald-500/40 bg-emerald-950/60 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.35)]")
-                : (theme === 'light' ? "border-stone-200 bg-stone-50 text-stone-800" : "border-white/10 bg-white/5 text-stone-200")
+                : (palette.isLight ? "border-stone-300/80 bg-white/70 text-stone-900" : "border-white/10 bg-black/30 text-stone-200")
             )}>
               <div className="flex items-center justify-between font-bold">
                 <span className="flex items-center gap-1.5">
@@ -1052,10 +1118,26 @@ export const VastuOthersView: React.FC<Props> = ({
               </div>
             </div>
           </div>
+
+          {/* Instant Room-by-Room Vastu Verdict & Remedy Engine */}
+          <RoomVastuEngine
+            currentHeading={currentHeading}
+            language={language}
+            theme={theme}
+            selectedStyle={selectedStyle}
+            variantId={variantId}
+            onHaptic={triggerHaptic}
+            onSaveRoomAudit={(audit) => {
+              handleSaveRoom(`${audit.roomName} (${audit.zoneCode})`);
+            }}
+          />
+
           {/* Interactive Vastu Live Audit Scorecard */}
           <VastuAuditScorecard
             language={language}
             theme={theme}
+            selectedStyle={selectedStyle}
+            variantId={variantId}
             currentHeading={currentHeading}
             onHaptic={triggerHaptic}
           />
@@ -1063,6 +1145,8 @@ export const VastuOthersView: React.FC<Props> = ({
           <VastuPanel
             language={language}
             theme={theme}
+            selectedStyle={selectedStyle}
+            variantId={variantId}
             vastuScore={houseGridScore}
             selectedRoom={selectedRoom}
             setSelectedRoom={setSelectedRoom}
@@ -1083,8 +1167,10 @@ export const VastuOthersView: React.FC<Props> = ({
             <button
               onClick={() => { setShowARScanner(true); triggerHaptic(); }}
               className={cn(
-                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all",
-                theme === 'light' ? "bg-white border-amber-400 text-amber-800" : "bg-stone-900 border-amber-500/30 text-amber-300"
+                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
+                palette.pillBg,
+                palette.pillBorder,
+                palette.headingText
               )}
             >
               <Camera className="w-3.5 h-3.5" />
@@ -1093,8 +1179,10 @@ export const VastuOthersView: React.FC<Props> = ({
             <button
               onClick={() => { setShowFloorPlan(true); triggerHaptic(); }}
               className={cn(
-                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all",
-                theme === 'light' ? "bg-white border-amber-400 text-amber-800" : "bg-stone-900 border-amber-500/30 text-amber-300"
+                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
+                palette.pillBg,
+                palette.pillBorder,
+                palette.headingText
               )}
             >
               <Layers className="w-3.5 h-3.5" />
@@ -1103,8 +1191,10 @@ export const VastuOthersView: React.FC<Props> = ({
             <button
               onClick={() => { setShowWeather(true); triggerHaptic(); }}
               className={cn(
-                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all",
-                theme === 'light' ? "bg-white border-amber-400 text-amber-800" : "bg-stone-900 border-amber-500/30 text-amber-300"
+                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
+                palette.pillBg,
+                palette.pillBorder,
+                palette.headingText
               )}
             >
               <Sun className="w-3.5 h-3.5" />
@@ -1116,6 +1206,8 @@ export const VastuOthersView: React.FC<Props> = ({
           <VastuEnhancements
             language={language}
             theme={theme}
+            selectedStyle={selectedStyle}
+            variantId={variantId}
             currentHeading={currentHeading}
             onHaptic={triggerHaptic}
           />
@@ -1217,15 +1309,15 @@ export const VastuOthersView: React.FC<Props> = ({
               ? "border-emerald-900/30 bg-gradient-to-b from-[#ECFDF5] to-[#D1FAE5] shadow-2xl"
               : "border-emerald-900/40 bg-gradient-to-b from-[#0A1E14] to-[#040E0A] shadow-2xl"
           )}>
-            <span className={cn("font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5", theme === 'light' ? "text-emerald-800" : "text-emerald-300")}>
+            <span className={cn("font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5", palette.isLight ? "text-emerald-800" : "text-emerald-300")}>
               <span>↗</span>
               <span>{language === 'hi' ? 'किबला दिशा (मक्का अल-मुकर्रमा)' : 'Qibla Direction (Makkah Al-Mukarramah)'}</span>
             </span>
 
-            <div className={cn("p-3 rounded-2xl border flex flex-col items-center gap-1", theme === 'light' ? "bg-white border-stone-200" : "bg-black/40 border-white/10")}>
-              <span className={cn("text-[10px] uppercase font-bold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>{language === 'hi' ? 'आपके GPS से काबा बेयरिंग:' : 'Kaaba Bearing from Your GPS:'}</span>
-              <span className={cn("text-3xl font-black font-mono", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>{qiblaData ? `${qiblaData.qiblaBearing}°` : '—'}</span>
-              <span className={cn("text-[10.5px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
+            <div className={cn("p-3 rounded-2xl border flex flex-col items-center gap-1", palette.isLight ? "bg-white border-stone-200" : "bg-black/40 border-white/10")}>
+              <span className={cn("text-[10px] uppercase font-bold", palette.isLight ? "text-stone-600" : "text-stone-400")}>{language === 'hi' ? 'आपके GPS से काबा बेयरिंग:' : 'Kaaba Bearing from Your GPS:'}</span>
+              <span className={cn("text-3xl font-black font-mono", palette.isLight ? "text-teal-700" : "text-emerald-400")}>{qiblaData ? `${qiblaData.qiblaBearing}°` : '—'}</span>
+              <span className={cn("text-[10.5px] font-bold", palette.isLight ? "text-stone-600" : "text-stone-300")}>
                 {qiblaData ? (language === 'hi' ? `दूरी: ${qiblaData.distanceKm} किमी` : `Distance: ${qiblaData.distanceKm} km`) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
               </span>
             </div>
@@ -1233,8 +1325,8 @@ export const VastuOthersView: React.FC<Props> = ({
             <div className={cn(
               "p-3 rounded-2xl border flex items-center justify-center gap-2 font-black transition-all",
               qiblaData?.isFacingQibla
-                ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]")
-                : (theme === 'light' ? "bg-white text-stone-600 border-stone-300" : "bg-stone-900 text-stone-400 border-white/10")
+                ? (palette.isLight ? "bg-teal-100 text-teal-800 border-teal-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]")
+                : (palette.isLight ? "bg-white text-stone-700 border-stone-300" : "bg-stone-900 text-stone-400 border-white/10")
             )}>
               <Navigation className="w-4 h-4" />
               <span>{qiblaData ? (qiblaData.isFacingQibla ? (language === 'hi' ? 'काबा की ओर संरेखित ✓' : 'ALIGNED WITH KAABA ✓') : (language === 'hi' ? `किबला की ओर मुड़ने के लिए ${qiblaData.qiblaBearing}° घुमाएं` : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`)) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}</span>
@@ -1247,13 +1339,13 @@ export const VastuOthersView: React.FC<Props> = ({
       {/* 9. CREATOR BRANDING FOOTER CARD (EXACTLY AS IN ALL SCREENSHOTS) */}
       {/* ========================================================================= */}
       <div className={cn(
-        "w-full max-w-sm rounded-[24px] p-4 border shadow-2xl flex flex-col items-center justify-center text-center mt-4",
+        "w-full max-w-xl rounded-[24px] p-4 border shadow-2xl flex flex-col items-center justify-center text-center mt-4",
         theme === 'light'
           ? "bg-gradient-to-r from-[#FEF3C7] via-[#FDE68A] to-[#FCD34D] border-amber-400"
           : "bg-gradient-to-r from-[#181109] via-[#2A180B] to-[#140C04] border-amber-500/40"
       )}>
         <div className="flex items-center gap-2 mb-1">
-          <h4 className={cn("text-sm font-serif font-black tracking-wider uppercase", theme === 'light' ? "text-amber-900" : "text-amber-300")}>
+          <h4 className={cn("text-sm font-serif font-black tracking-wider uppercase", palette.isLight ? "text-amber-900" : "text-amber-300")}>
             BY AADISH JAIN
           </h4>
           <span className="px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-amber-500 text-stone-950 shadow-sm">
@@ -1261,11 +1353,11 @@ export const VastuOthersView: React.FC<Props> = ({
           </span>
         </div>
 
-        <p className={cn("text-[10.5px] font-bold tracking-wide", theme === 'light' ? "text-amber-900" : "text-stone-300")}>
+        <p className={cn("text-[10.5px] font-bold tracking-wide", palette.isLight ? "text-amber-900" : "text-stone-300")}>
           Spiritual & Vastu Guidance Services
         </p>
 
-        <span className={cn("text-[9px] mt-1 flex items-center gap-1 font-bold", theme === 'light' ? "text-amber-800" : "text-stone-400")}>
+        <span className={cn("text-[9px] mt-1 flex items-center gap-1 font-bold", palette.isLight ? "text-amber-700" : "text-stone-400")}>
           <span>Made with</span>
           <span className="text-rose-500">❤️</span>
           <span>for Spiritual Alignment</span>
@@ -1278,7 +1370,7 @@ export const VastuOthersView: React.FC<Props> = ({
           isOpen={showARScanner}
           onClose={() => setShowARScanner(false)}
           heading={currentHeading}
-          directionName={liveZone.code}
+          directionName={live8Zone.code}
           selectedRoom={selectedRoom}
           language={language}
           themeColor={customAccentColor}
@@ -1324,3 +1416,6 @@ export const VastuOthersView: React.FC<Props> = ({
     </div>
   );
 };
+
+export default VastuOthersView;
+

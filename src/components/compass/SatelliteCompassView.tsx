@@ -49,34 +49,23 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
     : { telescope: 'Telescope', satellite: 'Satellite', map: 'Map', heading: 'Heading', level: 'Level', altitude: 'Altitude', sync: 'Sync', fullMap: 'Full Map', maps: 'Maps', magnetic: 'Magnetic Field', trueHeading: 'True Heading', axis: 'Axis', insight: 'Premium Direction Insight', satelliteTip: 'Satellite lock helps validate site orientation before vastu placement.', mapTip: 'Map mode helps compare room intent with real-world alignment.', steady: 'Your device is steady enough for accurate compass, level, and AR vastu readings.', holdFlat: 'Hold flatter for a cleaner lock before finalizing compass or vastu decisions.' };
 
   const getCardinal = (deg: number) => {
-    const val = Math.floor(deg / 22.5 + 0.5);
-    const arr = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-    return arr[val % 16];
+    const val = Math.round(((deg % 360 + 360) % 360) / 45) % 8;
+    const arr = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    return arr[val];
   };
 
   const openGoogleMaps = () => {
-    try { Haptics.impact({ style: ImpactStyle.Light }); } catch {}
+    try { Haptics.impact({ style: ImpactStyle.Light }); } catch (e) { console.error('Haptic feedback failed in SatelliteCompassView:', e); }
     window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
   };
 
   return (
     <div className="w-full flex flex-col items-center select-none relative overflow-hidden rounded-[2.5rem] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.9)] my-2 min-h-[580px] bg-[#04070c]">
       <div className="absolute inset-0 z-0 overflow-hidden">
-        {currentMode === 'satellite' ? (
-          <div
-            className="absolute inset-0 bg-cover bg-center transition-all duration-700 scale-105"
-            style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=1200&q=85'), url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80')`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center 40%'
-            }}
-          />
-        ) : (
-          <MapCompassView heading={heading} location={location} />
-        )}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(34,211,238,0.18),transparent_28%),radial-gradient(circle_at_50%_70%,rgba(239,68,68,0.14),transparent_24%)]" />
-        <div className="absolute inset-0 opacity-30 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:28px_28px]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/80" />
+        <MapCompassView heading={heading} location={location} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(34,211,238,0.18),transparent_28%),radial-gradient(circle_at_50%_70%,rgba(239,68,68,0.14),transparent_24%)] pointer-events-none" />
+        <div className="absolute inset-0 opacity-30 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:28px_28px] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/80 pointer-events-none" />
       </div>
 
       <div className="w-full z-10 pt-4 px-3 flex flex-col items-center gap-3">
@@ -103,7 +92,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
               <button
                 key={tab.id}
                 onClick={() => {
-                  try { Haptics.impact({ style: ImpactStyle.Light }); } catch {}
+                  try { Haptics.impact({ style: ImpactStyle.Light }); } catch (e) { console.error('Haptic feedback failed in SatelliteCompassView tab:', e); }
                   if (tab.id === 'telescope') onOpenAR?.();
                   else if (tab.id === 'map') {
                     setInternalMode('map');
@@ -166,7 +155,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
           { label: copy.altitude, value: `${altitudeFeet || 0} ft`, icon: Mountain, tone: 'text-white' }
         ].map((item) => (
           <div key={item.label} className="rounded-[1.35rem] border border-white/10 bg-black/45 px-3 py-2.5 backdrop-blur-md shadow-xl">
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-stone-400">
+            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-stone-600">
               <item.icon className="w-3.5 h-3.5" />
               <span>{item.label}</span>
             </div>
@@ -304,3 +293,5 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
     </div>
   );
 };
+
+export default SatelliteCompassView;

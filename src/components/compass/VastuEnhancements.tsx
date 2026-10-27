@@ -2,10 +2,14 @@ import { useState, useMemo, memo, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { Share2, Search, AlertTriangle, Clock, Home } from 'lucide-react';
 import { getChoghadiyaData } from '@/lib/choghadiya';
+import { getAppThemePalette } from '@/lib/themePalettes';
+import { CompassStyleId } from '@/types/compass';
 
 interface VastuEnhancementsProps {
   language: string;
   theme: string;
+  selectedStyle?: CompassStyleId;
+  variantId?: string | null;
   currentHeading: number | null;
   onHaptic: () => void;
 }
@@ -46,8 +50,9 @@ const DOSHAS = [
   { zone: 'center', issue: 'heavy', labelHi: 'ब्रह्मस्थान में भारी सामान', labelEn: 'Heavy items in center', severity: 'moderate', remedyHi: 'केंद्र को खाली और हल्का रखें', remedyEn: 'Keep center empty and light' },
 ];
 
-export const VastuEnhancements = memo(({ language, theme, currentHeading, onHaptic }: VastuEnhancementsProps) => {
+export const VastuEnhancements = memo(({ language, theme, selectedStyle, variantId, currentHeading, onHaptic }: VastuEnhancementsProps) => {
   const isHi = language === 'hi';
+  const palette = useMemo(() => getAppThemePalette(selectedStyle, variantId), [selectedStyle, variantId]);
   const [activeSection, setActiveSection] = useState<'zones' | 'lookup' | 'dosha' | 'muhurat'>('zones');
   const [searchActivity, setSearchActivity] = useState<string>('study');
   const [shareMsg, setShareMsg] = useState<string | null>(null);
@@ -92,10 +97,10 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
     <button
       onClick={() => { setActiveSection(id); onHaptic(); }}
       className={cn(
-        "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider flex flex-col items-center gap-1 border transition-all active:scale-95",
+        "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider flex flex-col items-center gap-1 border transition-all active:scale-95 shadow-sm",
         activeSection === id
-          ? (theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-400" : "bg-amber-500/20 text-amber-300 border-amber-500/40")
-          : (theme === 'light' ? "bg-white border-stone-200 text-stone-500" : "bg-stone-900 border-stone-800 text-stone-400")
+          ? `${palette.pillBg} ${palette.pillBorder} ${palette.headingText} font-black shadow-md scale-[1.02]`
+          : (palette.isLight ? "bg-white/70 border-stone-300 text-stone-600 hover:bg-white" : "bg-black/35 border-white/10 text-stone-300 hover:bg-black/50")
       )}
     >
       {icon}
@@ -116,10 +121,12 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
       {/* ── 8-Zone Visual Floor Plan ── */}
       {activeSection === 'zones' && (
         <div className={cn(
-          "rounded-2xl p-4 border transition-colors duration-300",
-          theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
+          "rounded-2xl p-4 border transition-colors duration-300 shadow-md",
+          palette.telemetryCardBg,
+          palette.telemetryCardBorder,
+          palette.isLight ? "text-stone-900" : "text-stone-100"
         )}>
-          <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <Home className="w-3.5 h-3.5 text-amber-400" />
             {isHi ? '8-दिशा वास्तु नक्शा' : '8-Zone Vastu Map'}
           </h5>
@@ -208,10 +215,12 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
       {/* ── Best Direction Quick Lookup ── */}
       {activeSection === 'lookup' && (
         <div className={cn(
-          "rounded-2xl p-4 border transition-colors duration-300",
-          theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
+          "rounded-2xl p-4 border transition-colors duration-300 shadow-md",
+          palette.telemetryCardBg,
+          palette.telemetryCardBorder,
+          palette.isLight ? "text-stone-900" : "text-stone-100"
         )}>
-          <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <Search className="w-3.5 h-3.5 text-amber-400" />
             {isHi ? 'किसके लिए सर्वोत्तम दिशा?' : 'Best Direction For...'}
           </h5>
@@ -271,7 +280,7 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
           "rounded-2xl p-4 border transition-colors duration-300",
           theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
         )}>
-          <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
             {isHi ? 'वास्तु दोष डिटेक्टर' : 'Vastu Dosha Detector'}
           </h5>
@@ -310,7 +319,7 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
           "rounded-2xl p-4 border transition-colors duration-300",
           theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
         )}>
-          <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-amber-400" />
             {isHi ? 'आज का मुहूर्त' : "Today's Muhurat"}
           </h5>
@@ -318,9 +327,9 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
           <div className={cn(
             "p-3 rounded-xl border flex items-center justify-between",
             choghadiya.currentSlot.type === 'good'
-              ? "bg-emerald-500/10 border-emerald-500/30"
+              ? (theme === 'light' ? "bg-teal-50 border-teal-400" : "bg-emerald-500/10 border-emerald-500/30")
               : choghadiya.currentSlot.type === 'avoid'
-              ? "bg-red-500/10 border-red-500/30"
+              ? (theme === 'light' ? "bg-red-50 border-red-400" : "bg-red-500/10 border-red-500/30")
               : "bg-sky-500/10 border-sky-500/30"
           )}>
             <div>
@@ -337,11 +346,14 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
           </div>
 
           {choghadiya.nextGoodSlot && (
-            <div className="mt-2 p-2.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center justify-between">
-              <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
+            <div className={cn(
+              "mt-2 p-2.5 rounded-xl border flex items-center justify-between",
+              theme === 'light' ? "border-teal-400 bg-teal-50" : "border-emerald-500/30 bg-emerald-500/10"
+            )}>
+              <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-teal-700" : "text-emerald-300")}>
                 {isHi ? 'अगला शुभ मुहूर्त' : 'Next Good Muhurat'}
               </span>
-              <span className={cn("text-[10px] font-black", theme === 'light' ? "text-emerald-700" : "text-emerald-300")}>
+              <span className={cn("text-[10px] font-black", theme === 'light' ? "text-teal-700" : "text-emerald-300")}>
                 {isHi ? choghadiya.nextGoodSlot.nameHi : choghadiya.nextGoodSlot.name} · {choghadiya.nextGoodSlot.startTime}
               </span>
             </div>
@@ -358,7 +370,7 @@ export const VastuEnhancements = memo(({ language, theme, currentHeading, onHapt
         {isHi ? 'वास्तु रिपोर्ट साझा करें' : 'Share Vastu Report'}
       </button>
       {shareMsg && (
-        <div className={cn("text-center text-[11px] font-bold animate-in fade-in", theme === 'light' ? "text-emerald-700" : "text-emerald-400")}>
+        <div className={cn("text-center text-[11px] font-bold animate-in fade-in", theme === 'light' ? "text-teal-700" : "text-emerald-400")}>
           {shareMsg}
         </div>
       )}

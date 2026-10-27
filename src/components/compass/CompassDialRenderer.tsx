@@ -42,12 +42,117 @@ interface Props {
   onPointerUp: (e: React.PointerEvent) => void;
 }
 
-const get16WindName = (deg: number | null) => {
-  if (deg === null) return 'ENE';
-  const winds = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
-  const index = Math.round(((deg % 360 + 360) % 360) / 22.5) % 16;
+const get8CardinalName = (deg: number | null) => {
+  if (deg === null) return 'N';
+  const winds = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(((deg % 360 + 360) % 360) / 45) % 8;
   return winds[index];
 };
+
+interface VastuElementArc {
+  code: string;
+  nameEn: string;
+  nameHi: string;
+  icon: string;
+  startDeg: number;
+  endDeg: number;
+  centerDeg: number;
+  color: string;
+  border: string;
+}
+
+const VASTU_ELEMENT_ARCS: VastuElementArc[] = [
+  {
+    code: 'water',
+    nameEn: 'WATER',
+    nameHi: 'जल',
+    icon: '💧',
+    startDeg: 348.75,
+    endDeg: 56.25,
+    centerDeg: 22.5,
+    color: '#0284C7',
+    border: '#38BDF8'
+  },
+  {
+    code: 'air',
+    nameEn: 'AIR',
+    nameHi: 'वायु',
+    icon: '🍃',
+    startDeg: 56.25,
+    endDeg: 123.75,
+    centerDeg: 90,
+    color: '#059669',
+    border: '#34D399'
+  },
+  {
+    code: 'fire',
+    nameEn: 'FIRE',
+    nameHi: 'अग्नि',
+    icon: '🔥',
+    startDeg: 123.75,
+    endDeg: 191.25,
+    centerDeg: 157.5,
+    color: '#DC2626',
+    border: '#F87171'
+  },
+  {
+    code: 'earth',
+    nameEn: 'EARTH',
+    nameHi: 'पृथ्वी',
+    icon: '⛰️',
+    startDeg: 191.25,
+    endDeg: 258.75,
+    centerDeg: 225,
+    color: '#D97706',
+    border: '#FBBF24'
+  },
+  {
+    code: 'space',
+    nameEn: 'SPACE',
+    nameHi: 'आकाश',
+    icon: '🌌',
+    startDeg: 258.75,
+    endDeg: 348.75,
+    centerDeg: 303.75,
+    color: '#475569',
+    border: '#94A3B8'
+  }
+];
+
+function polarToSvg(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180;
+  return {
+    x: Number((cx + r * Math.cos(rad)).toFixed(2)),
+    y: Number((cy + r * Math.sin(rad)).toFixed(2)),
+  };
+}
+
+function describeAnnularSector(
+  cx: number,
+  cy: number,
+  rInner: number,
+  rOuter: number,
+  startDeg: number,
+  endDeg: number
+): string {
+  const p1 = polarToSvg(cx, cy, rOuter, startDeg);
+  const p2 = polarToSvg(cx, cy, rOuter, endDeg);
+  const p3 = polarToSvg(cx, cy, rInner, endDeg);
+  const p4 = polarToSvg(cx, cy, rInner, startDeg);
+
+  const span = (endDeg - startDeg + 360) % 360;
+  const largeArc = span > 180 ? 1 : 0;
+
+  return `M ${p1.x} ${p1.y} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rInner} ${rInner} 0 ${largeArc} 0 ${p4.x} ${p4.y} Z`;
+}
+
+function isHeadingInSector(deg: number, startDeg: number, endDeg: number): boolean {
+  const norm = ((deg % 360) + 360) % 360;
+  if (startDeg > endDeg) {
+    return norm >= startDeg || norm < endDeg;
+  }
+  return norm >= startDeg && norm < endDeg;
+}
 
 export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   styleId,
@@ -176,7 +281,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
       case 'sandalwood':
         return 'border-[20px] sm:border-[24px] border-[#C9A67E] shadow-[0_20px_60px_rgba(78,53,36,0.7),inset_0_3px_8px_rgba(255,255,255,0.7),inset_0_-8px_16px_rgba(78,53,36,0.95)] bg-gradient-to-br from-[#E8D7C2] via-[#C9A67E] to-[#8C6239]';
       case 'royal_gold':
-        return 'border-[18px] sm:border-[22px] border-transparent shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_55px_rgba(212,175,55,0.65),inset_0_2px_8px_rgba(255,255,230,0.95),inset_0_-8px_20px_rgba(60,35,10,0.95)] bg-[linear-gradient(135deg,#5C380C_0%,#A87818_15%,#FFE680_35%,#FFFDF5_46%,#D4AF37_60%,#9E6C18_80%,#4A2A08_100%)] bg-origin-border';
+        return 'border-[18px] sm:border-[22px] border-transparent shadow-[0_25px_70px_rgba(0,0,0,0.95),0_0_55px_rgba(212,175,55,0.7),inset_0_2px_8px_rgba(255,255,230,0.95),inset_0_-8px_20px_rgba(70,50,10,0.95)] bg-[linear-gradient(135deg,#785A14_0%,#C59B27_18%,#FFE785_36%,#FFFDF5_46%,#E5C158_62%,#A67C1A_82%,#543E0B_100%)] bg-origin-border';
       case 'vedic_mandala':
         return 'border-[18px] sm:border-[22px] border-[#D97706] shadow-[0_20px_60px_rgba(0,0,0,0.95),inset_0_3px_8px_rgba(254,240,138,0.7),inset_0_-8px_16px_rgba(180,83,9,0.9)] bg-gradient-to-tr from-[#D97706] via-[#FBBF24] to-[#B45309]';
       default:
@@ -195,7 +300,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
       case 'sandalwood':
         return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FAF3E8] via-[#EFE2CE] to-[#DCBF9E]';
       case 'royal_gold':
-        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FFFDF0] via-[#FCE38A] 35%, via-[#E5B53A] 70%, to-[#9E6E18] shadow-[inset_0_0_40px_rgba(90,55,10,0.5)]';
+        return 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FFFDF2] via-[#FDE68A] 35%, via-[#E5B53A] 70%, to-[#A67C1A] shadow-[inset_0_0_40px_rgba(166,124,26,0.45)]';
       case 'vedic_mandala':
         return 'bg-[#0B131B]';
       default:
@@ -242,7 +347,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         className={cn(
-          "w-[23.5rem] h-[23.5rem] sm:w-[26.5rem] sm:h-[26.5rem] rounded-full flex items-center justify-center relative select-none pointer-events-none",
+          "w-[min(calc(100vw-4px),26.5rem)] h-[min(calc(100vw-4px),26.5rem)] rounded-full flex items-center justify-center relative select-none pointer-events-none box-border",
           getBezelClass()
         )}
         style={{
@@ -576,6 +681,61 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 <circle cx="100" cy="100" r="67" fill="none" stroke="#F59E0B" strokeWidth="0.9" />
                 <circle cx="100" cy="100" r="65" fill="none" stroke="#D97706" strokeWidth="0.4" strokeDasharray="1.2 2.2" />
 
+                {/* 5 Vedic Elements (Panchamahabhutas) Color-Coded Annular Ring */}
+                <g className="transition-all duration-300">
+                  {VASTU_ELEMENT_ARCS.map((elem) => {
+                    const isCurrent = isHeadingInSector(displayAngle, elem.startDeg, elem.endDeg);
+                    const pathD = describeAnnularSector(100, 100, 58.5, 66.5, elem.startDeg, elem.endDeg);
+                    return (
+                      <g key={elem.code} className="transition-all duration-200">
+                        {/* Annular Sector Arc */}
+                        <path
+                          d={pathD}
+                          fill={elem.color}
+                          fillOpacity={isCurrent ? 0.95 : 0.72}
+                          stroke={isCurrent ? '#FFFFFF' : elem.border}
+                          strokeWidth={isCurrent ? '1.0' : '0.4'}
+                          className={cn(
+                            "transition-all duration-300",
+                            isCurrent && "filter drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]"
+                          )}
+                        />
+                        {/* Element Label Centered inside Arc */}
+                        <g transform={`rotate(${elem.centerDeg}, 100, 100)`}>
+                          <text
+                            x="100"
+                            y="38.5"
+                            textAnchor="middle"
+                            fill="#FFFFFF"
+                            fontSize="2.8"
+                            fontWeight="900"
+                            letterSpacing="0.25"
+                            className="select-none"
+                            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.95)' }}
+                          >
+                            {isHi ? `${elem.icon} ${elem.nameHi}` : `${elem.icon} ${elem.nameEn}`}
+                          </text>
+                          <text
+                            x="100"
+                            y="41.8"
+                            textAnchor="middle"
+                            fill={isCurrent ? '#FDE047' : '#F1F5F9'}
+                            fontSize="1.9"
+                            fontWeight="700"
+                            className="select-none opacity-85"
+                            style={{ textShadow: '0 1px 1px rgba(0,0,0,0.95)' }}
+                          >
+                            {isHi ? elem.nameEn : elem.nameHi}
+                          </text>
+                        </g>
+                      </g>
+                    );
+                  })}
+                </g>
+
+                {/* Subtle Inner Gold Ring framing the 5 Elements */}
+                <circle cx="100" cy="100" r="58.5" fill="none" stroke="#F59E0B" strokeWidth="0.5" opacity="0.8" />
+
                 {/* 16-Petal Shodasha Dala Padma (16 Vastu Directions / Kalas) */}
                 {Array.from({ length: 16 }).map((_, i) => (
                   <path
@@ -797,14 +957,14 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     ? (vTickMajor
                         ? `w-[2.5px] h-3.5`
                         : isNautical ? "w-[2.5px] h-3.5 bg-[#8C5824]"
-                        : styleId === 'royal_gold' ? "w-[2.5px] h-4 bg-[#3E2205] shadow-[0_0_3px_rgba(255,255,255,0.6)]"
+                        : styleId === 'royal_gold' ? "w-[2.5px] h-4 bg-[#423206] shadow-[0_0_3px_rgba(255,245,180,0.8)]"
                         : styleId === 'sandalwood' ? "w-[2.5px] h-3.5 bg-[#8C6239] shadow-[0_0_4px_rgba(140,98,57,0.4)]"
                         : isGraphite ? "w-[2.5px] h-3.5 bg-[#D1D5DB] shadow-[0_0_5px_rgba(209,213,219,0.5)]"
                         : "w-[2.5px] h-3.5 bg-[#EF4444] shadow-sm")
                     : isMid
                     ? (vTickMid
                         ? "w-[1.8px] h-2.5"
-                        : styleId === 'royal_gold' ? "w-[1.8px] h-3 bg-[#5C360A]"
+                        : styleId === 'royal_gold' ? "w-[1.8px] h-3 bg-[#634C0E]"
                         : isNautical ? "w-[1.5px] h-2.5 bg-[#8C5824]"
                         : styleId === 'sandalwood' ? "w-[1.8px] h-2.5 bg-[#8C6239]/60"
                         : isGraphite ? "w-[1.8px] h-2.5 bg-[#9CA3AF]/80"
@@ -812,7 +972,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     : (vTickMinor
                         ? "w-[1px] h-1.5"
                         : isNautical ? "w-[1px] h-1.5 bg-[#8C5824]/40"
-                        : styleId === 'royal_gold' ? "w-[1px] h-1.5 bg-[#78470E]/70"
+                        : styleId === 'royal_gold' ? "w-[1px] h-1.5 bg-[#856616]/80"
                         : styleId === 'sandalwood' ? "w-[1px] h-1.5 bg-[#8C6239]/30"
                         : isGraphite ? "w-[1px] h-1.5 bg-[#6B7280]/40"
                         : "w-[1px] h-1.5 bg-white/25")
@@ -829,7 +989,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               <div className="flex flex-col items-center select-none mt-1 sm:mt-1.5">
                 <span className={cn(
                   "font-mono font-bold text-[0.6rem] sm:text-[0.66rem] tracking-tight leading-none",
-                  styleId === 'royal_gold' ? "text-[#3B1F05] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" :
+                  styleId === 'royal_gold' ? "text-[#3D2E05] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.75)]" :
                   styleId === 'sandalwood' ? "text-[#4A2810] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]" :
                   variantId === 'ios_white' ? "text-[#0F172A] font-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]" :
                   isGraphite ? "text-slate-200 font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" :
@@ -879,8 +1039,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     "font-black tracking-tight",
                     styleId === 'royal_gold'
                       ? (pt.isNorth
-                          ? "text-[#4A0208] text-lg font-black font-serif drop-shadow-[0_1px_0px_#FFFFFF] drop-shadow-[0_0_2px_#FDE047] scale-110"
-                          : "text-[#2D1603] text-sm font-black font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]")
+                          ? "text-[#8B0000] text-lg font-black font-serif drop-shadow-[0_1px_0px_#FFFFFF] drop-shadow-[0_0_3px_#FDE047] scale-110"
+                          : "text-[#3D2E05] text-sm font-black font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]")
                       : pt.isNorth
                       ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444] animate-pulse-subtle"
                       : styleId === 'satellite_earth'
@@ -901,7 +1061,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           {/* Sun Badge (Real-time Solar Position) — hidden for minimal_onyx */}
           {sunPos !== null && (styleId as string) !== 'minimal_onyx' && !isMinimalOnyx && (
             <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${sunPos}deg)` }}>
-              <div className="flex flex-col items-center mt-12 animate-pulse">
+              <div className="flex flex-col items-center mt-14 animate-pulse">
                 <div className="flex items-center gap-1 bg-amber-500/90 text-stone-950 px-1.5 py-0.5 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.9)] border border-amber-300">
                   <Sun className="w-3 h-3 fill-amber-300 text-stone-950" />
                   <span className="text-[8px] font-black tracking-wider leading-none">{isHi ? 'सूर्य' : 'Sun'}</span>
@@ -913,7 +1073,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           {/* Qibla Indicator on Dial */}
           {isQiblaMode && (
             <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${qiblaBearing}deg)` }}>
-              <div className="flex flex-col items-center mt-9 animate-bounce">
+              <div className="flex flex-col items-center mt-7 animate-bounce">
                 <div className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-2xl transition-all duration-300",
                   isFacingQibla
@@ -925,7 +1085,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                     <span className="text-[9px] font-black tracking-wider">
                       {isHi ? `किबला ${qiblaBearing}°` : `Qibla ${qiblaBearing}°`}
                     </span>
-                    <span className="text-[7px] font-bold opacity-80 mt-0.5">
+                    <span className="text-[8.5px] font-bold opacity-80 mt-0.5">
                       {qiblaDistanceKm.toLocaleString(isHi ? 'hi-IN' : 'en-US')} {isHi ? 'किमी' : 'km'}
                     </span>
                   </div>
@@ -939,7 +1099,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
             <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${targetBearing}deg)` }}>
               <div className="flex flex-col items-center mt-3 z-30 animate-pulse">
                 <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[9px] border-t-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.9)]" />
-                <span className="px-1.5 py-0.5 mt-0.5 rounded-full text-[7.5px] font-black bg-amber-500 text-stone-950 shadow-md">
+                <span className="px-1.5 py-0.5 mt-0.5 rounded-full text-[8.5px] font-black bg-amber-500 text-stone-950 shadow-md">
                   {Math.round(targetBearing)}°
                 </span>
               </div>
@@ -1275,10 +1435,10 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <stop offset="100%" stopColor="#D4A738" />
                 </linearGradient>
                 <linearGradient id="shahi-gold-blade-r" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#D4A738" />
-                  <stop offset="40%" stopColor="#A16207" />
-                  <stop offset="80%" stopColor="#6E3B06" />
-                  <stop offset="100%" stopColor="#3E1E02" />
+                  <stop offset="0%" stopColor="#E5C158" />
+                  <stop offset="40%" stopColor="#C59B27" />
+                  <stop offset="80%" stopColor="#967215" />
+                  <stop offset="100%" stopColor="#5E470B" />
                 </linearGradient>
 
                 {/* Deep Pigeon-Blood Burmese Ruby Gemstone Gradients */}
@@ -1513,25 +1673,25 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               <div className="flex flex-col items-center justify-center pointer-events-none gap-1.5">
                 <div className="relative flex flex-col items-center justify-center h-[3.75rem] w-[3.75rem] rounded-full border-[3.5px] border-emerald-300 bg-emerald-950/95 shadow-[0_0_20px_rgba(52,211,153,0.75),inset_0_0_12px_rgba(0,0,0,0.95)] group-hover:border-emerald-200 transition-colors">
                   <span className="text-[14px] font-black font-mono text-emerald-100 leading-none">{displayAngle}°</span>
-                  <span className="text-[7px] font-bold uppercase tracking-widest text-emerald-400 mt-0.5">{get16WindName(displayHeading)}</span>
+                  <span className="text-[8.5px] font-bold uppercase tracking-widest text-emerald-400 mt-0.5">{get8CardinalName(displayHeading)}</span>
                   {/* Micro Recenter Reticle Dot */}
                   <span className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-400/60" />
                 </div>
                 <div className="text-center select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)]">
                   <span className="text-xl sm:text-2xl font-black font-mono tracking-tight text-white">
-                    {displayHeading !== null ? Math.round(displayHeading) : 0}° {get16WindName(displayHeading)}
+                    {displayHeading !== null ? Math.round(displayHeading) : 0}° {get8CardinalName(displayHeading)}
                   </span>
                 </div>
               </div>
             ) : styleId === 'royal_gold' ? (
-              <div className="flex flex-col items-center justify-center h-12 w-12 rounded-full border-[2px] border-[#FFE680] bg-gradient-to-br from-[#1E0F04] via-[#120802] to-[#080301] text-[#FFF8DC] shadow-[0_4px_22px_rgba(40,20,5,0.95),inset_0_1px_4px_rgba(255,240,180,0.5)] relative">
+              <div className="flex flex-col items-center justify-center h-12 w-12 rounded-full border-[2px] border-[#FFE680] bg-gradient-to-br from-[#2E2405] via-[#1A1402] to-[#0D0A01] text-[#FFF8DC] shadow-[0_4px_22px_rgba(40,20,5,0.95),inset_0_1px_4px_rgba(255,240,180,0.5)] relative">
                 {/* 4 Inlaid Alternating Emerald & Ruby Gemstones */}
                 <div className="absolute -top-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
                 <div className="absolute -bottom-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-800 border border-[#FFE680] shadow-[0_0_8px_#10b981]" />
                 <div className="absolute -left-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
                 <div className="absolute -right-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-rose-400 to-rose-800 border border-[#FFE680] shadow-[0_0_8px_#e11d48]" />
                 <span className="text-[13px] font-black leading-none text-[#FFFDF0] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{displayAngle}°</span>
-                <span className="text-[6.5px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get16WindName(displayHeading)}</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-widest text-[#FDE047] mt-0.5">{get8CardinalName(displayHeading)}</span>
               </div>
             ) : isGraphite ? (
               <div className={cn(
@@ -1559,8 +1719,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 <span className={cn("text-[14px] font-black font-mono leading-none z-10 drop-shadow-md", isDeviceFlat ? "text-emerald-100" : "text-slate-100")}>
                   {displayAngle}°
                 </span>
-                <span className={cn("text-[6.5px] font-black uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-slate-300")}>
-                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                <span className={cn("text-[8.5px] font-black uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-slate-300")}>
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}
                 </span>
               </div>
             ) : variantId === 'ios_white' ? (
@@ -1579,8 +1739,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
                 />
                 <span className="text-[14px] font-black font-mono leading-none text-slate-950 z-10">{displayAngle}°</span>
-                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-600 font-black" : "text-slate-500")}>
-                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                <span className={cn("text-[8.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-600 font-black" : "text-slate-500")}>
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}
                 </span>
               </div>
             ) : variantId === 'ios_minimal' ? (
@@ -1593,8 +1753,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
                 />
                 <span className="text-[14px] font-mono font-black leading-none z-10">{displayAngle}°</span>
-                <span className="text-[6.5px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5 z-10">
-                  {isDeviceFlat ? 'LEVEL' : get16WindName(displayHeading)}
+                <span className="text-[8.5px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5 z-10">
+                  {isDeviceFlat ? 'LEVEL' : get8CardinalName(displayHeading)}
                 </span>
               </div>
             ) : variantId === 'ios_nautical' ? (
@@ -1609,8 +1769,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
                 />
                 <span className="text-[14px] font-serif font-black leading-none text-[#F3E5AB] z-10">{displayAngle}°</span>
-                <span className={cn("text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400 font-black" : "text-[#D4AF37]")}>
-                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                <span className={cn("text-[8.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400 font-black" : "text-[#D4AF37]")}>
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}
                 </span>
               </div>
             ) : styleId === 'vedic_mandala' ? (
@@ -1625,8 +1785,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
                 />
                 <span className="text-[12px] font-mono font-black leading-none z-10">{displayAngle}°</span>
-                <span className={cn("text-[6px] font-bold uppercase tracking-wider mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-amber-300")}>
-                  {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : get16WindName(displayHeading)}
+                <span className={cn("text-[8px] font-bold uppercase tracking-wider mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-amber-300")}>
+                  {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : get8CardinalName(displayHeading)}
                 </span>
               </div>
             ) : styleId === 'sandalwood' ? (
@@ -1663,8 +1823,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 <span className="text-[14px] font-black font-mono leading-none z-10" style={{ color: isDeviceFlat ? '#34D399' : (activeVariant.id === 'ios_black' ? '#FFFFFF' : activeVariant.primaryColor) }}>
                   {displayAngle}°
                 </span>
-                <span className="text-[6.5px] font-bold uppercase tracking-widest mt-0.5 z-10 text-stone-300">
-                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                <span className="text-[8.5px] font-bold uppercase tracking-widest mt-0.5 z-10 text-stone-300">
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}
                 </span>
               </div>
             ) : (
@@ -1679,8 +1839,8 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
                 />
                 <span className="text-[14px] font-black text-emerald-100 leading-none z-10">{displayAngle}°</span>
-                <span className="text-[6.5px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5 z-10">
-                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get16WindName(displayHeading)}
+                <span className="text-[8.5px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5 z-10">
+                  {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}
                 </span>
               </div>
             )}

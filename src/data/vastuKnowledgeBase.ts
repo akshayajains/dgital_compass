@@ -8,6 +8,7 @@ export interface VastuZone {
   endDeg: number;
   centerDeg: number;
   deity: string;
+  deityHi: string;
   color: string;
   accentColor: string;
   idealFor: { en: string[]; hi: string[] };
@@ -45,6 +46,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 11.25,
     centerDeg: 0,
     deity: 'Lord Kuber (God of Wealth)',
+    deityHi: 'कुबेर (धन पति)',
     color: '#38BDF8',
     accentColor: 'text-sky-400',
     idealFor: {
@@ -68,6 +70,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 33.75,
     centerDeg: 22.5,
     deity: 'Dhanvantari (God of Medicine)',
+    deityHi: 'धन्वंतरि (चिकित्सा देवता)',
     color: '#06B6D4',
     accentColor: 'text-cyan-400',
     idealFor: {
@@ -91,6 +94,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 56.25,
     centerDeg: 45,
     deity: 'Lord Shiva & Brihaspati',
+    deityHi: 'शिव शंकर व बृहस्पति',
     color: '#FACC15',
     accentColor: 'text-yellow-400',
     idealFor: {
@@ -114,6 +118,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 78.75,
     centerDeg: 67.5,
     deity: 'Parjanya (Rain God)',
+    deityHi: 'पर्जन्य (वर्षा देवता)',
     color: '#34D399',
     accentColor: 'text-emerald-400',
     idealFor: {
@@ -137,6 +142,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 101.25,
     centerDeg: 90,
     deity: 'Lord Indra & Surya Dev',
+    deityHi: 'इंद्र देव व सूर्य देव',
     color: '#10B981',
     accentColor: 'text-emerald-400',
     idealFor: {
@@ -160,6 +166,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 123.75,
     centerDeg: 112.5,
     deity: 'Bhrisha',
+    deityHi: 'भृश (कठोर देवता)',
     color: '#14B8A6',
     accentColor: 'text-teal-400',
     idealFor: {
@@ -183,6 +190,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 146.25,
     centerDeg: 135,
     deity: 'Lord Agni & Venus (Shukra)',
+    deityHi: 'अग्नि देव व शुक्र',
     color: '#F97316',
     accentColor: 'text-orange-400',
     idealFor: {
@@ -206,6 +214,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 168.75,
     centerDeg: 157.5,
     deity: 'Pushan',
+    deityHi: 'पूषन (पोषक देवता)',
     color: '#FB923C',
     accentColor: 'text-orange-300',
     idealFor: {
@@ -229,6 +238,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 191.25,
     centerDeg: 180,
     deity: 'Lord Yama & Mangal (Mars)',
+    deityHi: 'यमराज व मंगल',
     color: '#EF4444',
     accentColor: 'text-red-400',
     idealFor: {
@@ -252,6 +262,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 213.75,
     centerDeg: 202.5,
     deity: 'Gandharva',
+    deityHi: 'गंधर्व (स्वर्गवासी)',
     color: '#A855F7',
     accentColor: 'text-purple-400',
     idealFor: {
@@ -275,6 +286,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 236.25,
     centerDeg: 225,
     deity: 'Lord Nirriti & Rahu',
+    deityHi: 'नैऋति व राहु',
     color: '#F59E0B',
     accentColor: 'text-amber-400',
     idealFor: {
@@ -298,6 +310,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 258.75,
     centerDeg: 247.5,
     deity: 'Sugriva / Dauvarika',
+    deityHi: 'सुग्रीव / दौवारिक',
     color: '#818CF8',
     accentColor: 'text-indigo-400',
     idealFor: {
@@ -321,6 +334,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 281.25,
     centerDeg: 270,
     deity: 'Lord Varuna & Shani (Saturn)',
+    deityHi: 'वरुण देव व शनि',
     color: '#6366F1',
     accentColor: 'text-indigo-400',
     idealFor: {
@@ -344,6 +358,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 303.75,
     centerDeg: 292.5,
     deity: 'Shosha / Asura',
+    deityHi: 'शोष / असुर',
     color: '#94A3B8',
     accentColor: 'text-slate-400',
     idealFor: {
@@ -367,6 +382,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 326.25,
     centerDeg: 315,
     deity: 'Lord Vayu & Chandra (Moon)',
+    deityHi: 'वायु देव व चंद्रमा',
     color: '#38BDF8',
     accentColor: 'text-sky-400',
     idealFor: {
@@ -390,6 +406,7 @@ export const VASTU_16_ZONES: VastuZone[] = [
     endDeg: 348.75,
     centerDeg: 337.5,
     deity: 'Roga / Naga',
+    deityHi: 'रोग / नाग',
     color: '#0284C7',
     accentColor: 'text-sky-500',
     idealFor: {

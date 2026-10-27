@@ -60,7 +60,71 @@
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+    /* Safe area padding for notched devices */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+  /* Smooth font loading — prevent FOIT/FOUT for Hindi text */
+  @media (prefers-reduced-motion: no-preference) {
+    body {
+      font-display: swap;
+    }
+  }
+}
+
+/* Safe area utilities for bottom tab bar */
+.safe-area-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
+}
+
+/* Smooth theme transition on all elements */
+*, *::before, *::after {
+  transition-property: background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Disable transition for elements that should be instant */
+.no-theme-transition, .no-theme-transition * {
+  transition-property: none !important;
+}
+
+/* Active press feedback for touch targets */
+.active-press:active {
+  transform: scale(0.97);
+  transition-transform: 100ms ease;
+}
+
+/* Better focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid hsl(38 92% 50%);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Improved card hover effects */
+@media (hover: hover) {
+  .card-hover-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+}
+
+/* Hindi text rendering optimization */
+.hi-text {
+  -webkit-font-feature-settings: "cfar" 1, "ss03" 1;
+  font-feature-settings: "cfar" 1, "ss03" 1;
+}
+
+/* Fix: Mukta/Yantramanav max weight is 800, but Tailwind's font-black requests 900.
+   When 900 is requested, browser falls back to system fonts that can't render Devanagari.
+   Force all Mukta/Yantramanav text to use weight 800 even when 900 is requested. */
+body {
+  font-feature-settings: "ss03" 1, "cfar" 1;
+}
+
+/* Override font-weight 900 for elements using Mukta/Yantramanav so Hindi renders correctly */
+.font-black {
+  font-weight: 800 !important;
 }
 
 @layer utilities {

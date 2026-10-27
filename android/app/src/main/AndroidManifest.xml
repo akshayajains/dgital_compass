@@ -57,7 +57,7 @@
         <receiver
             android:name=".CompassWidgetProvider"
             android:exported="true"
-            android:label="Digital Compass (Nothing Style)">
+            android:label="Digital Compass 360°">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="com.spiritual.compass.ACTION_CHECK_DIRECTION" />

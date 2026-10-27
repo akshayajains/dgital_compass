@@ -15,6 +15,8 @@ export interface Location {
   accuracy?: number | null;
   speed?: number | null;
   gpsHeading?: number | null;
+  isOffline?: boolean;
+  source?: 'gps' | 'ip' | 'cached' | 'default';
 }
 
 export interface SunTimes {
@@ -41,7 +43,14 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     try {
       const saved = localStorage.getItem(LOCATION_STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...parsed,
+          speed: 0,
+          gpsHeading: null,
+          isOffline: true,
+          source: (parsed.source || 'cached') as 'gps' | 'ip' | 'cached' | 'default'
+        };
       }
     } catch (e) {
       console.warn('Failed to parse saved location', e);
@@ -108,7 +117,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
             const state = data2.address?.state || '';
             return { city, state };
           }
-        } catch {}
+        } catch (e) {
+          console.error('Nominatim reverse geocode fallback failed:', e);
+        }
       }
       return { city: '', state: '' };
     };
@@ -134,7 +145,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           return cachedMap[cacheKey];
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error('Failed to read elevation cache:', e);
+    }
 
     const saveCache = (elev: number) => {
       try {
@@ -142,7 +155,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
         const cachedMap = cachedRaw ? JSON.parse(cachedRaw) : {};
         cachedMap[cacheKey] = elev;
         localStorage.setItem('compass_elev_cache_v1', JSON.stringify(cachedMap));
-      } catch {}
+      } catch (e) {
+        console.error('Failed to save elevation cache:', e);
+      }
     };
 
     const lat4 = lat.toFixed(4);
@@ -159,7 +174,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           return elev;
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error('Open-Meteo elevation API failed:', e);
+    }
 
     // Secondary Fallback: Open-Elevation API (when Open-Meteo returns 503 / Service Unavailable)
     try {
@@ -172,7 +189,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           return elev2;
         }
       }
-    } catch {}
+    } catch (e) {
+      console.error('Open-Elevation API fallback failed:', e);
+    }
 
     return null;
   };
@@ -197,7 +216,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
         stateEn: stateEn || '',
         altitude: alt,
         accuracy: acc,
-        speed: spd
+        speed: spd,
+        isOffline: false,
+        source: 'gps'
       });
       setLoading(false);
     };
@@ -223,7 +244,9 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
               stateEn: stateEn || ipData.region || '',
               altitude: elev,
               accuracy: 1000,
-              speed: null
+              speed: null,
+              isOffline: true,
+              source: 'ip'
             });
             setError('ip');
           } else {
@@ -295,7 +318,7 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           setLocationState((prev) => {
             if (!prev || prev.altitude != null) return prev;
             const updated = { ...prev, altitude: elev };
-            try { localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+            try { localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(updated)); } catch (e) { console.error('Failed to save location with altitude:', e); }
             return updated;
           });
         }
@@ -334,6 +357,7 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
     if (!liveTracking) {
       lastFixRef.current = null;
       smoothedSpeedRef.current = 0;
+      setLocationState((prev) => prev ? { ...prev, speed: 0, gpsHeading: null } : prev);
       return;
     }
     if (typeof window === 'undefined' || !navigator.geolocation) return;
@@ -375,18 +399,25 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
       }
       lastFixRef.current = { lat: rawLat, lng: rawLng, time: now };
 
+      const accuracy = typeof pos.coords.accuracy === 'number' && !isNaN(pos.coords.accuracy) ? pos.coords.accuracy : 999;
+
       // Determine final instantaneous speed:
       let instantSpeed = 0;
       if (typeof rawSpeed === 'number' && !isNaN(rawSpeed) && rawSpeed >= 0) {
+        // Hardware Doppler speed is authoritative when available (smartphones with GPS lock)
         instantSpeed = rawSpeed;
-      } else if (dist >= 1.2 && calculatedSpeed >= 0.3) {
+      } else if (accuracy <= 15 && dist >= Math.max(accuracy * 0.75, 4.0) && calculatedSpeed >= 0.6) {
+        // Only synthesize speed from coordinate displacement if GPS accuracy is tight (<= 15m)
+        // and movement exceeds circle of uncertainty.
+        // Stationary laptops, desktops, and indoor Wi-Fi triangulation have accuracy > 20m,
+        // strictly preventing stationary Wi-Fi jitter from registering false 20+ km/h.
         instantSpeed = calculatedSpeed;
       } else {
         instantSpeed = 0;
       }
 
-      // Noise deadband: speeds < 0.28 m/s (~1 km/h) are stationary noise
-      if (instantSpeed < 0.28) {
+      // Noise deadband: speeds < 0.4 m/s (~1.4 km/h) are stationary noise
+      if (instantSpeed < 0.4) {
         instantSpeed = 0;
       }
 
@@ -438,10 +469,14 @@ export const SunTimesProvider = ({ children }: { children: ReactNode }) => {
           accuracy: pos.coords.accuracy ?? prev.accuracy ?? null,
           speed: effectiveSpeed,
           gpsHeading: effectiveSpeed >= 1.2 ? (nextGpsHeading ?? prev.gpsHeading ?? null) : null,
+          isOffline: false,
+          source: 'gps'
         };
         try {
           localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(next));
-        } catch {}
+        } catch (e) {
+          console.error('Failed to save location cache:', e);
+        }
         return next;
       });
     };

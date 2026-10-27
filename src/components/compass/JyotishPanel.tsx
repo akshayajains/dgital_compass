@@ -24,7 +24,7 @@ export const JyotishPanel = memo(({ language, theme, jyotishRashi, setJyotishRas
         </div>
 
         <div className="mb-4">
-          <label className="text-[10px] text-stone-400 uppercase font-black tracking-wider block mb-1.5">
+          <label className="text-[10px] text-stone-600 uppercase font-black tracking-wider block mb-1.5">
             {language === 'hi' ? 'अपनी राशि चुनें:' : 'Select Your Zodiac (Rashi):'}
           </label>
           <select
@@ -60,7 +60,7 @@ export const JyotishPanel = memo(({ language, theme, jyotishRashi, setJyotishRas
           "p-3 rounded-xl border shadow-inner transition-colors duration-300",
           theme === 'light' ? "bg-white border-fuchsia-500/20" : "bg-stone-950/80 border-stone-800"
         )}>
-          <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-2">{language === 'hi' ? 'ज्योतिष सुझाव' : 'Astrology Tips'}</h5>
+          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-2">{language === 'hi' ? 'ज्योतिष सुझाव' : 'Astrology Tips'}</h5>
           <p className={cn("text-[11px] leading-relaxed font-medium transition-colors", theme === 'light' ? "text-fuchsia-900" : "text-stone-300")}>
             {language === 'hi'
               ? 'आपकी राशि के अनुसार शुभ दिशा को कम्पास पर हाइलाइट किया गया है।'

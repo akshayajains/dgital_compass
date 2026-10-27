@@ -86,7 +86,7 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
         float prevRoll = CompassWidgetProvider.getSavedRoll(this);
         latestPitch = prevPitch;
         latestRoll = prevRoll;
-        CompassWidgetProvider.updateAllWidgets(this, prevHeading, prevPitch, prevRoll, "● Live Measuring...", true);
+        CompassWidgetProvider.updateAllWidgets(this, prevHeading, prevPitch, prevRoll, "● Measuring...", true);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sensorManager == null) {
@@ -198,7 +198,7 @@ public class WidgetSensorActivity extends Activity implements SensorEventListene
             // Throttle RemoteViews updates to ~6 FPS (every 160ms) for smooth Home Screen dial rotation
             if (now - lastWidgetPushTime >= 160L) {
                 lastWidgetPushTime = now;
-                CompassWidgetProvider.updateAllWidgets(this, latestHeading, latestPitch, latestRoll, "● Live Updating...", true);
+                CompassWidgetProvider.updateAllWidgets(this, latestHeading, latestPitch, latestRoll, "● Live...", true);
             }
         }
     }

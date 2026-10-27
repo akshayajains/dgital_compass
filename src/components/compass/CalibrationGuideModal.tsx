@@ -92,7 +92,9 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
       setIsCalibrated(true);
       try {
         Haptics.impact({ style: ImpactStyle.Heavy });
-      } catch {}
+      } catch (e) {
+        console.error('Calibration haptic feedback failed:', e);
+      }
       onCalibrationComplete?.();
     }
   };
@@ -322,7 +324,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
 
           {/* Master Progress bar */}
           <div className="w-full space-y-1.5 mb-5">
-            <div className={cn("flex justify-between text-[11px] font-black", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
+            <div className={cn("flex justify-between text-[11px] font-black", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
               <span>{isHi ? 'समग्र कैलिब्रेशन स्तर' : 'Overall Calibration Level'}</span>
               <span className={cn(isCalibrated ? "text-emerald-500 font-black" : "text-amber-500 font-bold")}>
                 {totalProgress}%
@@ -366,3 +368,5 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
     </AnimatePresence>
   );
 };
+
+export default CalibrationGuideModal;

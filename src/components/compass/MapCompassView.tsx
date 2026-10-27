@@ -94,7 +94,7 @@ export const MapCompassView: React.FC<Props> = ({
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 bg-[#0A0E14]/95 backdrop-blur-sm">
           <MapPin className="w-8 h-8 text-red-500 animate-pulse" />
           <span className="text-sm font-black text-white uppercase tracking-wider">Location Unavailable</span>
-          <span className="text-[10px] text-stone-400 text-center px-8">Enable GPS or grant location permission to see the map</span>
+          <span className="text-[10px] text-stone-600 text-center px-8">Enable GPS or grant location permission to see the map</span>
         </div>
       )}
 

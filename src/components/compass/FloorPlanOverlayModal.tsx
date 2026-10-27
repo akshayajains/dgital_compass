@@ -88,14 +88,14 @@ export const FloorPlanOverlayModal = ({
           )}
         >
           {/* Top Bar */}
-          <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <div className={cn("p-4 border-b flex items-center justify-between", theme === 'light' ? "border-amber-500/20" : "border-white/10")}>
             <div className="flex items-center gap-2">
               <Layers className="w-5 h-5 text-amber-400" />
               <div>
-                <h3 className="font-serif font-black text-sm text-white">
+                <h3 className={cn("font-serif font-black text-sm", theme === 'light' ? "text-amber-950" : "text-white")}>
                   {language === 'hi' ? 'वास्तु ब्लूप्रिंट संरेखण' : 'Floor Plan Vastu Calibrator'}
                 </h3>
-                <p className="text-[10px] text-stone-400">
+                <p className="text-[10px] text-stone-600">
                   {language === 'hi' ? 'नक्शे पर 9x9 वास्तु मंडल ग्रिड बिछाएं' : 'Overlay 9x9 Vastu Purusha Mandala Grid'}
                 </p>
               </div>
@@ -103,14 +103,14 @@ export const FloorPlanOverlayModal = ({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-white/10 active:scale-90 transition-transform text-stone-400 hover:text-white"
+              className={cn("p-2 rounded-full active:scale-90 transition-transform", theme === 'light' ? "text-stone-600 hover:bg-stone-200 hover:text-stone-900" : "text-stone-400 hover:bg-white/10 hover:text-white")}
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Center Interactive Canvas View */}
-          <div className="flex-1 relative overflow-hidden bg-stone-950 flex items-center justify-center p-2">
+          <div className={cn("flex-1 relative overflow-hidden flex items-center justify-center p-2", theme === 'light' ? "bg-stone-200" : "bg-stone-950")}>
             {imageSrc ? (
               <div
                 className="relative w-full h-full max-h-[420px] flex items-center justify-center overflow-hidden rounded-2xl border border-white/10"
@@ -179,14 +179,14 @@ export const FloorPlanOverlayModal = ({
               </div>
             ) : (
               // Empty Upload State
-              <div className="flex flex-col items-center justify-center p-8 text-center border-2 border-dashed border-white/20 rounded-3xl max-w-xs">
+              <div className={cn("flex flex-col items-center justify-center p-8 text-center border-2 border-dashed rounded-3xl max-w-xs", theme === 'light' ? "border-stone-300" : "border-white/20")}>
                 <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-3">
                   <Upload className="w-7 h-7" />
                 </div>
-                <h4 className="text-sm font-bold text-white mb-1">
+                <h4 className={cn("text-sm font-bold mb-1", theme === 'light' ? "text-stone-900" : "text-white")}>
                   {language === 'hi' ? 'घर का नक्शा चुनें' : 'Upload House Blueprint'}
                 </h4>
-                <p className="text-xs text-stone-400 mb-4">
+                <p className={cn("text-xs mb-4", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
                   {language === 'hi' ? 'अपनी गैलरी या फाइल से 2D फ्लोर प्लान की फोटो अपलोड करें।' : 'Select architectural 2D floor plan image from your gallery.'}
                 </p>
                 <button
@@ -209,10 +209,10 @@ export const FloorPlanOverlayModal = ({
 
           {/* Bottom Calibration Controls */}
           {imageSrc && (
-            <div className="p-4 bg-stone-900 border-t border-white/10 space-y-3">
+            <div className={cn("p-4 border-t space-y-3", theme === 'light' ? "bg-stone-100 border-stone-200" : "bg-stone-900 border-white/10")}>
               {/* Rotation Slider */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black uppercase tracking-wider text-stone-400 w-16">
+                <span className={cn("text-[10px] font-black uppercase tracking-wider w-16", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
                   {language === 'hi' ? 'घूर्णन' : 'Rotate'}: {Math.round(effectiveRotation) % 360}°
                 </span>
                 <input
@@ -243,7 +243,7 @@ export const FloorPlanOverlayModal = ({
               {/* Scale & Grid Type Toggle */}
               <div className="flex items-center justify-between gap-3 pt-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-stone-400">Scale:</span>
+                  <span className={cn("text-[10px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>Scale:</span>
                   <input
                     type="range"
                     min="0.5"
@@ -255,12 +255,12 @@ export const FloorPlanOverlayModal = ({
                   />
                 </div>
 
-                <div className="flex items-center gap-1.5 bg-black/60 p-1 rounded-xl border border-white/10">
+                <div className={cn("flex items-center gap-1.5 p-1 rounded-xl border", theme === 'light' ? "bg-stone-200 border-stone-300" : "bg-black/60 border-white/10")}>
                   <button
                     onClick={() => setGridType('9grid')}
                     className={cn(
                       "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all",
-                      gridType === '9grid' ? "bg-amber-500 text-stone-950" : "text-stone-400 hover:text-white"
+                      gridType === '9grid' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-400 hover:text-white")
                     )}
                   >
                     9-Grid
@@ -269,7 +269,7 @@ export const FloorPlanOverlayModal = ({
                     onClick={() => setGridType('16radial')}
                     className={cn(
                       "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all",
-                      gridType === '16radial' ? "bg-amber-500 text-stone-950" : "text-stone-400 hover:text-white"
+                      gridType === '16radial' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-400 hover:text-white")
                     )}
                   >
                     16-Radial
@@ -278,7 +278,7 @@ export const FloorPlanOverlayModal = ({
 
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-1.5 rounded-lg bg-stone-800 text-stone-300 hover:text-white active:scale-90"
+                  className={cn("p-1.5 rounded-lg active:scale-90", theme === 'light' ? "bg-stone-300 text-stone-600 hover:text-stone-900" : "bg-stone-800 text-stone-300 hover:text-white")}
                   title="Change Image"
                 >
                   <Upload className="w-4 h-4" />

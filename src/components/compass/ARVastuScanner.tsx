@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, X, Sparkles, AlertTriangle, CheckCircle2, RefreshCw, Zap, Download, Lock } from 'lucide-react';
+import { Camera, X, Sparkles, AlertTriangle, CheckCircle2, RefreshCw, Zap, Download, Lock, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getDevtaPadaAtDegree } from '@/data/devtaData';
 import { toast } from 'sonner';
+import { Share } from '@capacitor/share';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Capacitor } from '@capacitor/core';
 
 interface ARVastuScannerProps {
   isOpen: boolean;
@@ -212,7 +215,7 @@ export const ARVastuScanner = ({
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => {
-        try { track.stop(); } catch {}
+        try { track.stop(); } catch (e) { console.error('Failed to stop camera track:', e); }
       });
       streamRef.current = null;
     }
@@ -252,7 +255,7 @@ export const ARVastuScanner = ({
       
       ctx.fillStyle = '#DAA520';
       ctx.font = 'bold 24px sans-serif';
-      ctx.fillText(`JAIN COMPASS AR VASTU AUDIT - ${Math.round(curDeg)}° ${directionName}`, 40, canvas.height - 80);
+      ctx.fillText(`DIGITAL COMPASS AR VASTU AUDIT - ${Math.round(curDeg)}° ${directionName}`, 40, canvas.height - 80);
       
       ctx.fillStyle = '#FFFFFF';
       ctx.font = '18px sans-serif';
@@ -260,7 +263,78 @@ export const ARVastuScanner = ({
 
       const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
       setCapturedImage(dataUrl);
-      toast.success(language === 'hi' ? 'फोटो सहेजी गई!' : 'AR Audit Photo captured!');
+      toast.success(language === 'hi' ? 'फोटो कैप्चर हो गई!' : 'AR Audit Photo captured!');
+    }
+  };
+
+  const handleSaveOrSharePhoto = async () => {
+    if (!capturedImage) return;
+    onHaptic();
+
+    const fileName = `Vastu_AR_${Date.now()}.jpg`;
+
+    // 1. Native Capacitor Filesystem & Share for Android / iOS
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const base64Data = capturedImage.includes(',') ? capturedImage.split(',')[1] : capturedImage;
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Documents,
+          recursive: true
+        });
+
+        // Trigger native share so user can save directly to Photos/Gallery, WhatsApp, Drive, etc.
+        try {
+          await Share.share({
+            title: language === 'hi' ? 'दिशा ज्ञान AR वास्तु ऑडिट' : 'Digital Compass AR Vastu Audit',
+            text: `Vastu Audit Photo - ${Math.round(curDeg)}° ${directionName} (${roomConfig.label})`,
+            url: savedFile.uri,
+            dialogTitle: language === 'hi' ? 'फोटो सहेजें या साझा करें' : 'Save or Share AR Photo',
+          });
+          toast.success(language === 'hi' ? 'गैलरी में सहेजा गया / साझा किया गया!' : 'Saved to Documents / Shared successfully!');
+          return;
+        } catch {
+          toast.success(language === 'hi' ? 'फ़ाइल दस्तावेज़ फ़ोल्डर में सहेजी गई!' : 'Image saved to Documents folder!');
+          return;
+        }
+      } catch (err) {
+        console.warn('Native filesystem write error, falling back:', err);
+      }
+    }
+
+    // 2. Web Share API with File (Supported in Android Chrome / WebViews)
+    if (navigator.share && navigator.canShare) {
+      try {
+        const res = await fetch(capturedImage);
+        const blob = await res.blob();
+        const file = new File([blob], fileName, { type: 'image/jpeg' });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: language === 'hi' ? 'दिशा ज्ञान AR वास्तु ऑडिट' : 'Digital Compass AR Vastu Audit',
+            text: `Vastu Audit: ${Math.round(curDeg)}° ${directionName}`
+          });
+          toast.success(language === 'hi' ? 'सफलतापूर्वक साझा किया गया!' : 'Shared successfully!');
+          return;
+        }
+      } catch (err: any) {
+        if (err?.name === 'AbortError') return;
+        console.warn('Web Share failed, fallback to download:', err);
+      }
+    }
+
+    // 3. Browser direct blob anchor download fallback
+    try {
+      const link = document.createElement('a');
+      link.href = capturedImage;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success(language === 'hi' ? 'फोटो डाउनलोड हो गई!' : 'Photo downloaded!');
+    } catch {
+      toast.error(language === 'hi' ? 'फोटो सहेजने में विफल' : 'Failed to save photo');
     }
   };
 
@@ -395,7 +469,7 @@ export const ARVastuScanner = ({
       {/* Bottom Action Controls & Snapshot */}
       <div className="relative z-20 pb-8 px-6 flex items-center justify-between bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-6">
         <div className="text-left">
-          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+          <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
             {language === 'hi' ? 'सक्रिय कमरा' : 'Target Room'}
           </span>
           <span className="text-xs font-black text-white">
@@ -440,11 +514,11 @@ export const ARVastuScanner = ({
         </div>
 
         <div className="text-right">
-          <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider block">
+          <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
             {language === 'hi' ? 'तत्व' : 'Element'}
           </span>
           <span className="text-xs font-black text-amber-300">
-            {currentDevta.element}
+            {language === 'hi' ? currentDevta.elementNameHi : currentDevta.element}
           </span>
         </div>
       </div>
@@ -455,17 +529,16 @@ export const ARVastuScanner = ({
           <div className="relative max-w-sm w-full bg-stone-900 rounded-3xl overflow-hidden border border-white/20 shadow-2xl">
             <img src={capturedImage} alt="AR Snapshot" className="w-full h-auto object-cover" />
             <div className="p-4 flex gap-3">
-              <a
-                href={capturedImage}
-                download={`Vastu_AR_${Date.now()}.jpg`}
-                className="flex-1 py-3 rounded-2xl bg-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-transform"
+              <button
+                onClick={handleSaveOrSharePhoto}
+                className="flex-1 py-3 rounded-2xl bg-amber-500 text-stone-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 active:scale-95 transition-transform shadow-lg cursor-pointer"
               >
                 <Download className="w-4 h-4" />
                 <span>{language === 'hi' ? 'गैलरी में सहेजें' : 'Save Image'}</span>
-              </a>
+              </button>
               <button
                 onClick={() => setCapturedImage(null)}
-                className="py-3 px-5 rounded-2xl bg-stone-800 text-white font-bold text-xs uppercase active:scale-95 transition-transform"
+                className="py-3 px-5 rounded-2xl bg-stone-800 text-white font-bold text-xs uppercase active:scale-95 transition-transform cursor-pointer"
               >
                 {language === 'hi' ? 'बंद करें' : 'Close'}
               </button>

@@ -9,6 +9,7 @@ export interface DevtaPada {
   name: string;    // English name
   nameHi: string;  // Hindi name
   element: string; // Element (Water, Air, Fire, Earth, Space)
+  elementNameHi: string; // Hindi element name
   startDeg: number;
   endDeg: number;
   centerDeg: number;
@@ -23,11 +24,20 @@ const ELEMENT_MAP: Record<string, string> = {
   Akash: 'Space'
 };
 
+const ELEMENT_HI_MAP: Record<string, string> = {
+  Jal: 'जल तत्व',
+  Vayu: 'वायु तत्व',
+  Agni: 'अग्नि तत्व',
+  Prithvi: 'पृथ्वी तत्व',
+  Akash: 'आकाश तत्व'
+};
+
 export const DEVTA_32_PADAS: DevtaPada[] = VASTU_32_PADAS.map((p) => ({
   id: p.code.replace('*', ''),
   name: p.nameEn,
   nameHi: p.nameHi,
   element: ELEMENT_MAP[p.element] || p.element,
+  elementNameHi: p.elementNameHi,
   startDeg: p.startDeg,
   endDeg: p.endDeg,
   centerDeg: p.centerDeg,
@@ -41,6 +51,7 @@ export const getDevtaPadaAtDegree = (degree: number): DevtaPada => {
     name: pada.nameEn,
     nameHi: pada.nameHi,
     element: ELEMENT_MAP[pada.element] || pada.element,
+    elementNameHi: pada.elementNameHi,
     startDeg: pada.startDeg,
     endDeg: pada.endDeg,
     centerDeg: pada.centerDeg,

@@ -64,8 +64,8 @@ export const JainPanel = memo(({
             className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-inner active:scale-95 border",
               theme === 'light'
-                ? "bg-white border-stone-200 text-stone-500 hover:text-stone-700 hover:bg-stone-50"
-                : "bg-stone-900 border-stone-800 text-stone-500 hover:text-stone-300 hover:bg-stone-800"
+                ? "bg-white border-stone-200 text-stone-600 hover:text-stone-700 hover:bg-stone-50"
+                : "bg-stone-900 border-stone-800 text-stone-600 hover:text-stone-300 hover:bg-stone-800"
             )}
           >
             <RotateCcw className="w-5 h-5" />
@@ -84,7 +84,7 @@ export const JainPanel = memo(({
         "p-4 rounded-xl border shadow-inner transition-colors duration-300",
         theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
       )}>
-        <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-3">
+        <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3">
           {language === 'hi' ? 'साधना चेकलिस्ट' : 'Sadhana Setup'}
         </h5>
         <div className="space-y-2">
@@ -115,7 +115,7 @@ export const JainPanel = memo(({
                 "text-xs font-medium transition-colors",
                 checklist[item.id]
                   ? (theme === 'light' ? "text-amber-900" : "text-amber-100")
-                  : "text-stone-400"
+                  : "text-stone-600"
               )}>{item.text}</span>
             </div>
           ))}
@@ -126,7 +126,7 @@ export const JainPanel = memo(({
         "p-4 rounded-xl border shadow-inner transition-colors duration-300",
         theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
       )}>
-        <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-3">
+        <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3">
           {language === 'hi' ? 'दैनिक चर्या दिशा निर्देश' : 'Daily Routine Directions'}
         </h5>
         <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-thin">

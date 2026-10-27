@@ -282,7 +282,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
     try {
       if (stream) {
         stream.getTracks().forEach((t) => {
-          try { t.stop(); } catch {}
+          try { t.stop(); } catch (e) { console.error('Failed to stop camera track in Telescope:', e); }
         });
         setStream(null);
       }
@@ -333,7 +333,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
     return () => {
       if (stream) {
         stream.getTracks().forEach((t) => {
-          try { t.stop(); } catch {}
+          try { t.stop(); } catch (e) { console.error('Failed to stop camera track on cleanup in Telescope:', e); }
         });
       }
     };
@@ -453,7 +453,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
           <p className="text-stone-300 text-xs font-bold uppercase tracking-wider mb-1">
             AR TELESCOPE CAMERA VIEW
           </p>
-          <p className="text-stone-400 text-[11px] max-w-xs mb-4">
+          <p className="text-stone-600 text-[11px] max-w-xs mb-4">
             {cameraError ? cameraError : (language === 'hi' ? 'लाइव ऑप्टिकल टेलीस्कोप कैमरा और कंपास देखने के लिए कैमरा अनुमति दें।' : 'Enable camera permissions to view the live optical telescope camera with compass telemetry.')}
           </p>
           <button
@@ -472,11 +472,11 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
       {/* 3. Top Scrolling Bearing Azimuth Tape */}
       <div className="hidden absolute top-4 inset-x-8 z-30 flex-col items-center pointer-events-none">
         <div className="px-4 py-1 rounded-full bg-black/70 backdrop-blur-md border border-cyan-400/40 text-white flex items-center gap-3 shadow-lg">
-          <span className="text-[10px] font-mono text-stone-400">{(displayDeg - 15 + 360) % 360}°</span>
+          <span className="text-[10px] font-mono text-stone-600">{(displayDeg - 15 + 360) % 360}°</span>
           <span className="text-sm font-mono font-black text-cyan-400 tracking-wider">
             {displayDeg}°
           </span>
-          <span className="text-[10px] font-mono text-stone-400">{(displayDeg + 15) % 360}°</span>
+          <span className="text-[10px] font-mono text-stone-600">{(displayDeg + 15) % 360}°</span>
         </div>
         {/* Reticle Caret */}
         <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[7px] border-t-cyan-400 drop-shadow-[0_0_6px_#00f0ff] -mt-0.5" />
@@ -534,7 +534,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
               onClick={() => setZoomLevel(z)}
               className={cn(
                 "px-2 py-0.5 rounded-lg text-[9px] font-mono font-bold uppercase transition-all",
-                zoomLevel === z ? "bg-cyan-500 text-black shadow-sm" : "text-stone-400 hover:text-white"
+                zoomLevel === z ? "bg-cyan-500 text-black shadow-sm" : "text-stone-600 hover:text-white"
               )}
             >
               {z}X
@@ -591,7 +591,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
           >
             <span className="text-amber-300">🏠</span>
             <span>{selectedRoomLabel}</span>
-            <ChevronDown className={cn("w-3.5 h-3.5 text-stone-400 transition-transform", roomSelectorOpen && "rotate-180")} />
+            <ChevronDown className={cn("w-3.5 h-3.5 text-stone-600 transition-transform", roomSelectorOpen && "rotate-180")} />
           </button>
           {roomSelectorOpen && (
             <div className="absolute top-full left-0 mt-1 w-56 max-h-64 overflow-y-auto rounded-2xl bg-black/90 backdrop-blur-md border border-white/20 shadow-2xl p-1.5 z-50">
@@ -639,14 +639,14 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
                   : (verdict === 'auspicious' ? 'Auspicious' : verdict === 'dosha' ? 'Vastu Dosha' : 'Neutral')}
               </span>
             </div>
-            <span className="text-[9px] font-mono text-stone-400">{displayDeg}°</span>
+            <span className="text-[9px] font-mono text-stone-600">{displayDeg}°</span>
           </div>
 
           {/* Body */}
           <div className="px-3 py-2.5 space-y-2">
             {/* Target Room */}
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">
+              <span className="text-[9px] font-bold text-stone-600 uppercase tracking-wider">
                 {language === 'hi' ? 'लक्ष्य कमरा' : 'Target Room'}
               </span>
               <span className="text-[11px] font-black text-white text-right">{selectedRoomLabel}</span>
@@ -654,7 +654,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
 
             {/* Element */}
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">
+              <span className="text-[9px] font-bold text-stone-600 uppercase tracking-wider">
                 {language === 'hi' ? 'तत्व' : 'Element'}
               </span>
               <span className="text-[11px] font-black text-amber-300">
@@ -664,7 +664,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
 
             {/* Current Direction */}
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider">
+              <span className="text-[9px] font-bold text-stone-600 uppercase tracking-wider">
                 {language === 'hi' ? 'दिशा' : 'Direction'}
               </span>
               <span className="text-[11px] font-black text-cyan-300">
@@ -674,7 +674,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
 
             {/* Remedy */}
             <div className="pt-1.5 border-t border-white/10">
-              <span className="text-[9px] font-bold text-stone-400 uppercase tracking-wider block mb-1">
+              <span className="text-[9px] font-bold text-stone-600 uppercase tracking-wider block mb-1">
                 {language === 'hi' ? 'उपाय' : 'Remedy'}
               </span>
               <p className="text-[10px] text-stone-300 leading-snug">
@@ -732,7 +732,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
         </div>
 
         <div className="absolute bottom-5 left-7 pointer-events-auto">
-          <span className="block text-[8px] font-black uppercase tracking-wide text-stone-400">{scannerCopy.targetRoom}</span>
+          <span className="block text-[8px] font-black uppercase tracking-wide text-stone-600">{scannerCopy.targetRoom}</span>
           <div className="relative mt-1">
             <button onClick={() => setRoomSelectorOpen((value) => !value)} className="flex max-w-[128px] items-center gap-1 text-left text-[11px] font-black leading-tight text-white">
               <span>{selectedRoomLabel}</span><ChevronDown className={cn('h-4 w-4 text-stone-300 transition-transform', roomSelectorOpen && 'rotate-180')} />
@@ -746,7 +746,7 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
         </div>
 
         <div className="absolute bottom-5 right-7 text-right">
-          <span className="block text-[8px] font-black uppercase tracking-wide text-stone-400">{scannerCopy.element}</span>
+          <span className="block text-[8px] font-black uppercase tracking-wide text-stone-600">{scannerCopy.element}</span>
           <span className="mt-1 block text-[11px] font-black text-amber-300">{language === 'hi' ? currentZone.elementHi : currentZone.element}</span>
         </div>
 
@@ -762,3 +762,5 @@ export const TelescopeCameraCompass: React.FC<Props> = ({
     </div>
   );
 };
+
+export default TelescopeCameraCompass;

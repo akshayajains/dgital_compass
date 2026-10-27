@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   Activity, 
@@ -46,7 +46,7 @@ interface SensorItem {
   getTelemetry: () => Record<string, string | number>;
 }
 
-export const SensorsInspectorModal = ({
+export const SensorsInspectorModal = memo(({
   isOpen,
   onClose,
   language,
@@ -108,7 +108,9 @@ export const SensorsInspectorModal = ({
           setAmbientLux(sensor.illuminance);
         });
         sensor.start();
-      } catch {}
+      } catch (e) {
+        console.error('AmbientLightSensor not available:', e);
+      }
     }
 
     return () => {
@@ -119,7 +121,7 @@ export const SensorsInspectorModal = ({
 
   // Run Step-by-Step Diagnostic Sensor Benchmark
   const runDiagnostics = () => {
-    try { Haptics.impact({ style: ImpactStyle.Medium }); } catch {}
+    try { Haptics.impact({ style: ImpactStyle.Medium }); } catch (e) { console.error('Haptics failed in SensorsInspector diagnostics:', e); }
     setIsTesting(true);
     setTestProgress(0);
     setTestedSensorIndex(0);
@@ -133,13 +135,13 @@ export const SensorsInspectorModal = ({
       current += 1;
       setTestedSensorIndex(current);
       setTestProgress(Math.min(100, Math.round((current / total) * 100)));
-      try { Haptics.impact({ style: ImpactStyle.Light }); } catch {}
+      try { Haptics.impact({ style: ImpactStyle.Light }); } catch (e) { console.error('Haptics failed in SensorsInspector progress:', e); }
 
       if (current >= total) {
         if (testTimerRef.current) clearInterval(testTimerRef.current);
         setIsTesting(false);
         setTestComplete(true);
-        try { Haptics.impact({ style: ImpactStyle.Heavy }); } catch {}
+        try { Haptics.impact({ style: ImpactStyle.Heavy }); } catch (e) { console.error('Haptics failed in SensorsInspector complete:', e); }
       }
     }, 180);
   };
@@ -324,7 +326,7 @@ export const SensorsInspectorModal = ({
         {/* Compact Header with Test Button */}
         <div className="flex items-center justify-between pb-2.5 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]">
+            <div className="w-8 h-8 rounded-xl bg-teal-100 border border-emerald-500/30 flex items-center justify-center text-teal-700 shadow-[0_0_12px_rgba(52,211,153,0.3)]">
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div className="text-left">
@@ -372,7 +374,7 @@ export const SensorsInspectorModal = ({
 
             <button
               onClick={() => {
-                try { Haptics.impact({ style: ImpactStyle.Light }); } catch {}
+                try { Haptics.impact({ style: ImpactStyle.Light }); } catch (e) { console.error('Haptics failed in SensorsInspector close:', e); }
                 onClose();
               }}
               className={cn(
@@ -426,11 +428,11 @@ export const SensorsInspectorModal = ({
                   isBeingTested
                     ? "bg-amber-500/15 border-amber-400/60 shadow-[0_0_12px_rgba(245,158,11,0.3)] scale-[1.01]"
                     : isExpanded
-                    ? (theme === 'light' ? "bg-stone-50 border-emerald-500/40 shadow-sm" : "bg-[#161B22] border-emerald-500/40 shadow-md")
+                    ? (theme === 'light' ? "bg-stone-50 border-teal-500/40 shadow-sm" : "bg-[#161B22] border-emerald-500/40 shadow-md")
                     : (theme === 'light' ? "bg-white border-stone-200 hover:bg-stone-50" : "bg-[#13171D]/90 border-white/5 hover:bg-[#181E27]")
                 )}
                 onClick={() => {
-                  try { Haptics.impact({ style: ImpactStyle.Light }); } catch {}
+                  try { Haptics.impact({ style: ImpactStyle.Light }); } catch (e) { console.error('Haptics failed in SensorsInspector expand:', e); }
                   setExpandedId(isExpanded ? null : sensor.id);
                 }}
               >
@@ -442,7 +444,7 @@ export const SensorsInspectorModal = ({
                       isBeingTested
                         ? "bg-amber-500/20 text-amber-300 border-amber-400/50 animate-pulse"
                         : isTestPassed
-                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                        ? (theme === 'light' ? "bg-teal-100 text-teal-600 border-teal-400" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30")
                         : (theme === 'light' ? "bg-stone-100 text-stone-700 border-stone-200" : "bg-white/5 text-stone-400 border-white/10")
                     )}>
                       <Icon className="w-3.5 h-3.5" />
@@ -452,7 +454,7 @@ export const SensorsInspectorModal = ({
                       <span className="text-[11px] font-bold tracking-tight truncate leading-tight">
                         {sensor.name}
                       </span>
-                      <span className="text-[9px] font-mono text-emerald-400/90 font-bold truncate leading-tight">
+                      <span className={cn("text-[9px] font-mono font-bold truncate leading-tight", theme === 'light' ? "text-teal-600/90" : "text-emerald-400/90")}>
                         {liveValue}
                       </span>
                     </div>
@@ -465,12 +467,12 @@ export const SensorsInspectorModal = ({
                       isBeingTested
                         ? "bg-amber-500/20 text-amber-300 border-amber-400/40 animate-pulse"
                         : isTestPassed
-                        ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-                        : "bg-white/5 text-stone-300 border-white/10"
+                        ? (theme === 'light' ? "bg-teal-100 text-teal-700 border-teal-400" : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30")
+                        : (theme === 'light' ? "bg-stone-100 text-stone-500 border-stone-300" : "bg-white/5 text-stone-300 border-white/10")
                     )}>
                       {isBeingTested ? 'TESTING...' : isTestPassed ? '✓ PASS' : sensor.getTestStatus()}
                     </span>
-                    {isExpanded ? <ChevronDown className="w-3 h-3 text-stone-400" /> : <ChevronRight className="w-3 h-3 text-stone-500" />}
+                    {isExpanded ? <ChevronDown className="w-3 h-3 text-stone-600" /> : <ChevronRight className="w-3 h-3 text-stone-600" />}
                   </div>
                 </div>
 
@@ -480,9 +482,9 @@ export const SensorsInspectorModal = ({
                     "px-3 pb-2.5 pt-1.5 text-left border-t space-y-1.5 text-xs",
                     theme === 'light' ? "border-stone-200 bg-stone-100/50" : "border-white/5 bg-black/30"
                   )}>
-                    <div className="flex items-center justify-between text-[10px] text-stone-400">
+                    <div className="flex items-center justify-between text-[10px] text-stone-600">
                       <span>{sensor.description}</span>
-                      <span className="font-mono text-stone-400 text-[9px] truncate max-w-[12rem]">{sensor.vendor}</span>
+                      <span className="font-mono text-stone-600 text-[9px] truncate max-w-[12rem]">{sensor.vendor}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-1.5 pt-0.5 font-mono text-[10px]">
@@ -494,8 +496,8 @@ export const SensorsInspectorModal = ({
                             theme === 'light' ? "bg-white border-stone-200" : "bg-stone-900/90 border-white/10"
                           )}
                         >
-                          <span className="text-[8px] font-sans font-black uppercase text-stone-400">{key}</span>
-                          <span className="font-bold text-emerald-400">{value}</span>
+                          <span className="text-[8px] font-sans font-black uppercase text-stone-600">{key}</span>
+                          <span className={cn("font-bold", theme === 'light' ? "text-teal-700" : "text-emerald-400")}>{value}</span>
                         </div>
                       ))}
                     </div>
@@ -507,14 +509,17 @@ export const SensorsInspectorModal = ({
         </div>
 
         {/* Compact Footer */}
-        <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-stone-400 shrink-0">
+        <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-stone-600 shrink-0">
           <span className="flex items-center gap-1 font-medium">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+            <CheckCircle2 className={cn("w-3 h-3 shrink-0", theme === 'light' ? "text-teal-600" : "text-emerald-400")} />
             <span>{language === 'hi' ? 'सेंसर सटीकता: उच्च (High Precision)' : 'Sensor Precision: High (Fused)'}</span>
           </span>
           <button
             onClick={onClose}
-            className="py-1 px-3.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-stone-950 font-black text-[11px] uppercase tracking-wider active:scale-95 transition-all shadow-sm"
+            className={cn(
+              "py-1 px-3.5 rounded-lg text-stone-950 font-black text-[11px] uppercase tracking-wider active:scale-95 transition-all shadow-sm",
+              theme === 'light' ? "bg-teal-600 hover:bg-teal-700 text-white" : "bg-emerald-500 hover:bg-emerald-600"
+            )}
           >
             {language === 'hi' ? 'पूर्ण' : 'Close'}
           </button>
@@ -522,4 +527,6 @@ export const SensorsInspectorModal = ({
       </div>
     </div>
   );
-};
+});
+
+export default SensorsInspectorModal;

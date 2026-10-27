@@ -1,11 +1,16 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
+import { getAppThemePalette } from '@/lib/themePalettes';
+import { CompassStyleId } from '@/types/compass';
 import { cn } from '@/lib/utils';
 import { Grid, Save, Trash2 } from 'lucide-react';
 import { ImpactStyle } from '@capacitor/haptics';
+import { useStyleTheme } from '@/contexts/StyleThemeContext';
 
 interface VastuPanelProps {
   language: string;
   theme: string;
+  selectedStyle?: CompassStyleId;
+  variantId?: string | null;
   vastuScore: number | null;
   selectedRoom: string;
   setSelectedRoom: (v: string) => void;
@@ -22,44 +27,57 @@ interface VastuPanelProps {
 }
 
 export const VastuPanel = memo(({
-  language, theme, vastuScore, selectedRoom, setSelectedRoom,
+  language, theme, selectedStyle, variantId, vastuScore, selectedRoom, setSelectedRoom,
   doorDegree, setDoorDegree, house9Grid, setHouse9Grid, onHaptic,
   currentDir, savedRooms, onSaveRoom, onLoadRoom, onDeleteRoom
 }: VastuPanelProps) => {
+  const palette = useMemo(() => getAppThemePalette(selectedStyle, variantId), [selectedStyle, variantId]);
+  const { styleColors } = useStyleTheme();
+
+  // Fallback defaults
+  const cardBg = styleColors?.cardBg ?? '#181510';
+  const cardBgLight = styleColors?.cardBgLight ?? 'rgba(251, 247, 230, 0.5)';
+  const cardBorder = styleColors?.cardBorder ?? 'rgba(245, 158, 11, 0.15)';
+  const cardText = styleColors?.cardText ?? '#F5DEB3';
+  const cardTextLight = styleColors?.cardTextLight ?? '#78350F';
+
   return (
-    <div className="space-y-4">
-      <div className={cn(
-        "rounded-2xl p-4 border transition-all duration-300",
-        theme === 'light'
-          ? "bg-amber-50/50 border-amber-500/25 shadow-sm text-amber-950"
-          : "bg-[#181510] border-amber-500/15 shadow-inner"
-      )}>
-        <div className="flex justify-between items-start mb-3">
-          <h4 className={cn("font-extrabold text-sm transition-colors", theme === 'light' ? "text-amber-900" : "text-amber-200")}>{language === 'hi' ? 'वास्तु विश्लेषक' : 'Vastu Analyzer'}</h4>
+    <div className="w-full space-y-4">
+      <div
+        className={cn(
+          "w-full rounded-2xl px-2 py-3.5 sm:px-3 sm:py-4 border transition-all duration-300 shadow-md",
+          palette.telemetryCardBg,
+          palette.telemetryCardBorder
+        )}
+      >
+        <div className="flex justify-between items-start mb-3 px-1">
+          <h4 className={cn("font-extrabold text-sm transition-colors", palette.headingText)}>{language === 'hi' ? 'वास्तु विश्लेषक' : 'Vastu Analyzer'}</h4>
           {vastuScore !== null && (
-            <div className={cn(
-              "px-2 py-0.5 rounded-full text-[10px] font-black border tracking-wider",
-              vastuScore === 100 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
-              vastuScore === 0 ? "bg-red-500/20 text-red-400 border-red-500/30" :
-              (theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-amber-500/20 text-amber-400 border-amber-500/30")
-            )}>
+            <div
+              className="px-2 py-0.5 rounded-full text-[11px] font-black border tracking-wider transition-colors duration-500"
+              style={{
+                backgroundColor: vastuScore === 100 ? 'rgba(16, 185, 129, 0.2)' : vastuScore === 0 ? 'rgba(239, 68, 68, 0.2)' : (palette.isLight ? cardBgLight : cardBg),
+                color: vastuScore === 100 ? '#34D399' : vastuScore === 0 ? '#F87171' : (palette.isLight ? cardTextLight : cardText),
+                borderColor: vastuScore === 100 ? 'rgba(16, 185, 129, 0.3)' : vastuScore === 0 ? 'rgba(239, 68, 68, 0.3)' : cardBorder,
+              }}
+            >
               {language === 'hi' ? 'स्कोर: ' : 'Score: '}{vastuScore}%
             </div>
           )}
         </div>
 
         <div className="mb-4">
-          <label className={cn("text-[10px] uppercase font-black tracking-wider block mb-1.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+          <label className={cn("text-[11px] uppercase font-black tracking-wider block mb-1.5 px-1", palette.pillLabelText)}>
             {language === 'hi' ? 'कक्ष का प्रकार चुनें:' : 'Select Room Type:'}
           </label>
           <select
             value={selectedRoom}
             onChange={(e) => { setSelectedRoom(e.target.value); onHaptic(ImpactStyle.Medium); }}
             className={cn(
-              "w-full text-sm font-extrabold px-3 py-2.5 rounded-xl appearance-none outline-none transition-all duration-300 border shadow-inner",
-              theme === 'light'
-                ? "bg-white border-amber-500/30 text-amber-900 focus:border-amber-500"
-                : "bg-stone-950 border-amber-500/30 text-amber-100 focus:border-amber-400"
+              "w-full text-sm font-extrabold px-3 py-2.5 rounded-xl appearance-none outline-none transition-all duration-300 border shadow-inner cursor-pointer",
+              palette.isLight
+                ? "bg-white text-stone-900 border-stone-300"
+                : "bg-black/50 text-white border-white/20"
             )}
           >
             {[
@@ -105,15 +123,15 @@ export const VastuPanel = memo(({
           if (!isBad) return null;
           return (
             <div className={cn(
-              "mt-3 p-3 rounded-xl border flex items-start gap-2.5 transition-colors duration-300",
-              theme === 'light' ? "bg-red-50 border-red-300/50" : "bg-red-500/10 border-red-500/25"
+              "w-full mt-3 p-3 rounded-xl border flex items-start gap-2.5 transition-colors duration-300",
+              palette.isLight ? "bg-red-50 border-red-300/50" : "bg-red-500/10 border-red-500/25"
             )}>
               <span className="text-lg leading-none">🛠️</span>
               <div>
-                <p className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-red-700" : "text-red-400")}>
+                <p className={cn("text-[11px] font-black uppercase tracking-wider", palette.isLight ? "text-red-700" : "text-red-400")}>
                   {language === 'hi' ? 'वास्तु दोष उपाय' : 'Vastu Dosha Remedy'}
                 </p>
-                <p className={cn("text-[11px] leading-relaxed font-medium mt-0.5", theme === 'light' ? "text-red-900" : "text-red-200")}>
+                <p className={cn("text-[12px] leading-relaxed font-medium mt-0.5", palette.isLight ? "text-red-900" : "text-red-200")}>
                   {language === 'hi' ? r.remedyHi : r.remedy}
                 </p>
               </div>
@@ -122,42 +140,44 @@ export const VastuPanel = memo(({
         })()}
 
         {/* Item 13: Saved rooms */}
-        <div className={cn("mt-3 pt-3 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
-          <div className="flex items-center justify-between mb-2">
-            <h5 className={cn("text-[10px] uppercase font-black tracking-wider", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+        <div className={cn("mt-3 pt-3 border-t", palette.isLight ? "border-stone-200" : "border-white/5")}>
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h5 className={cn("text-[11px] uppercase font-black tracking-wider", palette.pillLabelText)}>
               {language === 'hi' ? 'सहेजे गए कक्ष' : 'Saved Rooms'}
             </h5>
             <button
               onClick={() => { onHaptic(ImpactStyle.Medium); onSaveRoom(selectedRoom); }}
-              className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border transition-all active:scale-95",
-                theme === 'light' ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-amber-500/15 text-amber-400 border-amber-500/30"
-              )}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border transition-all duration-500 active:scale-95"
+              style={{
+                backgroundColor: palette.isLight ? cardBgLight : cardBg,
+                color: palette.isLight ? cardTextLight : cardText,
+                borderColor: cardBorder,
+              }}
             >
               <Save className="w-3 h-3" />
               {language === 'hi' ? 'सहेजें' : 'Save'}
             </button>
           </div>
           {savedRooms.length === 0 ? (
-            <p className={cn("text-[10px] font-medium", theme === 'light' ? "text-stone-500" : "text-stone-500")}>
+            <p className={cn("text-[11px] font-medium px-1", palette.pillLabelText)}>
               {language === 'hi' ? 'अभी कोई कक्ष सहेजा नहीं गया।' : 'No saved rooms yet.'}
             </p>
           ) : (
             <div className="space-y-1.5">
               {savedRooms.map((r) => (
-                <div key={r.id} className={cn(
-                  "flex items-center justify-between gap-2 p-2 rounded-lg border transition-colors",
-                  theme === 'light' ? "bg-white border-stone-200" : "bg-stone-900/60 border-stone-800"
-                )}>
+                <div key={r.id} className="w-full flex items-center justify-between gap-2 p-2 rounded-lg border transition-colors duration-500" style={{
+                  backgroundColor: palette.isLight ? 'rgba(255,255,255,0.8)' : 'rgba(30,30,30,0.6)',
+                  borderColor: cardBorder,
+                }}>
                   <button
                     onClick={() => { onHaptic(); onLoadRoom(r.id); }}
-                    className="flex-1 text-left text-[11px] font-bold truncate"
+                    className="flex-1 text-left text-[12px] font-bold truncate"
                   >
                     {r.room} · {r.door}°
                   </button>
                   <button
                     onClick={() => { onHaptic(); onDeleteRoom(r.id); }}
-                    className="text-stone-500 hover:text-red-500 transition-colors"
+                    className="text-stone-600 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -168,26 +188,28 @@ export const VastuPanel = memo(({
         </div>
 
         {/* 32 Padas Gate Checker */}
-        <div className={cn("mt-4 pt-3 border-t space-y-2", theme === 'light' ? "border-stone-200" : "border-white/5")}>
-          <label className={cn("text-[10px] uppercase font-black tracking-wider block mb-1", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
-            {language === 'hi' ? 'मुख्य द्वार की दिशा (डिग्री):' : 'Main Door Direction (Degrees):'}
-          </label>
-          <div className="flex gap-2 items-center">
-            <input
-              type="number"
-              min="0"
-              max="359"
-              placeholder="e.g. 90"
-              value={doorDegree}
-              onChange={(e) => { setDoorDegree(Math.min(359, Math.max(0, parseInt(e.target.value) || 0))); onHaptic(ImpactStyle.Medium); }}
-              className={cn(
-                "w-24 text-sm font-extrabold px-3 py-2 rounded-xl outline-none border shadow-inner",
-                theme === 'light'
-                  ? "bg-white border-amber-500/30 text-amber-900 focus:border-amber-500"
-                  : "bg-stone-950 border-amber-500/30 text-amber-100 focus:border-amber-400"
-              )}
-            />
-            <span className={cn("text-xs font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>°</span>
+        <div className={cn("mt-4 pt-3 border-t space-y-2", palette.isLight ? "border-stone-200" : "border-white/5")}>
+          <div className="flex items-center justify-between gap-2 px-1">
+            <label className={cn("text-[11px] uppercase font-black tracking-wider truncate", palette.pillLabelText)}>
+              {language === 'hi' ? 'मुख्य द्वार की दिशा (डिग्री):' : 'Main Door Direction (Degrees):'}
+            </label>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <input
+                type="number"
+                min="0"
+                max="359"
+                placeholder="e.g. 90"
+                value={doorDegree}
+                onChange={(e) => { setDoorDegree(Math.min(359, Math.max(0, parseInt(e.target.value) || 0))); onHaptic(ImpactStyle.Medium); }}
+                className="w-20 sm:w-24 text-sm font-extrabold px-2.5 py-1.5 rounded-xl outline-none border shadow-inner transition-colors duration-500 text-center"
+                style={{
+                  backgroundColor: palette.isLight ? '#ffffff' : 'rgb(2, 6, 23)',
+                  borderColor: cardBorder,
+                  color: palette.isLight ? cardTextLight : cardText,
+                }}
+              />
+              <span className={cn("text-sm font-bold", palette.pillLabelText)}>°</span>
+            </div>
           </div>
 
           {(() => {
@@ -233,81 +255,97 @@ export const VastuPanel = memo(({
             const currentPada = padas[index % 32];
 
             return (
-              <div className={cn(
-                "p-3 rounded-xl border flex flex-col gap-1 text-[11px] transition-colors duration-300",
-                currentPada.quality === 'good' ? (theme === 'light' ? "bg-emerald-50 border-emerald-300 text-emerald-800" : "bg-emerald-500/10 border-emerald-500/25 text-emerald-400") :
-                currentPada.quality === 'bad' ? (theme === 'light' ? "bg-red-50 border-red-300 text-red-700" : "bg-red-500/10 border-red-500/25 text-red-400") :
-                (theme === 'light' ? "bg-white border-stone-300 text-stone-700" : "bg-stone-900 border-white/5 text-stone-300")
-              )}>
+              <div
+                className={cn(
+                  "w-full p-3 sm:p-3.5 rounded-xl border flex flex-col gap-1 text-[12px] transition-colors duration-500 shadow-sm",
+                  currentPada.quality === 'good'
+                    ? (palette.isLight ? "bg-emerald-50 border-emerald-300 text-emerald-950" : "bg-emerald-500/15 border-emerald-500/35 text-emerald-200")
+                    : currentPada.quality === 'bad'
+                    ? (palette.isLight ? "bg-rose-50 border-rose-300 text-rose-950" : "bg-rose-500/15 border-rose-500/35 text-rose-200")
+                    : `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
+                )}
+              >
                 <div className="flex justify-between items-center font-extrabold">
-                  <span>{language === 'hi' ? 'द्वार पद (Pada):' : 'Gate Pada:'} {currentPada.name}</span>
-                  <span className="uppercase text-[9px] px-1.5 py-0.5 rounded font-black">
+                  <span className={palette.headingText}>{language === 'hi' ? 'द्वार पद (Pada):' : 'Gate Pada:'} {currentPada.name}</span>
+                  <span className={cn(
+                    "uppercase text-[10px] px-2.5 py-0.5 rounded-full font-black border shadow-sm",
+                    currentPada.quality === 'good'
+                      ? (palette.isLight ? "bg-emerald-600 text-white border-emerald-700" : "bg-emerald-500/25 text-emerald-300 border-emerald-500/40")
+                      : currentPada.quality === 'bad'
+                      ? (palette.isLight ? "bg-rose-600 text-white border-rose-700" : "bg-rose-500/25 text-rose-300 border-rose-500/40")
+                      : (palette.isLight ? "bg-stone-100 text-stone-900 border-stone-300 font-black" : `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`)
+                  )}>
                     {currentPada.quality === 'good' ? (language === 'hi' ? 'अति शुभ' : 'Auspicious') :
                      currentPada.quality === 'bad' ? (language === 'hi' ? 'अशुभ' : 'Inauspicious') :
                      (language === 'hi' ? 'सामान्य' : 'Neutral')}
                   </span>
                 </div>
-                <p className="mt-1 font-medium">{language === 'hi' ? 'प्रभाव/फल:' : 'Effect:'} {currentPada.effect}</p>
+                <p className={cn("mt-1 font-medium", palette.isLight ? "text-stone-800" : "text-stone-300")}>{language === 'hi' ? 'प्रभाव/फल:' : 'Effect:'} {currentPada.effect}</p>
               </div>
             );
           })()}
         </div>
 
         <div className={cn(
-          "p-3.5 rounded-xl border shadow-inner transition-colors duration-300 space-y-3",
-          theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-900"
+          "w-full p-3.5 sm:p-4 rounded-xl border shadow-inner transition-colors duration-300 space-y-3",
+          palette.isLight ? "bg-white/80 border-stone-300/80" : "bg-black/35 border-white/10"
         )}>
           <div>
-            <h5 className={cn("text-[10px] uppercase font-black tracking-wider mb-1", theme === 'light' ? "text-stone-600" : "text-stone-500")}>{language === 'hi' ? 'वास्तु सुझाव' : 'Vastu Tips'}</h5>
-            <p className={cn("text-[11px] leading-relaxed font-medium transition-colors", theme === 'light' ? "text-amber-900" : "text-stone-300")}>
+            <h5 className={cn("text-[11px] uppercase font-black tracking-wider mb-1", palette.headingText)}>{language === 'hi' ? 'वास्तु सुझाव' : 'Vastu Tips'}</h5>
+            <p className={cn("text-[12px] leading-relaxed font-medium transition-colors", palette.isLight ? "text-stone-800" : "text-stone-300")}>
               {language === 'hi'
                 ? 'कम्पास डायल पर उत्तम (BEST) दिशाओं को देखें। कम्पास को घुमाएं जब तक वह अनुकूल दिशा पर न आ जाए।'
                 : 'Look for the favorable BEST directions highlighted on the compass dial for optimal room placement.'}
             </p>
           </div>
 
-          <div className={cn("pt-2 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
-            <h5 className={cn("text-[10px] uppercase font-black tracking-wider mb-1", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? 'ब्रह्मस्थान (घर का केंद्र)' : 'Brahmasthan (Center Point)'}</h5>
-            <p className={cn("text-[11px] leading-relaxed font-medium transition-colors", theme === 'light' ? "text-amber-900" : "text-stone-300")}>
+          <div className={cn("pt-2 border-t", palette.isLight ? "border-stone-200" : "border-white/5")}>
+            <h5 className={cn("text-[11px] uppercase font-black tracking-wider mb-1", palette.pillUnitText)}>{language === 'hi' ? 'ब्रह्मस्थान (घर का केंद्र)' : 'Brahmasthan (Center Point)'}</h5>
+            <p className={cn("text-[12px] leading-relaxed font-medium transition-colors", palette.isLight ? "text-stone-800" : "text-stone-300")}>
               {language === 'hi'
                 ? 'घर के ठीक केंद्र को ब्रह्मस्थान कहते हैं। इसे हमेशा साफ, खुला, हल्का और स्तंभों या भारी फर्नीचर से मुक्त रखें।'
                 : 'The exact center of your home is the Brahmasthan. Keep it clean, empty, light, and free from heavy pillars, walls, toilets, or kitchens.'}
             </p>
           </div>
 
-          <div className={cn("pt-2 border-t space-y-2", theme === 'light' ? "border-stone-200" : "border-white/5")}>
-            <h5 className={cn("text-[10px] uppercase font-black tracking-wider", theme === 'light' ? "text-amber-700" : "text-amber-500")}>{language === 'hi' ? 'सरल वास्तु दोष उपाय' : 'Easy Vastu Remedies'}</h5>
-            <div className={cn("space-y-1.5 text-[10px] leading-normal", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
+          <div className={cn("pt-2 border-t space-y-2", palette.isLight ? "border-stone-200" : "border-white/5")}>
+            <h5 className={cn("text-[11px] uppercase font-black tracking-wider", palette.pillUnitText)}>{language === 'hi' ? 'सरल वास्तु दोष उपाय' : 'Easy Vastu Remedies'}</h5>
+            <div className={cn("space-y-1.5 text-[11px] leading-normal", palette.isLight ? "text-stone-700" : "text-stone-300")}>
               <div className="flex flex-col gap-0.5">
-                <span className={cn("font-extrabold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? '🚽 उत्तर-पूर्व में शौचालय:' : '🚽 Toilet in North-East:'}</span>
+                <span className={cn("font-extrabold", palette.headingText)}>{language === 'hi' ? '🚽 उत्तर-पूर्व में शौचालय:' : '🚽 Toilet in North-East:'}</span>
                 <span>{language === 'hi' ? 'शौचालय में समुद्री नमक का कटोरा रखें (साप्ताहिक बदलें) और बाहर तांबे का पिरामिड लगाएं।' : 'Keep sea salt bowl inside, place brass pyramid outside.'}</span>
               </div>
-              <div className={cn("flex flex-col gap-0.5 pt-1.5 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
-                <span className={cn("font-extrabold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? '🍳 दक्षिण-पश्चिम में रसोई:' : '🍳 Kitchen in South-West:'}</span>
+              <div className={cn("flex flex-col gap-0.5 pt-1.5 border-t", palette.isLight ? "border-stone-200" : "border-white/5")}>
+                <span className={cn("font-extrabold", palette.headingText)}>{language === 'hi' ? '🍳 दक्षिण-पश्चिम में रसोई:' : '🍳 Kitchen in South-West:'}</span>
                 <span>{language === 'hi' ? 'गैस चूल्हे के चारों ओर पीला टेप लगाएं या चूल्हे के नीचे तांबे की प्लेट रखें।' : 'Apply yellow tape around stove base or place a copper plate underneath.'}</span>
               </div>
-              <div className={cn("flex flex-col gap-0.5 pt-1.5 border-t", theme === 'light' ? "border-stone-200" : "border-white/5")}>
-                <span className={cn("font-extrabold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>{language === 'hi' ? '🚪 दक्षिण-पश्चिम में मुख्य द्वार:' : '🚪 Main Door in South-West:'}</span>
+              <div className={cn("flex flex-col gap-0.5 pt-1.5 border-t", palette.isLight ? "border-stone-200" : "border-white/5")}>
+                <span className={cn("font-extrabold", palette.headingText)}>{language === 'hi' ? '🚪 दक्षिण-पश्चिम में मुख्य द्वार:' : '🚪 Main Door in South-West:'}</span>
                 <span>{language === 'hi' ? 'दरवाजे को पीले रंग से पेंट करें या प्रवेश द्वार पर हनुमान जी की तस्वीर लगाएं।' : 'Paint the door golden-yellow or place lead metal helix.'}</span>
               </div>
             </div>
           </div>
 
           {/* Interactive 9-Grid Vastu House Floorplan Mapper */}
-          <div className={cn("pt-3 border-t", theme === 'light' ? "border-stone-200" : "border-white/10")}>
+          <div className={cn("pt-3 border-t", palette.isLight ? "border-stone-200" : "border-white/10")}>
             <div className="flex items-center justify-between mb-2">
-              <h5 className={cn("text-[11px] uppercase font-black tracking-wider flex items-center gap-1.5", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
-                <Grid className="w-3.5 h-3.5 text-amber-400" />
+              <h5 className={cn("text-[11px] uppercase font-black tracking-wider flex items-center gap-1.5", palette.headingText)}>
+                <Grid className={cn("w-3.5 h-3.5", palette.pillUnitText)} />
                 {language === 'hi' ? '9-ग्रिड संपूर्ण घर वास्तु विश्लेषक' : 'Interactive 9-Grid Floorplan Mapper'}
               </h5>
-              <span className={cn("text-[9px] font-bold px-2 py-0.5 rounded-full border", vastuScore !== null ? (theme === 'light' ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40") : (theme === 'light' ? "bg-stone-100 text-stone-500 border-stone-300" : "bg-white/5 text-stone-500 border-white/10"))}>
+              <span className={cn(
+                "text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-sm",
+                vastuScore !== null
+                  ? `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
+                  : (palette.isLight ? "bg-stone-100 text-stone-500 border-stone-300" : "bg-white/5 text-stone-500 border-white/10")
+              )}>
                 {vastuScore !== null ? `${language === 'hi' ? 'वास्तु स्कोर: ' : 'Vastu Score: '}${vastuScore}%` : '—'}
               </span>
             </div>
 
             <div className={cn(
               "grid grid-cols-3 gap-1.5 p-2 rounded-xl border text-center",
-              theme === 'light' ? "bg-stone-100 border-stone-300" : "bg-black/40 border-white/10"
+              palette.isLight ? "bg-stone-100/80 border-stone-300" : "bg-black/40 border-white/10"
             )}>
               {[
                 { key: 'NW', label: language === 'hi' ? 'वायव्य (NW)' : 'North-West (NW)' },
@@ -322,15 +360,15 @@ export const VastuPanel = memo(({
               ].map(sec => (
                 <div key={sec.key} className={cn(
                   "p-1.5 rounded-lg border flex flex-col justify-between",
-                  theme === 'light' ? "border-stone-300 bg-white" : "border-white/10 bg-stone-900/60"
+                  palette.isLight ? "border-stone-300 bg-white" : "border-white/10 bg-stone-900/60"
                 )}>
-                  <span className={cn("text-[7.5px] font-black uppercase", theme === 'light' ? "text-stone-500" : "text-stone-400")}>{sec.label}</span>
+                  <span className={cn("text-[8.5px] font-black uppercase", palette.pillLabelText)}>{sec.label}</span>
                   <select
                     value={house9Grid[sec.key] || 'open'}
                     onChange={(e) => setHouse9Grid(prev => ({ ...prev, [sec.key]: e.target.value }))}
                     className={cn(
-                      "mt-1 text-[8.5px] font-bold border rounded px-0.5 py-0.5 outline-none",
-                      theme === 'light' ? "bg-white text-amber-800 border-stone-300" : "bg-black text-amber-200 border-white/10"
+                      "mt-1 text-[10px] font-bold border rounded px-0.5 py-0.5 outline-none",
+                      palette.isLight ? "bg-white text-amber-800 border-stone-300" : "bg-black text-amber-200 border-white/10"
                     )}
                   >
                     <option value="open">{language === 'hi' ? 'खुला स्थान' : 'Open Space'}</option>

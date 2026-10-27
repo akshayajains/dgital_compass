@@ -49,7 +49,7 @@ public class CompassWidgetProvider extends AppWidgetProvider {
         float heading = prefs.getFloat(KEY_HEADING, 0f);
         float pitch = prefs.getFloat(KEY_PITCH, 0f);
         float roll = prefs.getFloat(KEY_ROLL, 0f);
-        String timestamp = prefs.getString(KEY_TIMESTAMP, "Tap to Check Direction");
+        String timestamp = prefs.getString(KEY_TIMESTAMP, "Tap to Check");
 
         for (int appWidgetId : appWidgetIds) {
             updateSingleWidget(context, appWidgetManager, appWidgetId, heading, pitch, roll, timestamp, false);
@@ -177,8 +177,8 @@ public class CompassWidgetProvider extends AppWidgetProvider {
 
             float cx = size / 2f;
             float cy = size / 2f;
-            float outerRadius = (size / 2f) - 18f; // 142f for size=320
-            float hubRadius = 58f;                 // Inner hub circle around center text
+            float outerRadius = (size / 2f) - 8f; // 142f for size=320
+            float hubRadius = 46f;                 // Inner hub circle around center text
 
             // Outer subtle bezel ring
             Paint bezelRingPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -235,7 +235,7 @@ public class CompassWidgetProvider extends AppWidgetProvider {
             degNumPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
             degNumPaint.setTextAlign(Paint.Align.CENTER);
 
-            float numRadius = outerRadius - 21f;
+            float numRadius = outerRadius - 19f;
             for (int deg = 30; deg < 360; deg += 30) {
                 if (deg % 90 == 0) continue; // Skip 0, 90, 180, 270 where N, E, S, W sit
                 float rad = (float) Math.toRadians(deg);
@@ -251,9 +251,9 @@ public class CompassWidgetProvider extends AppWidgetProvider {
 
             // 3. Draw 3D Faceted Bicolor Compass Needle (spanning from hubRadius+2 out to outerRadius-32)
             // Placed BEFORE N/E/S/W labels so the North spear points cleanly into the 'N' emblem!
-            float needleInner = hubRadius + 1f;       // 59f
-            float needleOuterNorth = outerRadius - 28f; // 114f
-            float needleOuterSouth = outerRadius - 34f; // 108f
+            float needleInner = hubRadius + 1f;
+            float needleOuterNorth = outerRadius - 26f;
+            float needleOuterSouth = outerRadius - 32f;
             float needleHalfWidth = 10.5f;
 
             // 3a. South Counter-Spear (180° — Brushed Silver-Titanium 3D facets)
@@ -320,7 +320,7 @@ public class CompassWidgetProvider extends AppWidgetProvider {
             // 4. Draw All 4 Cardinal Labels (N, E, S, W) kept upright for instant readability
             String[] cardLabels = {"N", "E", "S", "W"};
             int[] cardAngles = {0, 90, 180, 270};
-            float cardRadius = outerRadius - 20f;
+            float cardRadius = outerRadius - 18f;
 
             Paint cardPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             cardPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));

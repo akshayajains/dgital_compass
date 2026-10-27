@@ -1,6 +1,9 @@
-import React, { memo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ImpactStyle } from '@capacitor/haptics';
+import { generateAnnualForecast, AnnualForecast } from '@/lib/annualNumerology';
+import { ChevronDown, ChevronUp, Calendar, TrendingUp, DollarSign, Heart, Brain, Sparkles, Gem as GemIcon, Palette as PaletteIcon } from 'lucide-react';
+import { Language } from '@/types/compass';
 
 interface NumerologyPanelProps {
   language: string;
@@ -28,6 +31,18 @@ export const NumerologyPanel = memo(({
   numerologyHouse, setNumerologyHouse, houseTotal,
   numerologyVehicle, setNumerologyVehicle, vehicleTotal, onHaptic
 }: NumerologyPanelProps) => {
+  const [expandedMonth, setExpandedMonth] = useState<number | null>(null);
+  const [showForecast, setShowForecast] = useState(false);
+  const lang = language as Language;
+
+  const forecast = useMemo<AnnualForecast | null>(() => {
+    if (!numerologyDob) return null;
+    try {
+      return generateAnnualForecast(numerologyDob, new Date().getFullYear(), lang);
+    } catch {
+      return null;
+    }
+  }, [numerologyDob, lang]);
   return (
     <div className="space-y-4">
       <div className={cn(
@@ -41,7 +56,7 @@ export const NumerologyPanel = memo(({
         </div>
 
         <div className="mb-4">
-          <label className="text-[10px] text-stone-400 uppercase font-black tracking-wider block mb-1.5">
+          <label className={cn("text-[10px] uppercase font-black tracking-wider block mb-1.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
             {language === 'hi' ? 'अपनी जन्म तिथि दर्ज करें:' : 'Enter Your Date of Birth:'}
           </label>
           <input
@@ -64,14 +79,14 @@ export const NumerologyPanel = memo(({
                   "p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center text-center",
                   theme === 'light' ? "bg-cyan-50/50 border-cyan-500/20" : "bg-cyan-950/20 border-cyan-900/40"
                 )}>
-                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">{language === 'hi' ? 'ड्राइवर (मूलांक)' : 'Driver (Mulank)'}</span>
+                  <span className="text-[10px] text-stone-600 font-bold uppercase tracking-wider">{language === 'hi' ? 'ड्राइवर (मूलांक)' : 'Driver (Mulank)'}</span>
                   <span className={cn("text-2xl font-black mt-1", theme === 'light' ? "text-cyan-700" : "text-cyan-400")}>{mulank}</span>
                 </div>
                 <div className={cn(
                   "p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center text-center",
                   theme === 'light' ? "bg-cyan-50/50 border-cyan-500/20" : "bg-cyan-900/40 border-cyan-900/40"
                 )}>
-                  <span className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">{language === 'hi' ? 'कंडक्टर (भाग्यांक)' : 'Conductor (Bhagyank)'}</span>
+                  <span className="text-[10px] text-stone-600 font-bold uppercase tracking-wider">{language === 'hi' ? 'कंडक्टर (भाग्यांक)' : 'Conductor (Bhagyank)'}</span>
                   <span className={cn("text-2xl font-black mt-1", theme === 'light' ? "text-cyan-700" : "text-cyan-400")}>{numerologyNumber}</span>
                 </div>
               </div>
@@ -114,7 +129,7 @@ export const NumerologyPanel = memo(({
                       })
                     )}
                   </div>
-                  <p className="text-[9.5px] leading-relaxed text-center text-stone-400 font-bold max-w-[15rem] mx-auto mt-1">
+                  <p className="text-[9.5px] leading-relaxed text-center text-stone-600 font-bold max-w-[15rem] mx-auto mt-1">
                     {language === 'hi'
                       ? 'हाइलाइट किए गए अंक आपके चार्ट में उपस्थित ऊर्जा को दर्शाते हैं।'
                       : 'Highlighted numbers are present in your chart. Dimmed numbers represent missing energies.'}
@@ -128,7 +143,7 @@ export const NumerologyPanel = memo(({
                 theme === 'light' ? "bg-white border-cyan-500/20" : "bg-stone-950/80 border-stone-800"
               )}>
                 <div className="flex justify-between items-center border-b border-white/5 pb-2">
-                  <span className="text-stone-400 font-bold">{language === 'hi' ? 'स्वामी ग्रह:' : 'Ruling Planet:'}</span>
+                  <span className="text-stone-600 font-bold">{language === 'hi' ? 'स्वामी ग्रह:' : 'Ruling Planet:'}</span>
                   <span className={cn("font-extrabold", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>
                     {
                       ['Sun (Surya)', 'Moon (Chandra)', 'Jupiter (Guru)', 'Rahu', 'Mercury (Budh)', 'Venus (Shukra)', 'Ketu', 'Saturn (Shani)', 'Mars (Mangal)'][numerologyNumber - 1]
@@ -137,7 +152,7 @@ export const NumerologyPanel = memo(({
                 </div>
 
                 <div className="flex flex-col gap-0.5 border-b border-white/5 pb-2">
-                  <span className="text-stone-400 font-bold mb-0.5">{language === 'hi' ? 'मूलांक व्यक्तित्व लक्षण:' : 'Key Personality Traits:'}</span>
+                  <span className="text-stone-600 font-bold mb-0.5">{language === 'hi' ? 'मूलांक व्यक्तित्व लक्षण:' : 'Key Personality Traits:'}</span>
                   <span className="font-semibold text-[11px] leading-relaxed text-stone-300">
                     {
                       [
@@ -157,7 +172,7 @@ export const NumerologyPanel = memo(({
 
                 <div className="grid grid-cols-2 gap-2 text-[10px] border-b border-white/5 pb-2">
                   <div>
-                    <span className="text-stone-400 font-bold block">{language === 'hi' ? 'शुभ रंग:' : 'Lucky Colors:'}</span>
+                    <span className="text-stone-600 font-bold block">{language === 'hi' ? 'शुभ रंग:' : 'Lucky Colors:'}</span>
                     <span className="font-extrabold text-amber-500">
                       {
                         language === 'hi'
@@ -167,7 +182,7 @@ export const NumerologyPanel = memo(({
                     </span>
                   </div>
                   <div>
-                    <span className="text-stone-400 font-bold block">{language === 'hi' ? 'शुभ रत्न:' : 'Lucky Gemstone:'}</span>
+                    <span className="text-stone-600 font-bold block">{language === 'hi' ? 'शुभ रत्न:' : 'Lucky Gemstone:'}</span>
                     <span className="font-extrabold text-amber-500">
                       {
                         ['Ruby (माणिक)', 'Pearl (मोती)', 'Yellow Sapphire (पुखराज)', 'Hessonite (गोमेद)', 'Emerald (पन्ना)', 'Diamond (हीरा)', 'Cat\'s Eye (लहसुनिया)', 'Blue Sapphire (नीलम)', 'Red Coral (मूंगा)'][mulank - 1]
@@ -178,7 +193,7 @@ export const NumerologyPanel = memo(({
 
                 <div className="grid grid-cols-2 gap-2 text-[10px] border-b border-white/5 pb-2">
                   <div>
-                    <span className="text-stone-400 font-bold block">{language === 'hi' ? 'मित्र अंक (Friendly):' : 'Friendly Numbers:'}</span>
+                    <span className="text-stone-600 font-bold block">{language === 'hi' ? 'मित्र अंक (Friendly):' : 'Friendly Numbers:'}</span>
                     <span className="font-extrabold text-emerald-400">
                       {
                         ['1, 2, 3, 5, 9', '1, 2, 5, 7', '1, 3, 5, 7, 9', '1, 4, 5, 6', '1, 3, 5, 6', '4, 5, 6, 8', '1, 3, 5, 7', '3, 5, 6, 8', '1, 3, 5, 9'][mulank - 1]
@@ -186,7 +201,7 @@ export const NumerologyPanel = memo(({
                     </span>
                   </div>
                   <div>
-                    <span className="text-stone-400 font-bold block">{language === 'hi' ? 'शत्रु अंक (Enemy):' : 'Enemy Numbers:'}</span>
+                    <span className="text-stone-600 font-bold block">{language === 'hi' ? 'शत्रु अंक (Enemy):' : 'Enemy Numbers:'}</span>
                     <span className="font-extrabold text-rose-500">
                       {
                         ['8', '8, 9', '6', '8, 9', '2', '3', '8', '1, 2, 4, 7', '2, 4, 8'][mulank - 1]
@@ -197,7 +212,7 @@ export const NumerologyPanel = memo(({
 
                 <div className="grid grid-cols-2 gap-2 text-[10px] border-b border-white/5 pb-2">
                   <div>
-                    <span className="text-stone-400 font-bold block">{language === 'hi' ? 'क्या खरीदें/पास रखें:' : 'What to Buy/Carry:'}</span>
+                    <span className="text-stone-600 font-bold block">{language === 'hi' ? 'क्या खरीदें/पास रखें:' : 'What to Buy/Carry:'}</span>
                     <span className={cn("font-extrabold", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>
                       {
                         [
@@ -215,7 +230,7 @@ export const NumerologyPanel = memo(({
                     </span>
                   </div>
                   <div>
-                    <span className="text-stone-400 font-bold block">{language === 'hi' ? 'शुभ दिन:' : 'Lucky Days:'}</span>
+                    <span className="text-stone-600 font-bold block">{language === 'hi' ? 'शुभ दिन:' : 'Lucky Days:'}</span>
                     <span className={cn("font-extrabold", theme === 'light' ? "text-cyan-700" : "text-cyan-300")}>
                       {
                         ['Sunday, Monday', 'Monday, Sunday', 'Thursday, Tuesday', 'Wednesday, Friday', 'Wednesday, Friday', 'Friday, Wednesday', 'Monday, Sunday', 'Saturday, Friday', 'Tuesday, Thursday'][mulank - 1]
@@ -225,7 +240,7 @@ export const NumerologyPanel = memo(({
                 </div>
 
                 <div className="flex flex-col gap-0.5 text-[10px]">
-                  <span className="text-stone-400 font-bold block">{language === 'hi' ? 'क्या करें (दैनिक उपाय):' : 'What You Should Do (Remedy):'}</span>
+                  <span className="text-stone-600 font-bold block">{language === 'hi' ? 'क्या करें (दैनिक उपाय):' : 'What You Should Do (Remedy):'}</span>
                   <span className="font-semibold text-stone-300 leading-relaxed text-[10.5px]">
                     {
                       [
@@ -258,7 +273,7 @@ export const NumerologyPanel = memo(({
 
               {/* Phone Compatibility */}
               <div className="space-y-1.5">
-                <label className="text-[9.5px] text-stone-400 font-bold uppercase block">
+                <label className="text-[9.5px] text-stone-600 font-bold uppercase block">
                   {language === 'hi' ? 'मोबाईल नंबर चेक करें:' : 'Check Mobile Number:'}
                 </label>
                 <input
@@ -288,7 +303,9 @@ export const NumerologyPanel = memo(({
                   return (
                     <div className="flex items-center justify-between mt-1 text-[10.5px]">
                       <span>{language === 'hi' ? `कुल योग: ${phoneTotal}` : `Sum Total: ${phoneTotal}`}</span>
-                      <span className={cn("font-bold px-2 py-0.5 rounded-full text-[9px] uppercase", isFriendly ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400")}>
+                      <span className={cn("font-bold px-2 py-0.5 rounded-full text-[9px] uppercase border", isFriendly
+                        ? (theme === 'light' ? "bg-teal-100 text-teal-800 border-teal-300" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/40")
+                        : (theme === 'light' ? "bg-red-100 text-red-800 border-red-300" : "bg-rose-500/20 text-rose-400 border-rose-500/40"))}>
                         {isFriendly
                           ? (language === 'hi' ? 'अति शुभ / मित्र' : 'Highly Auspicious')
                           : (language === 'hi' ? 'सामान्य / शत्रु' : 'Inimical / Neutral')}
@@ -300,7 +317,7 @@ export const NumerologyPanel = memo(({
 
               {/* House Compatibility */}
               <div className="space-y-1.5 pt-2 border-t border-white/5">
-                <label className="text-[9.5px] text-stone-400 font-bold uppercase block">
+                <label className="text-[9.5px] text-stone-600 font-bold uppercase block">
                   {language === 'hi' ? 'घर/फ्लैट नंबर चेक करें:' : 'Check House / Flat Number:'}
                 </label>
                 <input
@@ -329,7 +346,9 @@ export const NumerologyPanel = memo(({
                   return (
                     <div className="flex items-center justify-between mt-1 text-[10.5px]">
                       <span>{language === 'hi' ? `कुल योग: ${houseTotal}` : `Sum Total: ${houseTotal}`}</span>
-                      <span className={cn("font-bold px-2 py-0.5 rounded-full text-[9px] uppercase", isFriendly ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400")}>
+                      <span className={cn("font-bold px-2 py-0.5 rounded-full text-[9px] uppercase border", isFriendly
+                        ? (theme === 'light' ? "bg-teal-100 text-teal-800 border-teal-300" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/40")
+                        : (theme === 'light' ? "bg-red-100 text-red-800 border-red-300" : "bg-rose-500/20 text-rose-400 border-rose-500/40"))}>
                         {isFriendly
                           ? (language === 'hi' ? 'शुभ / अनुकूल' : 'Lucky Alignment')
                           : (language === 'hi' ? 'सामान्य / शत्रु' : 'Inimical / Neutral')}
@@ -341,7 +360,7 @@ export const NumerologyPanel = memo(({
 
               {/* Vehicle Compatibility */}
               <div className="space-y-1.5 pt-2 border-t border-white/5">
-                <label className="text-[9.5px] text-stone-400 font-bold uppercase block">
+                <label className="text-[9.5px] text-stone-600 font-bold uppercase block">
                   {language === 'hi' ? 'वाहन/गाड़ी नंबर चेक करें (उदा. MH12GP4567):' : 'Check Car / Vehicle Number:'}
                 </label>
                 <input
@@ -370,7 +389,9 @@ export const NumerologyPanel = memo(({
                   return (
                     <div className="flex items-center justify-between mt-1 text-[10.5px]">
                       <span>{language === 'hi' ? `कुल योग: ${vehicleTotal}` : `Sum Total: ${vehicleTotal}`}</span>
-                      <span className={cn("font-bold px-2 py-0.5 rounded-full text-[9px] uppercase", isFriendly ? "bg-emerald-500/20 text-emerald-400" : "bg-rose-500/20 text-rose-400")}>
+                      <span className={cn("font-bold px-2 py-0.5 rounded-full text-[9px] uppercase border", isFriendly
+                        ? (theme === 'light' ? "bg-teal-100 text-teal-800 border-teal-300" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/40")
+                        : (theme === 'light' ? "bg-red-100 text-red-800 border-red-300" : "bg-rose-500/20 text-rose-400 border-rose-500/40"))}>
                         {isFriendly
                           ? (language === 'hi' ? 'शुभ / मित्र' : 'Lucky Alignment')
                           : (language === 'hi' ? 'सामान्य / शत्रु' : 'Inimical / Neutral')}
@@ -383,11 +404,191 @@ export const NumerologyPanel = memo(({
           )}
         </div>
 
+        {/* Annual Numerology Forecast */}
+        {forecast && (
+          <div className={cn(
+            "rounded-2xl border overflow-hidden transition-all duration-300",
+            theme === 'light'
+              ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-500/25 shadow-sm"
+              : "bg-gradient-to-br from-amber-950/20 to-orange-950/20 border border-amber-500/20 shadow-inner"
+          )}>
+            <button
+              onClick={() => { setShowForecast(!showForecast); onHaptic(ImpactStyle.Medium); }}
+              className={cn(
+                "w-full flex items-center justify-between p-4 text-left transition-colors",
+                theme === 'light' ? "hover:bg-amber-100/50" : "hover:bg-amber-900/20"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-amber-500" />
+                <div>
+                  <h4 className={cn("font-extrabold text-sm", theme === 'light' ? "text-amber-900" : "text-amber-300")}>
+                    {language === 'hi' ? `📅 वार्षिक अंक ज्योतिष ${new Date().getFullYear()}` : `📅 Annual Numerology ${new Date().getFullYear()}`}
+                  </h4>
+                  <p className={cn("text-[10px] font-bold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>
+                    {language === 'hi' ? `व्यक्तिगत वर्ष ${forecast.personalYear}: ${forecast.theme.hi}` : `Personal Year ${forecast.personalYear}: ${forecast.theme.en}`}
+                  </p>
+                </div>
+              </div>
+              {showForecast ? <ChevronUp className="w-4 h-4 text-amber-500" /> : <ChevronDown className="w-4 h-4 text-amber-500" />}
+            </button>
+
+            {showForecast && (
+              <div className="px-4 pb-4 space-y-4">
+                {/* Overview */}
+                <div className={cn(
+                  "p-3 rounded-xl border",
+                  theme === 'light' ? "bg-white/80 border-amber-200" : "bg-stone-900/60 border-stone-800"
+                )}>
+                  <p className={cn("text-[11px] leading-relaxed", theme === 'light' ? "text-stone-600" : "text-stone-300")}>
+                    {lang === 'hi' ? forecast.overview.hi : forecast.overview.en}
+                  </p>
+                </div>
+
+                {/* Category Forecasts */}
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { icon: <TrendingUp className="w-3.5 h-3.5 text-blue-400" />, label: { en: 'Career', hi: 'करियर' }, data: forecast.career },
+                    { icon: <DollarSign className="w-3.5 h-3.5 text-emerald-400" />, label: { en: 'Finance', hi: 'वित्त' }, data: forecast.finance },
+                    { icon: <Heart className="w-3.5 h-3.5 text-rose-400" />, label: { en: 'Health', hi: 'स्वास्थ्य' }, data: forecast.health },
+                    { icon: <Sparkles className="w-3.5 h-3.5 text-purple-400" />, label: { en: 'Love', hi: 'प्रेम' }, data: forecast.relationships },
+                    { icon: <Brain className="w-3.5 h-3.5 text-cyan-400" />, label: { en: 'Spiritual', hi: 'आध्यात्मिक' }, data: forecast.spirituality },
+                  ].map((cat, i) => (
+                    <div key={i} className={cn(
+                      "p-2.5 rounded-xl border space-y-1",
+                      theme === 'light' ? "bg-white/60 border-stone-200" : "bg-stone-900/40 border-stone-800"
+                    )}>
+                      <div className="flex items-center gap-1.5">
+                        {cat.icon}
+                        <span className={cn("text-[10px] font-bold uppercase", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                          {lang === 'hi' ? cat.label.hi : cat.label.en}
+                        </span>
+                      </div>
+                      <p className={cn("text-[9.5px] leading-relaxed", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                        {lang === 'hi' ? cat.data.hi : cat.data.en}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Lucky Colors & Gemstones */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className={cn(
+                    "p-2.5 rounded-xl border flex items-center gap-2",
+                    theme === 'light' ? "bg-white/60 border-stone-200" : "bg-stone-900/40 border-stone-800"
+                  )}>
+                    <PaletteIcon className="w-3.5 h-3.5 text-amber-400" />
+                    <div>
+                      <span className={cn("text-[9px] font-bold uppercase block", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                        {language === 'hi' ? 'शुभ रंग' : 'Lucky Colors'}
+                      </span>
+                      <span className={cn("text-[10px] font-bold", theme === 'light' ? "text-amber-700" : "text-amber-400")}>
+                        {forecast.luckyColors.join(', ')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "p-2.5 rounded-xl border flex items-center gap-2",
+                    theme === 'light' ? "bg-white/60 border-stone-200" : "bg-stone-900/40 border-stone-800"
+                  )}>
+                    <GemIcon className="w-3.5 h-3.5 text-purple-400" />
+                    <div>
+                      <span className={cn("text-[9px] font-bold uppercase block", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                        {language === 'hi' ? 'शुभ रत्न' : 'Lucky Gem'}
+                      </span>
+                      <span className={cn("text-[10px] font-bold", theme === 'light' ? "text-purple-700" : "text-purple-400")}>
+                        {forecast.luckyGemstones.join(', ')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Remedies */}
+                <div className={cn(
+                  "p-3 rounded-xl border",
+                  theme === 'light' ? "bg-amber-50 border-amber-200" : "bg-amber-950/20 border-amber-900/40"
+                )}>
+                  <h5 className={cn("text-[10px] font-bold uppercase mb-2", theme === 'light' ? "text-amber-800" : "text-amber-400")}>
+                    {language === 'hi' ? '🙏 दैनिक उपाय' : '🙏 Daily Remedies'}
+                  </h5>
+                  <ul className="space-y-1.5">
+                    {forecast.remedies.map((remedy, ri) => (
+                      <li key={ri} className={cn("text-[10px] leading-relaxed flex gap-1.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                        <span className="text-amber-500 mt-0.5">•</span>
+                        {lang === 'hi' ? remedy.hi : remedy.en}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Monthly Forecasts */}
+                <div>
+                  <h5 className={cn("text-[10px] font-bold uppercase mb-2", theme === 'light' ? "text-amber-800" : "text-amber-400")}>
+                    {language === 'hi' ? '📆 मासिक भविष्य' : '📆 Monthly Forecast'}
+                  </h5>
+                  <div className="space-y-1.5">
+                    {forecast.monthlyForecasts.map((month) => {
+                      const isExpanded = expandedMonth === month.monthNumber;
+                      return (
+                        <div key={month.monthNumber} className={cn(
+                          "rounded-lg border overflow-hidden",
+                          theme === 'light' ? "bg-white/60 border-stone-200" : "bg-stone-900/40 border-stone-800"
+                        )}>
+                          <button
+                            onClick={() => setExpandedMonth(isExpanded ? null : month.monthNumber)}
+                            className={cn(
+                              "w-full flex items-center justify-between p-2.5 text-left",
+                              theme === 'light' ? "hover:bg-stone-50" : "hover:bg-stone-800/50"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className={cn("text-[11px] font-bold", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
+                                {lang === 'hi' ? month.monthHi : month.month}
+                              </span>
+                              <span className={cn(
+                                "text-[8px] px-1.5 py-0.5 rounded-full font-bold",
+                                theme === 'light' ? "bg-amber-100 text-amber-700" : "bg-amber-900/40 text-amber-400"
+                              )}>
+                                {language === 'hi' ? `वibration ${month.vibration}` : `Vibration ${month.vibration}`}
+                              </span>
+                            </div>
+                            {isExpanded ? <ChevronUp className="w-3 h-3 text-stone-600" /> : <ChevronDown className="w-3 h-3 text-stone-600" />}
+                          </button>
+                          {isExpanded && (
+                            <div className={cn("px-2.5 pb-2.5 space-y-1.5 border-t", theme === 'light' ? "border-stone-100" : "border-stone-800")}>
+                              <p className={cn("text-[10px] leading-relaxed pt-1.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                                {lang === 'hi' ? month.advice.hi : month.advice.en}
+                              </p>
+                              <p className={cn("text-[9px] leading-relaxed", theme === 'light' ? "text-amber-600" : "text-amber-400")}>
+                                ⚠️ {lang === 'hi' ? month.caution.hi : month.caution.en}
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {month.luckyDays.map((day) => (
+                                  <span key={day} className={cn(
+                                    "text-[8px] px-1 py-0.5 rounded font-bold",
+                                    theme === 'light' ? "bg-teal-100 text-teal-700" : "bg-emerald-900/40 text-emerald-400"
+                                  )}>
+                                    {day}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className={cn(
           "p-3 rounded-xl border shadow-inner transition-colors duration-300",
           theme === 'light' ? "bg-white border-cyan-500/20" : "bg-stone-950/80 border-stone-800"
         )}>
-          <h5 className="text-[10px] text-stone-500 uppercase font-black tracking-wider mb-2">{language === 'hi' ? 'कम्पास का क्या महत्व है?' : 'Why use a Compass?'}</h5>
+          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-2">{language === 'hi' ? 'कम्पास का क्या महत्व है?' : 'Why use a Compass?'}</h5>
           <p className={cn("text-[11px] leading-relaxed font-medium transition-colors", theme === 'light' ? "text-cyan-900" : "text-stone-300")}>
             {language === 'hi'
               ? 'अंक वास्तु में, आपके मूलांक के अनुकूल शुभ दिशा (डायल पर हाइलाइटेड) की ओर मुख करके कार्य करने, अध्ययन करने या सोते समय सिर रखने से सकारात्मक ऊर्जा और सफलता आकर्षित होती है।'

@@ -19,10 +19,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
+import { getAppThemePalette } from '@/lib/themePalettes';
+import { CompassStyleId } from '@/types/compass';
 
 export interface VastuAuditScorecardProps {
   language: string;
   theme: string;
+  selectedStyle?: CompassStyleId;
+  variantId?: string | null;
   currentHeading: number | null;
   onHaptic?: (style?: ImpactStyle) => void;
 }
@@ -155,17 +159,22 @@ const ALL_DIRECTIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
 export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
   language,
   theme,
+  selectedStyle,
+  variantId,
   currentHeading,
   onHaptic
 }) => {
   const isHi = language === 'hi';
+  const palette = useMemo(() => getAppThemePalette(selectedStyle, variantId), [selectedStyle, variantId]);
 
   // State: Record of room_id -> selected direction code ('N', 'NE', etc.)
   const [roomDirections, setRoomDirections] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem('com.spiritual.compass.vastu_audit_rooms');
       if (saved) return JSON.parse(saved);
-    } catch {}
+    } catch (e) {
+      console.error('Failed to load Vastu audit room directions:', e);
+    }
     // Sensible standard default
     return {
       entrance: 'N',
@@ -187,14 +196,18 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
   useEffect(() => {
     try {
       localStorage.setItem('com.spiritual.compass.vastu_audit_rooms', JSON.stringify(roomDirections));
-    } catch {}
+    } catch (e) {
+      console.error('Failed to save Vastu audit room directions:', e);
+    }
   }, [roomDirections]);
 
   const handleSelectDirection = (roomId: string, dir: string) => {
     setRoomDirections(prev => ({ ...prev, [roomId]: dir }));
     try {
       Haptics.impact({ style: ImpactStyle.Light });
-    } catch {}
+    } catch (e) {
+      console.error('Haptics failed in VastuAuditScorecard direction select:', e);
+    }
     onHaptic?.(ImpactStyle.Light);
   };
 
@@ -316,7 +329,9 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
         setCopiedShare(true);
         setTimeout(() => setCopiedShare(false), 2500);
       }
-    } catch {}
+    } catch (e) {
+      console.error('Failed to share Vastu audit report:', e);
+    }
   };
 
   const handleResetDefaults = () => {
@@ -332,7 +347,9 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
     });
     try {
       Haptics.impact({ style: ImpactStyle.Medium });
-    } catch {}
+    } catch (e) {
+      console.error('Haptics failed in VastuAuditScorecard reset:', e);
+    }
   };
 
   const filteredEvaluations = showDoshaOnly 
@@ -341,10 +358,10 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
 
   return (
     <div className={cn(
-      "w-full rounded-2xl border p-4 sm:p-5 transition-all duration-300 shadow-md",
-      theme === 'light'
-        ? "bg-gradient-to-b from-amber-50/70 via-stone-50 to-amber-50/40 border-amber-500/25 text-stone-900"
-        : "bg-gradient-to-b from-[#14120f] via-[#0e0c0a] to-[#070605] border-amber-500/20 text-stone-100"
+      "w-full rounded-2xl border px-2.5 py-4 sm:px-4 sm:py-5 transition-all duration-300 shadow-md",
+      palette.telemetryCardBg,
+      palette.telemetryCardBorder,
+      palette.isLight ? "text-stone-900" : "text-stone-100"
     )}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2 mb-4">
@@ -353,11 +370,11 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h3 className={cn("text-base font-black tracking-tight flex items-center gap-1.5", theme === 'light' ? "text-amber-950" : "text-amber-200")}>
+            <h3 className={cn("text-base font-black tracking-tight flex items-center gap-1.5", palette.headingText)}>
               <span>{isHi ? 'वास्तु लाइव ऑडिट स्कोरकार्ड' : 'Vastu Live Audit Scorecard'}</span>
               <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
             </h3>
-            <p className={cn("text-[10px] font-semibold", theme === 'light' ? "text-stone-500" : "text-stone-400")}>
+            <p className={cn("text-[10px] font-semibold mt-0.5", palette.isLight ? "text-stone-700" : "text-stone-300")}>
               {isHi ? 'गृह व कार्यालय कक्ष संरेखण और वैदिक दोष निवारण' : 'Vedic home alignment & instant remedial guide'}
             </p>
           </div>
@@ -368,7 +385,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
           title={isHi ? "रीसेट करें" : "Reset defaults"}
           className={cn(
             "p-2 rounded-lg border text-xs transition-transform active:scale-90",
-            theme === 'light' ? "border-stone-300 text-stone-600 hover:bg-stone-200/60" : "border-white/10 text-stone-400 hover:bg-white/5"
+            palette.isLight ? "border-stone-300 text-stone-700 hover:bg-stone-200/60" : "border-white/10 text-stone-300 hover:bg-white/5"
           )}
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -379,10 +396,10 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
       <div className={cn("p-4 rounded-2xl border mb-5 relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm", ratingDetails.bg)}>
         {/* Left Score Meter */}
         <div className="flex items-center gap-4">
-          <div className="relative w-18 h-18 sm:w-20 sm:h-20 flex items-center justify-center shrink-0">
+          <div className="relative w-[7.5rem] h-[7.5rem] sm:w-20 sm:h-20 flex items-center justify-center shrink-0">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
               <path
-                className={theme === 'light' ? "stroke-stone-200" : "stroke-white/10"}
+                className={palette.isLight ? "stroke-stone-300" : "stroke-white/15"}
                 strokeWidth="3.5"
                 fill="none"
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -399,7 +416,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-xl font-black font-mono leading-none tracking-tight">{totalScore}%</span>
-              <span className="text-[7.5px] font-bold uppercase tracking-wider text-stone-400 mt-0.5">{isHi ? 'स्कोर' : 'SCORE'}</span>
+              <span className={cn("text-[7.5px] font-bold uppercase tracking-wider mt-0.5", palette.isLight ? "text-stone-600" : "text-stone-400")}>{isHi ? 'स्कोर' : 'SCORE'}</span>
             </div>
           </div>
 
@@ -408,12 +425,12 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
               {isHi ? ratingDetails.titleHi : ratingDetails.titleEn}
             </span>
             <div className="flex items-center gap-2 mt-1.5 text-[11px] font-bold">
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 border border-emerald-500/30">
                 ✓ {auspiciousCount} {isHi ? 'शुभ' : 'Auspicious'}
               </span>
               <span className={cn(
                 "px-2 py-0.5 rounded-full border",
-                doshaCount > 0 ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-stone-500/10 text-stone-400 border-stone-500/20"
+                doshaCount > 0 ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-stone-500/10 text-stone-600 border-stone-500/20"
               )}>
                 ⚠ {doshaCount} {isHi ? 'दोष' : 'Dosha'}
               </span>
@@ -442,7 +459,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
 
       {/* Filter Tabs */}
       <div className="flex items-center justify-between gap-2 mb-3">
-        <span className={cn("text-xs font-extrabold uppercase tracking-wider", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
+        <span className={cn("text-xs font-extrabold uppercase tracking-wider", palette.headingText)}>
           {isHi ? 'कक्ष व दिशा निर्धारण:' : 'Room & Direction Audit:'}
         </span>
         <button
@@ -450,8 +467,8 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
           className={cn(
             "text-[10px] font-black px-2.5 py-1 rounded-full border transition-all active:scale-95",
             showDoshaOnly
-              ? "bg-red-500 text-white border-red-600 shadow-sm"
-              : (theme === 'light' ? "bg-stone-200/80 text-stone-600 border-stone-300" : "bg-white/10 text-stone-300 border-white/10")
+              ? "bg-rose-500 text-white border-rose-600 shadow-sm"
+              : `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
           )}
         >
           {showDoshaOnly ? (isHi ? 'दोष केवल (सक्रिय)' : 'Doshas Only') : (isHi ? 'सभी कक्ष' : 'All Rooms')}
@@ -469,12 +486,18 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
             <div
               key={room.id}
               className={cn(
-                "rounded-xl border transition-all duration-200 overflow-hidden",
-                isAuspicious 
-                  ? (theme === 'light' ? "bg-emerald-50/60 border-emerald-500/30" : "bg-emerald-950/20 border-emerald-500/25")
-                  : isDosha
-                  ? (theme === 'light' ? "bg-red-50/70 border-red-500/35" : "bg-red-950/20 border-red-500/30")
-                  : (theme === 'light' ? "bg-white/70 border-stone-200" : "bg-[#181512]/60 border-white/10")
+                "rounded-xl border transition-all duration-200 overflow-hidden shadow-sm",
+                palette.isLight
+                  ? (isAuspicious
+                      ? "bg-white/90 border-emerald-500/35 hover:bg-white"
+                      : isDosha
+                      ? "bg-rose-50/80 border-rose-400/40"
+                      : "bg-white/80 border-stone-300/80 hover:bg-white")
+                  : (isAuspicious
+                      ? "bg-black/35 border-emerald-500/30 hover:bg-black/50"
+                      : isDosha
+                      ? "bg-black/35 border-rose-500/30 hover:bg-black/50"
+                      : "bg-black/30 border-white/10 hover:bg-black/40")
               )}
             >
               {/* Main Room Row */}
@@ -485,12 +508,12 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                 <div className="flex items-center gap-2.5">
                   <span className="text-xl shrink-0">{room.icon}</span>
                   <div className="flex flex-col text-left">
-                    <span className="text-xs font-black leading-tight">
+                    <span className={cn("text-xs font-black leading-tight", palette.headingText)}>
                       {isHi ? room.nameHi : room.nameEn}
                     </span>
                     <span className={cn(
                       "text-[10px] font-bold mt-0.5 flex items-center gap-1",
-                      isAuspicious ? "text-emerald-500" : isDosha ? "text-red-400" : "text-amber-500"
+                      isAuspicious ? (palette.isLight ? "text-emerald-700" : "text-emerald-400") : isDosha ? "text-rose-400" : palette.pillUnitText
                     )}>
                       {isAuspicious ? '✓ ' + (isHi ? 'शुभ स्थिति' : 'Auspicious') : isDosha ? '⚠ ' + (isHi ? 'वास्तु दोष' : 'Vastu Dosha') : '• ' + (isHi ? 'सामान्य' : 'Neutral')}
                       {' '}({isHi ? DIRECTION_LABELS[room.selectedDir]?.hi : DIRECTION_LABELS[room.selectedDir]?.en})
@@ -502,19 +525,19 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                   {/* Current Direction Badge */}
                   <span className={cn(
                     "px-2.5 py-1 rounded-lg font-black text-xs font-mono border tracking-tight",
-                    isAuspicious 
-                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40"
+                    isAuspicious
+                      ? `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText} shadow-sm`
                       : isDosha
-                      ? "bg-red-500/20 text-red-400 border-red-500/40"
-                      : (theme === 'light' ? "bg-stone-200 text-stone-800 border-stone-300" : "bg-white/10 text-white border-white/20")
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                      : `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
                   )}>
                     {room.selectedDir}
                   </span>
 
                   {isExpanded ? (
-                    <ChevronUp className="w-4 h-4 text-stone-400" />
+                    <ChevronUp className={cn("w-4 h-4", palette.isLight ? "text-stone-600" : "text-stone-400")} />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-stone-400" />
+                    <ChevronDown className={cn("w-4 h-4", palette.isLight ? "text-stone-600" : "text-stone-400")} />
                   )}
                 </div>
               </div>
@@ -523,12 +546,12 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
               {isExpanded && (
                 <div className={cn(
                   "p-3 pt-0 border-t flex flex-col gap-3",
-                  theme === 'light' ? "border-stone-200 bg-stone-50/50" : "border-white/10 bg-black/20"
+                  palette.isLight ? "border-stone-200 bg-stone-50/50" : "border-white/10 bg-black/20"
                 )}>
                   {/* Direction Picker Buttons */}
                   <div className="mt-2.5">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                      <span className={cn("text-[10px] font-bold uppercase tracking-wider", palette.isLight ? "text-stone-600" : "text-stone-400")}>
                         {isHi ? 'दिशा चुनें:' : 'Select Direction:'}
                       </span>
                       {currentHeading !== null && (
@@ -563,7 +586,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                                     : isDirDosha
                                     ? "bg-red-500 text-white border-red-400 shadow-md font-black"
                                     : "bg-amber-500 text-stone-950 border-amber-400 shadow-md font-black")
-                                : (theme === 'light'
+                                : (palette.isLight
                                     ? "bg-white text-stone-700 border-stone-300 hover:bg-stone-100"
                                     : "bg-white/5 text-stone-300 border-white/10 hover:bg-white/10")
                             )}
@@ -581,16 +604,20 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                   {/* Remedial Guidance Box */}
                   <div className={cn(
                     "p-2.5 rounded-xl border text-xs leading-relaxed flex items-start gap-2",
-                    isDosha
-                      ? "bg-red-500/10 border-red-500/30 text-red-200"
-                      : "bg-amber-500/10 border-amber-500/30 text-amber-200"
+                    palette.isLight
+                      ? (isDosha
+                        ? "bg-red-50 border-red-300 text-red-900"
+                        : "bg-amber-50 border-amber-300 text-amber-900")
+                      : (isDosha
+                        ? "bg-red-500/10 border-red-500/30 text-red-200"
+                        : "bg-amber-500/10 border-amber-500/30 text-amber-200")
                   )}>
-                    <Info className="w-4 h-4 shrink-0 text-amber-400 mt-0.5" />
+                    <Info className={cn("w-4 h-4 shrink-0 mt-0.5", palette.isLight ? "text-amber-600" : "text-amber-400")} />
                     <div>
-                      <span className="font-bold text-amber-400 block mb-0.5">
+                      <span className={cn("font-bold block mb-0.5", palette.isLight ? "text-amber-700" : "text-amber-400")}>
                         {isDosha ? (isHi ? 'दोष निवारण उपाय:' : 'Vedic Remedy:') : (isHi ? 'वास्तु मार्गदर्शन:' : 'Vedic Guidance:')}
                       </span>
-                      <span className={theme === 'light' ? "text-stone-700" : "text-stone-300"}>
+                      <span className={palette.isLight ? "text-stone-700" : "text-stone-300"}>
                         {isHi ? room.remedyHi : room.remedyEn}
                       </span>
                     </div>

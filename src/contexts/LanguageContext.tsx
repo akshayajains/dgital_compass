@@ -22,7 +22,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     try {
       const saved = localStorage.getItem(LANGUAGE_STORAGE_KEY);
       if (saved === 'en' || saved === 'hi') return saved;
-    } catch {}
+    } catch (e) {
+      console.error('Failed to load language preference:', e);
+    }
     return 'hi';
   });
 
@@ -30,7 +32,9 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     setLanguageState(lang);
     try {
       localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-    } catch {}
+    } catch (e) {
+      console.error('Failed to save language preference:', e);
+    }
   };
 
   const toggleLanguage = () => {

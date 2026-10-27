@@ -171,7 +171,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
               <h3 className={cn("text-base font-black tracking-wide", dark ? "text-amber-400" : "text-amber-600")}>
                 {t.styleGallery}
               </h3>
-              <span className={cn("text-[10px]", dark ? "text-stone-400" : "text-stone-500")}>
+              <span className={cn("text-[10px]", dark ? "text-stone-600" : "text-stone-600")}>
                 {isHi ? `${COMPASS_STYLES.length} प्रीमियम डायल शैलियां` : `${COMPASS_STYLES.length} premium compass dialers`}
               </span>
             </div>
@@ -180,7 +180,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
             onClick={onClose}
             className={cn(
               "p-2 rounded-full transition-colors",
-              dark ? "hover:bg-white/10 text-stone-400 hover:text-white" : "hover:bg-stone-200 text-stone-500 hover:text-stone-900"
+              dark ? "hover:bg-white/10 text-stone-600 hover:text-white" : "hover:bg-stone-200 text-stone-600 hover:text-stone-900"
             )}
           >
             <X className="w-5 h-5" />
@@ -198,8 +198,8 @@ export const StyleSelectorModal: React.FC<Props> = ({
                 selectedCategory === cat.id
                   ? "bg-amber-500 text-stone-950 font-black shadow-md border-amber-400 scale-105"
                   : dark
-                    ? "bg-white/5 text-stone-400 hover:text-white border-white/10"
-                    : "bg-white text-stone-500 hover:text-stone-900 border-stone-200"
+                    ? "bg-white/5 text-stone-600 hover:text-white border-white/10"
+                    : "bg-white text-stone-600 hover:text-stone-900 border-stone-200"
               )}
             >
               {cat.label}
@@ -307,7 +307,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
                 {/* ── Variant Color Swatches ── */}
                 {hasVariants && (
                   <div className="px-3 pb-3 pt-1 flex flex-col gap-1.5">
-                    <span className="text-[8px] font-black uppercase tracking-[0.18em] text-stone-500">
+                    <span className="text-[8px] font-black uppercase tracking-[0.18em] text-stone-600">
                       {isHi ? 'रंग चुनें' : 'COLORS'}
                     </span>
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -370,3 +370,5 @@ export const StyleSelectorModal: React.FC<Props> = ({
     </div>
   );
 };
+
+export default StyleSelectorModal;

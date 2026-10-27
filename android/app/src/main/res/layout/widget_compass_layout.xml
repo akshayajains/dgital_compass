@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_bg"
-    android:padding="12dp"
+    android:padding="6dp"
     android:gravity="center_horizontal">
 
     <!-- Top Bar: Red Dot + Title + Level Badge + Launch Button -->
@@ -13,14 +13,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="2dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="1dp">
 
         <ImageView
             android:id="@+id/widget_status_dot"
-            android:layout_width="7dp"
-            android:layout_height="7dp"
+            android:layout_width="6dp"
+            android:layout_height="6dp"
             android:src="@drawable/widget_red_dot"
-            android:layout_marginEnd="5dp"
+            android:layout_marginEnd="4dp"
             android:contentDescription="Status dot" />
 
         <TextView
@@ -28,10 +32,11 @@
             android:layout_height="wrap_content"
             android:text="COMPASS"
             android:textColor="#94A3B8"
-            android:textSize="8.5sp"
+            android:textSize="9sp"
             android:textStyle="bold"
-            android:letterSpacing="0.10"
-            android:fontFamily="sans-serif-medium" />
+            android:letterSpacing="0.08"
+            android:fontFamily="sans-serif-medium"
+            android:includeFontPadding="false" />
 
         <TextView
             android:id="@+id/widget_level_badge"
@@ -42,19 +47,22 @@
             android:layout_marginEnd="6dp"
             android:text="● LEVEL"
             android:textColor="#10B981"
-            android:textSize="8sp"
+            android:textSize="8.5sp"
             android:textStyle="bold"
-            android:fontFamily="monospace" />
+            android:fontFamily="monospace"
+            android:includeFontPadding="false"
+            android:singleLine="true" />
 
         <TextView
             android:id="@+id/widget_btn_open"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
             android:gravity="center"
             android:text="↗"
             android:textColor="#CBD5E1"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="bold"
+            android:includeFontPadding="false"
             android:contentDescription="Open full app" />
     </LinearLayout>
 
@@ -63,9 +71,7 @@
         android:id="@+id/widget_dial_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="1dp"
-        android:layout_marginBottom="1dp">
+        android:layout_weight="1">
 
         <!-- Rendered Dial Needle, 30° Numbers, N/E/S/W & Spirit Level Ring -->
         <ImageView
@@ -106,6 +112,7 @@
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium"
                 android:includeFontPadding="false"
+                android:singleLine="true"
                 android:layout_marginTop="0.5dp" />
 
             <TextView
@@ -118,6 +125,7 @@
                 android:textStyle="bold"
                 android:fontFamily="monospace"
                 android:includeFontPadding="false"
+                android:singleLine="true"
                 android:layout_marginTop="0.5dp" />
         </LinearLayout>
     </FrameLayout>
@@ -129,26 +137,30 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:paddingTop="3dp"
-        android:paddingBottom="3dp">
+        android:paddingTop="1.5dp"
+        android:paddingBottom="1.5dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="↻ "
             android:textColor="#8A929B"
-            android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false" />
 
         <TextView
             android:id="@+id/widget_status_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tap to Check Direction"
+            android:text="Tap to Check"
             android:textColor="#8A929B"
-            android:textSize="9sp"
+            android:textSize="8.5sp"
             android:textStyle="bold"
-            android:fontFamily="sans-serif" />
+            android:fontFamily="sans-serif"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
     </LinearLayout>
 
 </LinearLayout>
