@@ -2932,7 +2932,7 @@ export const CompassView = () => {
                   "flex items-center justify-between text-[10.5px] font-medium pt-3 mt-1 border-t text-stone-400 select-none",
                   theme === 'light' ? "border-stone-200/60 text-stone-600" : "border-white/5 text-stone-400"
                 )}>
-                  <span className="font-mono">v5.8.4 (Build 48)</span>
+                  <span className="font-mono">v5.8.5 (Build 49)</span>
                   <span className="text-[9.5px] uppercase font-bold tracking-wider opacity-80">{language === 'hi' ? 'ऑफलाइन प्रमाणित' : 'Offline Certified'}</span>
                 </div>
               </div>
