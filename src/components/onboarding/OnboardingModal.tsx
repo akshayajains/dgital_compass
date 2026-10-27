@@ -116,22 +116,22 @@ const ONBOARDING_SLIDES: OnboardingSlide[] = [
     icon: <Activity className="w-8 h-8 text-purple-400" />,
     titleEn: 'Live Sensors & Easy Calibration',
     titleHi: 'लाइव सेंसर्स व आसान कैलिब्रेशन',
-    subtitleEn: 'Magnetic Shield, GPS Altitude & Figure-8 Sync',
-    subtitleHi: 'चुंबकीय सुरक्षा, जीपीएस ऊंचाई व फिगर-8 संतुलन',
-    descEn: 'Built-in sensor fusion continuously monitors hardware accuracy. Simply move your phone in a figure-8 motion whenever needed.',
-    descHi: 'सेंसर सुरक्षा प्रणाली चुंबकीय हस्तक्षेप की चेतावनी देती है। सटीकता बढ़ाने हेतु फोन को 8 के आकार में घुमाएं।',
+    subtitleEn: 'Magnetic Shield, GPS Altitude & Circular Calibration',
+    subtitleHi: 'चुंबकीय सुरक्षा, जीपीएस ऊंचाई व गोलाकार कैलिब्रेशन',
+    descEn: 'Built-in sensor fusion continuously monitors hardware accuracy. Simply tilt your phone to roll the ball along the circle whenever needed.',
+    descHi: 'सेंसर सुरक्षा प्रणाली चुंबकीय हस्तक्षेप की चेतावनी देती है। सटीकता बढ़ाने हेतु फोन को झुकाकर गेंद को वृत्त में घुमाएं।',
     badgeEn: 'Automatic Accuracy Sync',
     badgeHi: 'स्वतः सेंसर संतुलन',
     badgeColor: 'border-purple-400/50 text-purple-300 bg-purple-500/10',
     highlightsEn: [
       'Real-time magnetic interference alerts & signal health',
       'GPS altitude, barometric air pressure & weather data',
-      'Smooth figure-8 guided recalibration in seconds'
+      'Smooth rolling ball circular calibration in seconds'
     ],
     highlightsHi: [
       'चुंबकीय हस्तक्षेप और सेंसर सिग्नल स्वास्थ्य की लाइव निगरानी',
       'GPS ऊंचाई, बैरोमीटर वायुदाब और मौसम इनसाइट्स',
-      'कुछ ही सेकंड में आसान 8-आकार (Figure-8) कैलिब्रेशन'
+      'कुछ ही सेकंड में आसान गोलाकार (Rolling Ball) कैलिब्रेशन'
     ]
   }
 ];

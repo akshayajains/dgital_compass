@@ -1033,12 +1033,12 @@ export const AdvancedLevelView: React.FC<Props> = ({
         isLight ? "border-amber-400/50 bg-amber-50 text-amber-950" : "border-amber-500/25 bg-amber-950/20 text-stone-300"
       )}>
         <div className={cn("text-[10px] font-black uppercase tracking-[0.20em]", isLight ? "text-amber-800" : "text-amber-300")}>
-          {isHi ? '8-आकृति सेंसर कैलिब्रेशन' : 'Figure-8 Sensor Calibration'}
+          {isHi ? 'सर्कल रोल सेंसर कैलिब्रेशन' : 'Circular Sensor Calibration'}
         </div>
         <p className="mt-0.5 text-[9px] leading-relaxed opacity-90">
           {displayLevel
             ? (isHi ? '✓ समतल लॉक प्राप्त। सतह माउंटिंग, फ्लोर-प्लान व कैमरा ऑडिट के लिए तैयार।' : '✓ Perfect level lock achieved. Ready for mounting, framing, and surface audits.')
-            : (isHi ? 'सटीक शून्य विचलन के लिए फोन को 8 की आकृति में घुमाएं और बबल केंद्र पर लाएं।' : 'Rotate phone in a smooth figure-8 motion, zero tare if needed, and align bubble to dead center.')}
+            : (isHi ? 'सटीक शून्य विचलन के लिए फोन को झुकाकर लेवल स्क्वायर को केंद्र पर लाएं।' : 'Tilt phone to align level square to dead center target, and calibrate if needed.')}
         </p>
       </div>
 

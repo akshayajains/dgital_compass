@@ -1508,30 +1508,32 @@ export const CompassView = () => {
                 setShowCalibrationModal(true);
               }}
               className={cn(
-                "w-full max-w-xl flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl border text-xs sm:text-[13px] font-bold uppercase tracking-wider transition-all active:scale-[0.98] my-1 shadow-lg",
+                "w-full max-w-xl flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl border text-xs sm:text-[13px] font-black uppercase tracking-wider transition-all active:scale-[0.98] my-1 shadow-lg",
                 isMagneticInterference
-                  ? "bg-rose-950/80 text-rose-200 border-rose-500/70 shadow-[0_0_20px_rgba(244,63,94,0.35)] animate-pulse"
-                  : theme === 'light'
-                  ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
-                  : "bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
+                  ? "bg-rose-950/90 text-rose-100 border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.35)] animate-pulse"
+                  : palette.isLight
+                  ? "bg-amber-100/90 text-amber-950 border-amber-400 shadow-sm hover:bg-amber-200/90"
+                  : "bg-amber-500/15 text-amber-200 border-amber-500/40 hover:bg-amber-500/25"
               )}
             >
               <span className="flex items-center gap-2">
                 {isMagneticInterference ? (
                   <>
                     <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                    <span className="font-black text-rose-300">
+                    <span className="font-black text-rose-200">
                       {language === 'hi' ? 'चुंबकीय हस्तक्षेप (धातु / EMI)' : 'MAGNETIC INTERFERENCE DETECTED'}
                     </span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>{language === 'hi' ? 'कैलिब्रेट करने के लिए टैप करें' : 'TAP TO CALIBRATE'}</span>
+                    <Sparkles className={cn("w-4 h-4 shrink-0", palette.isLight ? "text-amber-800" : "text-amber-400")} />
+                    <span className={cn("font-black", palette.isLight ? "text-amber-950" : "text-amber-200")}>
+                      {language === 'hi' ? 'कैलिब्रेट करने के लिए टैप करें' : 'TAP TO CALIBRATE'}
+                    </span>
                   </>
                 )}
               </span>
-              <span className="text-[10px] sm:text-[11px] font-mono opacity-80 font-bold">
+              <span className={cn("text-[10px] sm:text-[11px] font-mono font-black", palette.isLight ? "text-amber-900" : "text-amber-300")}>
                 {isMagneticInterference
                   ? (magneticFlux ? `${magneticFlux} μT (HIGH)` : (language === 'hi' ? 'कैलिब्रेट करें' : 'TILT TO CALIBRATE'))
                   : heading === null
@@ -2921,7 +2923,7 @@ export const CompassView = () => {
                   "flex items-center justify-between text-[10.5px] font-medium pt-3 mt-1 border-t text-stone-400 select-none",
                   theme === 'light' ? "border-stone-200/60 text-stone-600" : "border-white/5 text-stone-400"
                 )}>
-                  <span className="font-mono">v5.8.5 (Build 49)</span>
+                  <span className="font-mono">v5.8.8 (Build 52)</span>
                   <span className="text-[9.5px] uppercase font-bold tracking-wider opacity-80">{language === 'hi' ? 'ऑफलाइन प्रमाणित' : 'Offline Certified'}</span>
                 </div>
               </div>
