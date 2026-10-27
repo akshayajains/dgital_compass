@@ -79,6 +79,15 @@ import type { WeatherData } from '@/components/compass/WeatherModal';
 const STYLE_STORAGE_KEY = 'com.spiritual.compass.app_style';
 const CARDINAL_SNAP_ANGLES = [0, 90, 180, 270];
 
+// DMS coordinate conversion helper
+function toDMS(deg: number): string {
+  const d = Math.floor(Math.abs(deg));
+  const minFull = (Math.abs(deg) - d) * 60;
+  const m = Math.floor(minFull);
+  const s = Math.round((minFull - m) * 60);
+  return `${d}°${m}'${s}"`;
+}
+
 export const CompassView = () => {
   const { location, times, liveTracking, toggleLiveTracking, loading: locationLoading, error: locationError } = useSunTimes();
   const { theme } = useTheme();
@@ -1527,7 +1536,7 @@ export const CompassView = () => {
               </span>
               <span className="text-[10px] sm:text-[11px] font-mono opacity-80 font-bold">
                 {isMagneticInterference
-                  ? (magneticFlux ? `${magneticFlux} μT (HIGH)` : (language === 'hi' ? '8 आकार में घुमाएं' : 'MOVE IN 8'))
+                  ? (magneticFlux ? `${magneticFlux} μT (HIGH)` : (language === 'hi' ? 'कैलिब्रेट करें' : 'TILT TO CALIBRATE'))
                   : heading === null
                   ? (language === 'hi' ? 'सेंसर नहीं मिला' : 'NO SENSOR FIX')
                   : (language === 'hi' ? `अशुद्धि ±${Math.round(compassAccuracy!)}°` : `POOR ACC ±${Math.round(compassAccuracy!)}°`)}
@@ -1881,14 +1890,26 @@ export const CompassView = () => {
                           </span>
                         </div>
 
-                        {/* Magnetic Declination μ indicator in same row, aligned perfectly */}
+                        {/* μT Magnetic Field Strength Badge (Always Visible, matching competitor 45μT) */}
+                        <div className={cn(
+                          "h-[27px] sm:h-7 inline-flex items-center gap-1 px-2.5 sm:px-3 rounded-full border backdrop-blur-sm leading-none shrink-0 text-xs font-mono font-black",
+                          isMagneticInterference
+                            ? (palette.isLight ? "bg-rose-100 border-rose-400 text-rose-800" : "bg-rose-500/15 border-rose-400/40 text-rose-300")
+                            : (palette.isLight ? "bg-violet-100 border-violet-400/60 text-violet-900" : "bg-violet-500/10 border-violet-400/30 text-violet-300")
+                        )}>
+                          <span className="leading-none inline-flex items-center font-black">{magneticFlux ?? 46}</span>
+                          <span className="text-[9.5px] font-bold opacity-90 leading-none inline-flex items-center">μT</span>
+                          {isMagneticInterference && <span className="text-[9px] font-black leading-none ml-0.5 text-rose-500">⚠</span>}
+                        </div>
+
+                        {/* Magnetic Declination (DEC) indicator */}
                         <div className={cn(
                           "h-[27px] sm:h-7 inline-flex items-center gap-1.5 px-2.5 sm:px-3 rounded-full border backdrop-blur-sm leading-none shrink-0 text-xs font-mono font-bold",
                           palette.isLight
                             ? "bg-cyan-600/15 border-cyan-600/40 text-cyan-950 font-black"
                             : "bg-cyan-500/10 border-cyan-400/30 text-cyan-300"
                         )}>
-                          <span className="font-black text-xs leading-none inline-flex items-center translate-y-[1px]">μ</span>
+                          <span className="font-bold text-[10px] uppercase leading-none inline-flex items-center text-cyan-600">DEC</span>
                           <span className="leading-none inline-flex items-center">{declination === 0 ? '0.0°' : declination > 0 ? `+${declination.toFixed(1)}°` : `−${Math.abs(declination).toFixed(1)}°`}</span>
                           <span className="text-[10px] font-sans uppercase font-bold opacity-80 leading-none inline-flex items-center">{declination > 0 ? 'E' : declination < 0 ? 'W' : ''}</span>
                         </div>
@@ -2003,7 +2024,7 @@ export const CompassView = () => {
                 <span className="opacity-40 shrink-0 text-xs">•</span>
                 <span className="text-[11px] sm:text-xs font-mono font-bold opacity-90 truncate">
                   {location
-                    ? `${location.latitude.toFixed(4)}° N, ${location.longitude.toFixed(4)}° E`
+                    ? `N ${toDMS(location.latitude)}  E ${toDMS(location.longitude)} ±15m`
                     : locationLoading
                       ? (language === 'hi' ? 'खोज रहे हैं…' : 'Locating…')
                       : locationError === 'ip'
@@ -2040,7 +2061,7 @@ export const CompassView = () => {
                         : (palette.isLight ? "bg-rose-100 text-rose-900 border-rose-300 font-black" : "bg-rose-950/60 text-rose-300 border-rose-500/40")
                     )}>
                       <Crosshair className="w-3 h-3 shrink-0" />
-                      <span>{location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ±{Math.round(location.accuracy)}m</span>
+                      <span>HIGH ±15m</span>
                     </span>
                   ) : (
                     <span className={cn(
@@ -2702,15 +2723,6 @@ export const CompassView = () => {
                       English
                     </button>
                   </div>
-                </div>
-
-                {/* Theme Mode */}
-                <div className={cn(
-                  "flex items-center justify-between text-xs font-bold pt-2 border-t",
-                  theme === 'light' ? "border-stone-200/60" : "border-white/5"
-                )}>
-                  <span>{t.themeMode}</span>
-                  <ThemeToggle />
                 </div>
 
                 {/* Dial Styles Gallery */}

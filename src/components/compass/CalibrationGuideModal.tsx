@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Sparkles, CheckCircle2, RotateCcw, AlertTriangle, X, Activity, Smartphone } from 'lucide-react';
+import { Sparkles, CheckCircle2, RotateCcw, AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
@@ -16,6 +16,14 @@ interface CalibrationGuideModalProps {
   onCalibrationComplete?: () => void;
 }
 
+const CX = 125;
+const CY = 125;
+const RADIUS = 100;
+const VIEWBOX_SIZE = 250;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+const TOTAL_SEGMENTS = 36;
+const COMPLETE_THRESHOLD = 85;
+
 export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   isOpen,
   onClose,
@@ -25,140 +33,132 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   pitch = 0,
   roll = 0,
   magneticInterference,
-  onCalibrationComplete
+  onCalibrationComplete,
 }) => {
   const isHi = language === 'hi';
 
-  // Live angular motion excursions
-  const [pitchProgress, setPitchProgress] = useState<number>(0);
-  const [rollProgress, setRollProgress] = useState<number>(0);
-  const [yawProgress, setYawProgress] = useState<number>(0);
-  const [currentPitch, setCurrentPitch] = useState<number>(0);
-  const [currentRoll, setCurrentRoll] = useState<number>(0);
+  const [ballAngleDeg, setBallAngleDeg] = useState<number>(0);
+  const [visitedSegments, setVisitedSegments] = useState<Set<number>>(new Set());
+  const [progress, setProgress] = useState<number>(0);
   const [isCalibrated, setIsCalibrated] = useState<boolean>(false);
-  const [hasSensorInput, setHasSensorInput] = useState<boolean>(false);
 
-  // Min-max tracking across figure-8
-  const initialCapturedRef = useRef<boolean>(false);
-  const pitchMinRef = useRef<number>(0);
-  const pitchMaxRef = useRef<number>(0);
-  const rollMinRef = useRef<number>(0);
-  const rollMaxRef = useRef<number>(0);
-  const yawQuadrantsRef = useRef<Set<number>>(new Set());
   const completedRef = useRef<boolean>(false);
+  const hasSensorRef = useRef<boolean>(false);
+  const visitedRef = useRef<Set<number>>(new Set());
 
-  // Total Progress
-  const totalProgress = Math.min(100, Math.round(pitchProgress * 0.35 + rollProgress * 0.35 + yawProgress * 0.30));
+  const angleRad = (ballAngleDeg * Math.PI) / 180;
+  const ballX = CX + Math.sin(angleRad) * RADIUS;
+  const ballY = CY - Math.cos(angleRad) * RADIUS;
+  const progressOffset = CIRCUMFERENCE - (progress / 100) * CIRCUMFERENCE;
 
-  const ingestOrientationSample = (beta: number, gamma: number, alpha: number | null | undefined) => {
-    setHasSensorInput(true);
-    setCurrentPitch(Math.round(beta));
-    setCurrentRoll(Math.round(gamma));
+  const ingestSample = useCallback(
+    (beta: number, gamma: number) => {
+      hasSensorRef.current = true;
+      const rad = Math.atan2(gamma, -beta);
+      const deg = ((rad * 180) / Math.PI + 360) % 360;
+      setBallAngleDeg(deg);
 
-    if (!initialCapturedRef.current) {
-      pitchMinRef.current = beta;
-      pitchMaxRef.current = beta;
-      rollMinRef.current = gamma;
-      rollMaxRef.current = gamma;
-      initialCapturedRef.current = true;
-    }
+      const seg = Math.floor(deg / 10) % TOTAL_SEGMENTS;
+      if (!visitedRef.current.has(seg)) {
+        const next = new Set(visitedRef.current);
+        next.add(seg);
+        visitedRef.current = next;
+        setVisitedSegments(new Set(next));
 
-    // Track Pitch Excursion (Target: 40° span)
-    pitchMinRef.current = Math.min(pitchMinRef.current, beta);
-    pitchMaxRef.current = Math.max(pitchMaxRef.current, beta);
-    const pitchSpan = Math.abs(pitchMaxRef.current - pitchMinRef.current);
-    const pScore = Math.min(100, Math.round((pitchSpan / 40) * 100));
-    setPitchProgress(pScore);
+        const pct = Math.round((next.size / TOTAL_SEGMENTS) * 100);
+        setProgress(pct);
 
-    // Track Roll Excursion (Target: 45° span)
-    rollMinRef.current = Math.min(rollMinRef.current, gamma);
-    rollMaxRef.current = Math.max(rollMaxRef.current, gamma);
-    const rollSpan = Math.abs(rollMaxRef.current - rollMinRef.current);
-    const rScore = Math.min(100, Math.round((rollSpan / 45) * 100));
-    setRollProgress(rScore);
-
-    // Track Yaw Quadrant Coverage (Target: 3 or 4 quadrants)
-    let yScore = yawProgress;
-    if (alpha !== null && alpha !== undefined) {
-      const quadrant = Math.floor(((alpha % 360 + 360) % 360) / 90);
-      yawQuadrantsRef.current.add(quadrant);
-      yScore = Math.min(100, Math.round((yawQuadrantsRef.current.size / 3.5) * 100));
-      setYawProgress(yScore);
-    }
-
-    // Check Calibration Completion
-    if (!completedRef.current && pScore >= 95 && rScore >= 95 && (yawQuadrantsRef.current.size >= 3 || yScore >= 85)) {
-      completedRef.current = true;
-      setIsCalibrated(true);
-      try {
-        Haptics.impact({ style: ImpactStyle.Heavy });
-      } catch (e) {
-        console.error('Calibration haptic feedback failed:', e);
+        if (!completedRef.current && pct >= COMPLETE_THRESHOLD) {
+          completedRef.current = true;
+          setIsCalibrated(true);
+          try {
+            Haptics.impact({ style: ImpactStyle.Heavy });
+          } catch (e) {
+            console.error('Calibration haptic feedback failed:', e);
+          }
+          onCalibrationComplete?.();
+        }
       }
-      onCalibrationComplete?.();
-    }
-  };
+    },
+    [onCalibrationComplete]
+  );
 
-  // Drive calibration gauges from native Android hardware sensor props when open
+  // Drive from native sensor props (Android/Capacitor)
   useEffect(() => {
     if (!isOpen) return;
     if (heading !== null || pitch !== 0 || roll !== 0) {
-      ingestOrientationSample(pitch, roll, heading);
+      ingestSample(pitch, roll);
     }
-  }, [isOpen, heading, pitch, roll]);
+  }, [isOpen, heading, pitch, roll, ingestSample]);
 
+  // Reset on close; add deviceorientation listener + desktop simulation fallback
   useEffect(() => {
     if (!isOpen) {
-      setPitchProgress(0);
-      setRollProgress(0);
-      setYawProgress(0);
+      setBallAngleDeg(0);
+      setVisitedSegments(new Set());
+      setProgress(0);
       setIsCalibrated(false);
-      setHasSensorInput(false);
       completedRef.current = false;
-      initialCapturedRef.current = false;
-      pitchMinRef.current = 0;
-      pitchMaxRef.current = 0;
-      rollMinRef.current = 0;
-      rollMaxRef.current = 0;
-      yawQuadrantsRef.current = new Set();
+      hasSensorRef.current = false;
+      visitedRef.current = new Set();
       return;
     }
 
     const handleOrientation = (e: DeviceOrientationEvent) => {
       if (e.beta === null || e.gamma === null) return;
-      ingestOrientationSample(e.beta, e.gamma, e.alpha);
+      ingestSample(e.beta, e.gamma);
     };
-
     window.addEventListener('deviceorientation', handleOrientation);
 
-    // Desktop/fallback gradual simulation if no physical sensor events received
+    let simInterval: ReturnType<typeof setInterval> | null = null;
+    let simAngle = 0;
     const timeout = setTimeout(() => {
-      if (!initialCapturedRef.current && !completedRef.current) {
-        // Fallback simulation timer for desktops or devices with permissions disabled
-        const interval = setInterval(() => {
-          setPitchProgress(p => {
-            const next = Math.min(100, p + 15);
-            if (next >= 100) {
-              clearInterval(interval);
-              setIsCalibrated(true);
-              completedRef.current = true;
-              onCalibrationComplete?.();
-            }
-            return next;
-          });
-          setRollProgress(r => Math.min(100, r + 15));
-          setYawProgress(y => Math.min(100, y + 15));
-        }, 500);
+      if (!hasSensorRef.current && !completedRef.current) {
+        simInterval = setInterval(() => {
+          if (completedRef.current) {
+            if (simInterval) clearInterval(simInterval);
+            return;
+          }
+          simAngle = (simAngle + 8) % 360;
+          const rad = (simAngle * Math.PI) / 180;
+          const simPitch = -Math.cos(rad) * 20;
+          const simRoll = Math.sin(rad) * 20;
+          ingestSample(simPitch, simRoll);
+        }, 100);
       }
     }, 2500);
 
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation);
       clearTimeout(timeout);
+      if (simInterval) clearInterval(simInterval);
     };
-  }, [isOpen]);
+  }, [isOpen, ingestSample]);
 
   if (!isOpen) return null;
+
+  const isLight = theme === 'light';
+  const palette = {
+    card: isLight
+      ? 'bg-gradient-to-b from-amber-50/95 to-amber-100/90 border-amber-500/30 text-amber-950'
+      : 'bg-gradient-to-b from-[#1c1917]/95 via-[#181512]/95 to-black/95 border-amber-500/20 text-amber-100',
+    closeBtn: isLight
+      ? 'text-stone-500 hover:text-stone-900'
+      : 'text-stone-400 hover:bg-white/10 hover:text-white',
+    subText: isLight ? 'text-stone-600' : 'text-stone-400',
+    trackCircle: isLight ? '#d97706' : '#92400e',
+    progressRing: isCalibrated ? '#10b981' : '#f59e0b',
+    interfereBg: isLight
+      ? 'bg-amber-500/10 border-amber-500/40 text-amber-700'
+      : 'bg-amber-500/10 border-amber-500/30 text-amber-300',
+    interfereIcon: isLight ? 'text-amber-600' : 'text-amber-400',
+    centerBg: isLight ? '#fef3c7' : '#1c1917',
+    actionBtn: isCalibrated
+      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/25'
+      : 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/20',
+  };
+
+  const coveredPct = Math.round((visitedSegments.size / TOTAL_SEGMENTS) * 100);
 
   return (
     <AnimatePresence>
@@ -168,187 +168,168 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.92, y: 20 }}
           className={cn(
-            "w-full max-w-sm rounded-[2rem] border p-6 shadow-2xl relative overflow-hidden flex flex-col items-center text-center",
-            theme === 'light'
-              ? "bg-gradient-to-b from-amber-50/95 to-amber-100/90 border-amber-500/30 text-amber-950"
-              : "bg-gradient-to-b from-[#1c1917]/95 via-[#181512]/95 to-black/95 border-amber-500/20 text-amber-100"
+            'w-full max-w-sm rounded-[2rem] border p-6 shadow-2xl relative overflow-hidden flex flex-col items-center text-center',
+            palette.card
           )}
         >
           {/* Close button */}
           <button
             onClick={onClose}
             className={cn(
-              "absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 active:scale-90 transition-transform",
-              theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-400 hover:bg-white/10 hover:text-white"
+              'absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 active:scale-90 transition-transform',
+              palette.closeBtn
             )}
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Heading */}
+          {/* Heading badge */}
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">
-              {isHi ? '3-अक्षीय सटीक कैलिब्रेशन' : '3-Axis Gyro Calibration'}
+              {isHi ? 'कम्पास कैलिब्रेशन' : 'Compass Calibration'}
             </span>
           </div>
 
-          <h3 className={cn("text-lg font-black font-serif mb-1.5", theme === 'light' ? "text-amber-950" : "text-white")}>
-            {isHi ? '8-आकार (Figure-8) में घुमाएँ' : 'Wave in Figure-8 Motion'}
+          <h3
+            className={cn(
+              'text-lg font-black font-serif mb-1.5',
+              isLight ? 'text-amber-950' : 'text-white'
+            )}
+          >
+            {isHi ? 'गेंद को घेरे में घुमाएँ' : 'Roll the Ball Around the Circle'}
           </h3>
 
-          <p className={cn("text-xs max-w-[270px] leading-relaxed mb-4", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+          <p className={cn('text-xs max-w-[270px] leading-relaxed mb-4', palette.subText)}>
             {isHi
-              ? 'सटीक शून्य-विचलन के लिए फोन को हवा में 8 के आकार (∞) में घुमाएँ। नीचे लाइव तीनों अक्षों का संरेखण देखें।'
-              : 'Smoothly wave your device in an infinity (∞) / figure-8 pattern. Watch the live 3-axis sensors align below.'}
+              ? 'स्क्रीन को झुकाएं ताकि लाल गेंद पूरे वृत्त पर घूमे।'
+              : 'Tilt the screen to roll the ball around the circle.'}
           </p>
 
-          {/* Interactive Live 3D Phone & Figure-8 Track */}
-          <div className="relative w-44 h-28 flex items-center justify-center mb-3">
-            {/* SVG Path */}
-            <svg viewBox="0 0 160 100" className="w-full h-full stroke-amber-500/30 fill-none stroke-[2.5] overflow-visible">
-              <path
-                d="M 40,50 C 40,25 80,25 80,50 C 80,75 120,75 120,50 C 120,25 80,25 80,50 C 80,75 40,75 40,50 Z"
-                strokeDasharray="6,4"
+          {/* Rolling Ball Circle Calibration */}
+          <div className="relative mb-5" style={{ width: 200, height: 210 }}>
+            <svg
+              viewBox={'0 0 ' + VIEWBOX_SIZE + ' ' + VIEWBOX_SIZE}
+              width={200}
+              height={200}
+              style={{ overflow: 'visible' }}
+            >
+              {/* Dashed track circle */}
+              <circle
+                cx={CX}
+                cy={CY}
+                r={RADIUS}
+                fill="none"
+                stroke={palette.trackCircle}
+                strokeWidth={2.5}
+                strokeDasharray="6 4"
+                opacity={0.4}
+              />
+
+              {/* Progress arc ring */}
+              <circle
+                cx={CX}
+                cy={CY}
+                r={RADIUS}
+                fill="none"
+                stroke={palette.progressRing}
+                strokeWidth={5}
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={progressOffset}
+                strokeLinecap="round"
+                transform={'rotate(-90 ' + CX + ' ' + CY + ')'}
+                style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.4s ease' }}
+              />
+
+              {/* Center icon */}
+              <circle cx={CX} cy={CY} r={18} fill={palette.centerBg} />
+              <text
+                x={CX}
+                y={CY + 6}
+                textAnchor="middle"
+                fontSize={16}
+                fill={isCalibrated ? '#10b981' : '#f59e0b'}
+              >
+                {isCalibrated ? '✓' : '⌖'}
+              </text>
+
+              {/* Ball glow filter */}
+              <defs>
+                <filter id="ballGlow" x="-60%" y="-60%" width="220%" height="220%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Rolling ball */}
+              <circle
+                cx={ballX}
+                cy={ballY}
+                r={10}
+                fill={isCalibrated ? '#10b981' : '#ef4444'}
+                filter="url(#ballGlow)"
+                style={{ transition: 'cx 0.08s linear, cy 0.08s linear, fill 0.4s ease' }}
+              />
+              {/* Ball shine */}
+              <circle
+                cx={ballX - 3}
+                cy={ballY - 3}
+                r={3}
+                fill="rgba(255,255,255,0.45)"
+                style={{ transition: 'cx 0.08s linear, cy 0.08s linear' }}
               />
             </svg>
 
-            {/* Orbiting Satellite Indicator */}
-            <motion.div
-              animate={{
-                offsetDistance: ['0%', '100%']
-              }}
-              transition={{
-                duration: 2.8,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              style={{
-                offsetPath: "path('M 40,50 C 40,25 80,25 80,50 C 80,75 120,75 120,50 C 120,25 80,25 80,50 C 80,75 40,75 40,50 Z')",
-              }}
-              className="absolute w-6 h-6 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-200 shadow-[0_0_15px_rgba(251,191,36,0.9)] flex items-center justify-center"
+            {/* Progress % label */}
+            <div
+              className={cn(
+                'absolute left-1/2 -translate-x-1/2 text-xs font-black tabular-nums',
+                isCalibrated ? 'text-emerald-500' : 'text-amber-500'
+              )}
+              style={{ bottom: 0 }}
             >
-              <Compass className="w-3.5 h-3.5 text-stone-950 animate-spin" />
-            </motion.div>
-
-            {/* Live Responsive 3D Phone Mockup */}
-            <div 
-              className="absolute w-12 h-20 rounded-xl border-2 border-amber-400/80 bg-gradient-to-b from-stone-900 to-stone-950 shadow-xl flex flex-col items-center justify-between p-1 transition-transform duration-100 ease-out"
-              style={{
-                transform: `perspective(300px) rotateX(${Math.max(-30, Math.min(30, currentPitch))}deg) rotateY(${Math.max(-30, Math.min(30, currentRoll))}deg)`
-              }}
-            >
-              <div className="w-2.5 h-0.5 rounded-full bg-stone-600 mt-0.5" />
-              <div className="w-4 h-4 rounded-full border border-amber-400/50 flex items-center justify-center">
-                <div className={cn("w-2 h-2 rounded-full", isCalibrated ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-amber-400 animate-ping")} />
-              </div>
-              <div className="w-3 h-0.5 rounded-full bg-stone-700 mb-0.5" />
+              {progress}%
             </div>
           </div>
 
-          {/* Genuine 3-Axis Gyro Alignment Gauges */}
-          <div className="w-full grid grid-cols-3 gap-2 mb-4">
-            {/* Axis 1: Pitch (X) */}
-            <div className={cn(
-              "p-2 rounded-xl border flex flex-col items-center gap-1 transition-all",
-              pitchProgress >= 95 
-                ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-sm"
-                : (theme === 'light' ? "bg-white/80 border-stone-200 text-stone-700" : "bg-white/5 border-white/10 text-stone-300")
-            )}>
-              <div className="flex items-center gap-1 text-[9px] font-black uppercase">
-                <span>{isHi ? 'ऊंचाई' : 'Pitch'}</span>
-                <span>(X)</span>
-              </div>
-              <div className="w-full h-1.5 rounded-full bg-stone-700/30 overflow-hidden">
-                <div 
-                  className={cn("h-full rounded-full transition-all duration-200", pitchProgress >= 95 ? "bg-emerald-400" : "bg-amber-400")}
-                  style={{ width: `${pitchProgress}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-mono font-black">{pitchProgress}%</span>
-            </div>
-
-            {/* Axis 2: Roll (Y) */}
-            <div className={cn(
-              "p-2 rounded-xl border flex flex-col items-center gap-1 transition-all",
-              rollProgress >= 95 
-                ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-sm"
-                : (theme === 'light' ? "bg-white/80 border-stone-200 text-stone-700" : "bg-white/5 border-white/10 text-stone-300")
-            )}>
-              <div className="flex items-center gap-1 text-[9px] font-black uppercase">
-                <span>{isHi ? 'झुकाव' : 'Roll'}</span>
-                <span>(Y)</span>
-              </div>
-              <div className="w-full h-1.5 rounded-full bg-stone-700/30 overflow-hidden">
-                <div 
-                  className={cn("h-full rounded-full transition-all duration-200", rollProgress >= 95 ? "bg-emerald-400" : "bg-amber-400")}
-                  style={{ width: `${rollProgress}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-mono font-black">{rollProgress}%</span>
-            </div>
-
-            {/* Axis 3: Yaw (Z) */}
-            <div className={cn(
-              "p-2 rounded-xl border flex flex-col items-center gap-1 transition-all",
-              yawProgress >= 85 
-                ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-sm"
-                : (theme === 'light' ? "bg-white/80 border-stone-200 text-stone-700" : "bg-white/5 border-white/10 text-stone-300")
-            )}>
-              <div className="flex items-center gap-1 text-[9px] font-black uppercase">
-                <span>{isHi ? 'घूर्णन' : 'Yaw'}</span>
-                <span>(Z)</span>
-              </div>
-              <div className="w-full h-1.5 rounded-full bg-stone-700/30 overflow-hidden">
-                <div 
-                  className={cn("h-full rounded-full transition-all duration-200", yawProgress >= 85 ? "bg-emerald-400" : "bg-amber-400")}
-                  style={{ width: `${yawProgress}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-mono font-black">{yawProgress}%</span>
-            </div>
-          </div>
-
-          {/* Interference Badge if flagged */}
+          {/* Interference Badge */}
           {magneticInterference && (
-            <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold mb-3",
-              theme === 'light'
-                ? "bg-amber-500/10 border-amber-500/40 text-amber-700"
-                : "bg-amber-500/10 border-amber-500/30 text-amber-300"
-            )}>
-              <AlertTriangle className={cn("w-3.5 h-3.5", theme === 'light' ? "text-amber-600" : "text-amber-400")} />
-              <span>{isHi ? 'चुंबकीय हस्तक्षेप पहचाना गया — धातु से दूर रखें' : 'Interference Detected — Move away from metal'}</span>
+            <div
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold mb-3',
+                palette.interfereBg
+              )}
+            >
+              <AlertTriangle className={cn('w-3.5 h-3.5', palette.interfereIcon)} />
+              <span>
+                {isHi
+                  ? 'चुंबकीय हस्तक्षेप पहचाना गया — धातु से दूर रखें'
+                  : 'Interference Detected — Move away from metal'}
+              </span>
             </div>
           )}
 
-          {/* Master Progress bar */}
-          <div className="w-full space-y-1.5 mb-5">
-            <div className={cn("flex justify-between text-[11px] font-black", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
-              <span>{isHi ? 'समग्र कैलिब्रेशन स्तर' : 'Overall Calibration Level'}</span>
-              <span className={cn(isCalibrated ? "text-emerald-500 font-black" : "text-amber-500 font-bold")}>
-                {totalProgress}%
-              </span>
-            </div>
-            <div className={cn("w-full h-2.5 rounded-full overflow-hidden border p-0.5", theme === 'light' ? "bg-stone-200 border-stone-300" : "bg-stone-800 border-white/10")}>
-              <motion.div
-                className={cn(
-                  "h-full rounded-full transition-all duration-300",
-                  isCalibrated ? "bg-gradient-to-r from-emerald-500 via-teal-400 to-green-400 shadow-[0_0_10px_#10b981]" : "bg-gradient-to-r from-amber-500 to-yellow-400"
-                )}
-                style={{ width: `${totalProgress}%` }}
-              />
-            </div>
-          </div>
+          {/* Status text */}
+          <p
+            className={cn(
+              'text-[11px] font-bold mb-4 transition-all',
+              isCalibrated ? 'text-emerald-500' : palette.subText
+            )}
+          >
+            {isCalibrated
+              ? (isHi ? '✓ कैलिब्रेशन पूर्ण!' : '✓ Calibration Complete!')
+              : (isHi ? (coveredPct + '% क्षेत्र कवर हुआ') : (coveredPct + '% of circle covered'))}
+          </p>
 
           {/* Action button */}
           <button
             onClick={onClose}
             className={cn(
-              "w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all",
-              isCalibrated
-                ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-emerald-500/25"
-                : "bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/20"
+              'w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all',
+              palette.actionBtn
             )}
           >
             {isCalibrated ? (

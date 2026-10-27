@@ -1700,22 +1700,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   ? "border-emerald-400 bg-[#0B1510]/95 text-emerald-100 shadow-[0_0_22px_rgba(16,185,129,0.75),inset_0_0_12px_rgba(0,0,0,0.9)]"
                   : "border-slate-400 bg-[#0B0F14]/95 text-slate-100 shadow-[0_0_18px_rgba(148,163,184,0.5),inset_0_0_12px_rgba(0,0,0,0.9)]"
               )}>
-                {/* Bullseye Level Crosshair Reticle */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-25" viewBox="0 0 56 56">
-                  <circle cx="28" cy="28" r="9" fill="none" stroke="currentColor" strokeWidth="0.8" />
-                  <line x1="28" y1="4" x2="28" y2="52" stroke="currentColor" strokeWidth="0.5" />
-                  <line x1="4" y1="28" x2="52" y2="28" stroke="currentColor" strokeWidth="0.5" />
-                </svg>
+
                 {/* Floating Bullseye Bubble */}
-                <div
-                  className={cn(
-                    "absolute w-3 h-3 rounded-full pointer-events-none transition-transform duration-75",
-                    isDeviceFlat
-                      ? "bg-emerald-400 shadow-[0_0_8px_#10b981] border border-white/80"
-                      : "bg-amber-400/80 shadow-[0_0_6px_#f59e0b] border border-amber-200"
-                  )}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className={cn("text-[14px] font-black font-mono leading-none z-10 drop-shadow-md", isDeviceFlat ? "text-emerald-100" : "text-slate-100")}>
                   {displayAngle}°
                 </span>
@@ -1731,13 +1718,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   : "border-slate-300 bg-white/95 text-slate-900 shadow-[0_4px_18px_rgba(0,0,0,0.15)]"
               )}>
                 {/* Bullseye Floating Bubble */}
-                <div
-                  className={cn(
-                    "absolute w-3 h-3 rounded-full pointer-events-none transition-transform duration-75",
-                    isDeviceFlat ? "bg-emerald-500/80 shadow-[0_0_6px_#10b981]" : "bg-amber-500/60"
-                  )}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className="text-[14px] font-black font-mono leading-none text-slate-950 z-10">{displayAngle}°</span>
                 <span className={cn("text-[8.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-600 font-black" : "text-slate-500")}>
                   {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}
@@ -1748,10 +1729,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                 "flex flex-col items-center justify-center h-14 w-14 rounded-full border-2 transition-all duration-200 relative overflow-hidden",
                 isDeviceFlat ? "border-emerald-500 text-emerald-400 bg-zinc-950" : "border-zinc-700 bg-zinc-950/95 text-zinc-100"
               )}>
-                <div
-                  className={cn("absolute w-2.5 h-2.5 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400" : "bg-white/40")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className="text-[14px] font-mono font-black leading-none z-10">{displayAngle}°</span>
                 <span className="text-[8.5px] font-bold uppercase tracking-widest text-zinc-400 mt-0.5 z-10">
                   {isDeviceFlat ? 'LEVEL' : get8CardinalName(displayHeading)}
@@ -1764,10 +1742,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   ? "border-emerald-400 bg-[#0A1A12] shadow-[0_0_20px_rgba(16,185,129,0.5)]"
                   : "border-[#D4AF37] bg-gradient-to-br from-[#1C2833] via-[#0E161D] to-[#050A0E] shadow-[0_0_18px_rgba(212,175,55,0.4)]"
               )}>
-                <div
-                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-amber-400/60")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className="text-[14px] font-serif font-black leading-none text-[#F3E5AB] z-10">{displayAngle}°</span>
                 <span className={cn("text-[8.5px] font-bold uppercase tracking-widest mt-0.5 z-10", isDeviceFlat ? "text-emerald-400 font-black" : "text-[#D4AF37]")}>
                   {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}
@@ -1780,10 +1755,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   ? "border-emerald-400 bg-gradient-to-br from-[#0a2318] to-[#04100b] text-emerald-200 shadow-[0_0_16px_rgba(16,185,129,0.7)]"
                   : "border-amber-400 bg-gradient-to-br from-[#2E1202] via-[#180A02] to-[#0A0400] text-amber-100 shadow-[0_0_16px_rgba(245,158,11,0.7)]"
               )}>
-                <div
-                  className={cn("absolute w-2.5 h-2.5 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400" : "bg-amber-400/70")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className="text-[12px] font-mono font-black leading-none z-10">{displayAngle}°</span>
                 <span className={cn("text-[8px] font-bold uppercase tracking-wider mt-0.5 z-10", isDeviceFlat ? "text-emerald-400" : "text-amber-300")}>
                   {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : get8CardinalName(displayHeading)}
@@ -1796,10 +1768,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   ? "border-emerald-600 bg-emerald-50 text-emerald-950"
                   : "border-[#8C6239] bg-gradient-to-br from-[#FFFDF7] via-[#FAF3E8] to-[#EAD9C2] text-[#3D2512]"
               )}>
-                <div
-                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-500 shadow-[0_0_8px_#10b981]" : "bg-amber-600/40")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className="text-[15px] font-black leading-none font-serif z-10 text-[#3D2512] drop-shadow-sm">{displayAngle}°</span>
                 <span className={cn("text-[8px] font-black uppercase tracking-wider mt-0.5 z-10", isDeviceFlat ? "text-emerald-700" : "text-red-700")}>
                   {isDeviceFlat ? (isHi ? 'समतल' : 'LEVEL') : 'N'}
@@ -1816,10 +1785,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   boxShadow: `0 0 16px ${activeVariant.id === 'ios_black' ? '#FFFFFF' : activeVariant.primaryColor}55` 
                 } : undefined}
               >
-                <div
-                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-white/40")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className="text-[14px] font-black font-mono leading-none z-10" style={{ color: isDeviceFlat ? '#34D399' : (activeVariant.id === 'ios_black' ? '#FFFFFF' : activeVariant.primaryColor) }}>
                   {displayAngle}°
                 </span>
@@ -1834,10 +1800,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   ? "border-emerald-400 bg-emerald-950 shadow-[0_0_22px_rgba(52,211,153,0.85)]"
                   : "border-emerald-300/80 bg-emerald-950/85 shadow-[0_0_18px_rgba(52,211,153,0.6)]"
               )}>
-                <div
-                  className={cn("absolute w-3 h-3 rounded-full pointer-events-none", isDeviceFlat ? "bg-emerald-400 shadow-[0_0_8px_#10b981]" : "bg-emerald-400/50")}
-                  style={{ transform: `translate(${bubbleX}px, ${bubbleY}px)` }}
-                />
+                {/* Level bubble removed from center cap */}
                 <span className="text-[14px] font-black text-emerald-100 leading-none z-10">{displayAngle}°</span>
                 <span className="text-[8.5px] font-bold uppercase tracking-widest text-emerald-300 mt-0.5 z-10">
                   {isDeviceFlat ? (isHi ? '✓ समतल' : '✓ LEVEL') : get8CardinalName(displayHeading)}

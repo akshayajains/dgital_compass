@@ -733,16 +733,17 @@ export const AdvancedLevelView: React.FC<Props> = ({
           <span className={cn("absolute left-3 top-1/2 -translate-y-1/2 text-[8.5px] font-black font-mono pointer-events-none", isLight ? "text-teal-800/60" : "text-emerald-300/60")}>5°</span>
           <span className={cn("absolute right-3 top-1/2 -translate-y-1/2 text-[8.5px] font-black font-mono pointer-events-none", isLight ? "text-teal-800/60" : "text-emerald-300/60")}>5°</span>
 
-          {/* Center Target Deadzone Ring */}
+          {/* Center Target Deadzone Square (Green when Level) */}
           <div className={cn(
-            "w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 pointer-events-none z-10",
+            "w-10 h-10 rounded-lg border-2 flex items-center justify-center transition-all duration-300 pointer-events-none z-10",
             displayLevel
-              ? "border-teal-400 bg-teal-500/25 shadow-[0_0_30px_#14B8A6]"
-              : "border-amber-400/80 bg-amber-400/10 shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+              ? "border-emerald-400 bg-emerald-500/35 shadow-[0_0_30px_#10B981]"
+              : (isLight ? "border-stone-400/70 bg-stone-300/20" : "border-stone-600/70 bg-stone-800/20")
           )}>
+            {/* Center alignment pip */}
             <div className={cn(
-              "w-2 h-2 rounded-full transition-colors",
-              displayLevel ? "bg-teal-400 shadow-[0_0_12px_#14B8A6]" : "bg-amber-400/70"
+              "w-2.5 h-2.5 rounded-sm transition-colors",
+              displayLevel ? "bg-emerald-400 shadow-[0_0_12px_#10B981]" : "bg-stone-500/50"
             )} />
           </div>
 
@@ -759,24 +760,24 @@ export const AdvancedLevelView: React.FC<Props> = ({
             </div>
           )}
 
-          {/* High-Precision Fluid Mineral Spirit Bubble */}
+          {/* High-Precision Fluid Mineral Spirit Level Square (Aligns into center square) */}
           <div
             className={cn(
-              "absolute w-10 h-10 rounded-full transition-transform duration-100 ease-out shadow-2xl border flex items-center justify-center z-20 pointer-events-none",
+              "absolute w-10 h-10 rounded-lg transition-transform duration-100 ease-out shadow-2xl border-2 flex items-center justify-center z-20 pointer-events-none",
               displayLevel
-                ? "bg-gradient-to-tr from-[#0D9488] via-[#14B8A6] to-[#2DD4BF] border-white shadow-[0_0_30px_#14B8A6] scale-105"
+                ? "bg-gradient-to-tr from-[#059669] via-[#10B981] to-[#34D399] border-emerald-300 shadow-[0_0_30px_#10B981] scale-105"
                 : (isLight
-                    ? "bg-gradient-to-tr from-[#0F766E] via-[#14B8A6] to-[#5EEAD4] border-white shadow-[0_0_20px_rgba(20,184,166,0.8)]"
-                    : "bg-gradient-to-tr from-[#A7F3D0] via-[#34D399] to-[#059669] border-white/90 shadow-[0_0_20px_rgba(16,185,129,0.8)]")
+                    ? "bg-gradient-to-tr from-stone-400 via-stone-500 to-stone-600 border-white/90 shadow-[0_0_16px_rgba(0,0,0,0.3)]"
+                    : "bg-gradient-to-tr from-stone-700 via-stone-600 to-stone-500 border-white/60 shadow-[0_0_16px_rgba(0,0,0,0.5)]")
             )}
             style={{
               transform: `translate(${Math.max(-82, Math.min(82, -displayVisualRoll * 4.8))}px, ${Math.max(-82, Math.min(82, -displayVisualPitch * 4.8))}px)`
             }}
           >
             {/* Liquid Surface Shine & Specular Highlight */}
-            <div className="w-full h-full rounded-full flex items-center justify-center relative overflow-hidden">
-              <div className="absolute top-1 left-2 w-3 h-1.5 rounded-full bg-white/70 blur-[0.5px]" />
-              <div className={cn("w-1.5 h-1.5 rounded-full shadow-sm", isLight ? "bg-white/90" : "bg-stone-950/70")} />
+            <div className="w-full h-full rounded-lg flex items-center justify-center relative overflow-hidden">
+              <div className="absolute top-1 left-1.5 w-3 h-1 rounded-sm bg-white/70 blur-[0.5px]" />
+              <div className={cn("w-2 h-2 rounded-sm shadow-sm", displayLevel ? "bg-white" : (isLight ? "bg-white/80" : "bg-stone-950/60"))} />
             </div>
           </div>
 
@@ -859,8 +860,8 @@ export const AdvancedLevelView: React.FC<Props> = ({
       {/* ── ENGINEERING METRICS GRID (PITCH, ROLL, SLOPE %, ROOF 1:X, MM/M) ── */}
       <div className="w-full grid grid-cols-4 gap-1.5 my-1.5">
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[8.5px] font-black uppercase tracking-wider", isLight ? "text-stone-700" : "text-stone-400")}>{isHi ? 'पिच (X)' : 'Pitch (X)'}</span>
-          <span className={cn("text-xs sm:text-sm font-black font-mono mt-0.5 truncate", isLight ? "text-sky-700" : "text-sky-400")}>
+          <span className={cn("text-[10px] font-black uppercase tracking-wider", isLight ? "text-stone-700" : "text-stone-400")}>{isHi ? 'पिच (X)' : 'Pitch (X)'}</span>
+          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5 truncate", isLight ? "text-sky-700" : "text-sky-400")}>
             {formatAngleUnit(displayPitch, levelUnit)}
           </span>
           {levelUnit !== 'deg' && (
@@ -870,8 +871,8 @@ export const AdvancedLevelView: React.FC<Props> = ({
           )}
         </div>
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[8.5px] font-black uppercase tracking-wider", isLight ? "text-stone-700" : "text-stone-400")}>{isHi ? 'रोल (Y)' : 'Roll (Y)'}</span>
-          <span className={cn("text-xs sm:text-sm font-black font-mono mt-0.5 truncate", isLight ? "text-teal-700" : "text-emerald-400")}>
+          <span className={cn("text-[10px] font-black uppercase tracking-wider", isLight ? "text-stone-700" : "text-stone-400")}>{isHi ? 'रोल (Y)' : 'Roll (Y)'}</span>
+          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5 truncate", isLight ? "text-teal-700" : "text-emerald-400")}>
             {formatAngleUnit(displayRoll, levelUnit)}
           </span>
           {levelUnit !== 'deg' && (
@@ -884,14 +885,14 @@ export const AdvancedLevelView: React.FC<Props> = ({
           <span className={cn("text-[8.5px] font-black uppercase tracking-wider flex items-center gap-0.5", isLight ? "text-stone-700" : "text-stone-400")}>
             <TrendingUp className="w-2 h-2" />{isHi ? 'ढलान %' : 'Slope %'}
           </span>
-          <span className={cn("text-xs sm:text-sm font-black font-mono mt-0.5", isLight ? "text-amber-600" : "text-amber-400")}>{slopePercent}%</span>
+          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5", isLight ? "text-amber-600" : "text-amber-400")}>{slopePercent}%</span>
           <span className="text-[7.5px] font-mono text-stone-600">1:{roofRatio}</span>
         </div>
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
           <span className={cn("text-[8.5px] font-black uppercase tracking-wider flex items-center gap-0.5", isLight ? "text-stone-700" : "text-stone-400")}>
             <Ruler className="w-2 h-2" />{isHi ? 'पिच mm/m' : 'mm/m'}
           </span>
-          <span className={cn("text-xs sm:text-sm font-black font-mono mt-0.5", isLight ? "text-orange-600" : "text-orange-400")}>{mmPerMeter}</span>
+          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5", isLight ? "text-orange-600" : "text-orange-400")}>{mmPerMeter}</span>
           <span className="text-[7.5px] font-mono text-stone-600">{roofRatio}"/ft</span>
         </div>
       </div>
