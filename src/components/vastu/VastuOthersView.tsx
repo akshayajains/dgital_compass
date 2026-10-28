@@ -174,17 +174,19 @@ export const VastuOthersView: React.FC<Props> = ({
   });
 
   // 9-Grid Floorplan Mapper (sector keys — matches VastuPanel mapper UI + score)
-  const [house9Grid, setHouse9Grid] = useState<Record<string, string>>({
-    NW: 'bathroom',
-    N: 'entrance',
-    NE: 'pooja',
-    W: 'study',
-    CENTER: 'open',
-    E: 'entrance',
-    SW: 'master_bedroom',
-    S: 'staircase',
-    SE: 'kitchen'
+  const [house9Grid, setHouse9Grid] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('com.spiritual.compass.vastu_9grid');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {};
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('com.spiritual.compass.vastu_9grid', JSON.stringify(house9Grid));
+    } catch {}
+  }, [house9Grid]);
 
   // Feng Shui Bagua State
   const [isFengShuiOpen, setIsFengShuiOpen] = useState<boolean>(true);
@@ -558,11 +560,13 @@ export const VastuOthersView: React.FC<Props> = ({
       S: ['staircase', 'naukari'],
       SE: ['kitchen']
     };
+    const sectors = Object.keys(house9Grid).filter(k => Boolean(house9Grid[k]));
+    if (sectors.length === 0) return null;
     let correct = 0;
-    Object.keys(house9Grid).forEach(sector => {
+    sectors.forEach(sector => {
       if (ideal[sector]?.includes(house9Grid[sector])) correct += 1;
     });
-    return Math.round((correct / 9) * 100);
+    return Math.round((correct / Math.max(sectors.length, 1)) * 100);
   }, [house9Grid]);
 
   const premiumInsight = useMemo(() => {
@@ -869,7 +873,9 @@ export const VastuOthersView: React.FC<Props> = ({
               <MapPinned className={cn("w-3 h-3", palette.pillUnitText)} />
               <span>Score</span>
             </div>
-            <div className={cn("mt-1 text-sm font-black", palette.headingText)}>{houseGridScore}%</div>
+            <div className={cn("mt-1 text-sm font-black", palette.headingText)}>
+              {houseGridScore !== null ? `${houseGridScore}%` : '—'}
+            </div>
           </div>
         </div>
 

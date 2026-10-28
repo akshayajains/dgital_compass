@@ -364,13 +364,14 @@ export const VastuPanel = memo(({
                 )}>
                   <span className={cn("text-[8.5px] font-black uppercase", palette.pillLabelText)}>{sec.label}</span>
                   <select
-                    value={house9Grid[sec.key] || 'open'}
+                    value={house9Grid[sec.key] || ''}
                     onChange={(e) => setHouse9Grid(prev => ({ ...prev, [sec.key]: e.target.value }))}
                     className={cn(
                       "mt-1 text-[10px] font-bold border rounded px-0.5 py-0.5 outline-none",
                       palette.isLight ? "bg-white text-amber-800 border-stone-300" : "bg-black text-amber-200 border-white/10"
                     )}
                   >
+                    <option value="">{language === 'hi' ? '— चुनें —' : '— Select —'}</option>
                     <option value="open">{language === 'hi' ? 'खुला स्थान' : 'Open Space'}</option>
                     <option value="pooja">{language === 'hi' ? 'पूजा मंदिर' : 'Pooja Mandir'}</option>
                     <option value="kitchen">{language === 'hi' ? 'रसोई घर' : 'Kitchen'}</option>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   Compass, 
+  RotateCcw,
   CircleDot,
   Settings,
   Zap,
@@ -270,14 +271,20 @@ export const CompassView = () => {
     return 'color_palette';
   });
 
-  // Variant state for grouped themes (ios_compass → ios_white, color_palette → cp_rose)
+  // Variant state for grouped themes (color_palette -> ios_nautical default)
   const VARIANT_STORAGE_KEY = 'com.spiritual.compass.app_variant';
   const [selectedVariant, setSelectedVariant] = useState<string | null>(() => {
     try {
+      const v589Migrated = localStorage.getItem('com.spiritual.compass.default_nautical_v589');
+      if (!v589Migrated) {
+        localStorage.setItem('com.spiritual.compass.default_nautical_v589', 'true');
+        localStorage.setItem(VARIANT_STORAGE_KEY, 'ios_nautical');
+        return 'ios_nautical';
+      }
       const saved = localStorage.getItem(VARIANT_STORAGE_KEY);
       if (saved) return saved;
     } catch {}
-    return getDefaultVariantId(selectedStyle) || null;
+    return getDefaultVariantId(selectedStyle) || 'ios_nautical';
   });
 
   const handleSelectStyle = (id: CompassStyleId) => {
@@ -1277,8 +1284,28 @@ export const CompassView = () => {
           </div>
         </div>
 
-        {/* Header Controls: All Tools & Settings Cog */}
+        {/* Header Controls: Calibrate, All Tools & Settings Cog */}
         <div className="flex items-center gap-1.5">
+          {/* Dedicated Small Calibration Button on Home Page */}
+          <button
+            onClick={() => {
+              setShowCalibrationModal(true);
+              triggerHapticFeedback();
+            }}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border active:scale-95 transition-all shadow-sm",
+              palette.headerBtnBg,
+              palette.headerBtnBorder,
+              palette.headerBtnText
+            )}
+            title={language === 'hi' ? 'कंपास कैलिब्रेट करें' : 'Calibrate Compass'}
+          >
+            <RotateCcw className={cn("w-3.5 h-3.5", palette.headerBtnIcon)} />
+            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
+              {language === 'hi' ? 'कैलिब्रेट' : 'Calibrate'}
+            </span>
+          </button>
+
           <button
             onClick={() => {
               setShowFeatureExplorer(true);
@@ -1899,18 +1926,6 @@ export const CompassView = () => {
                           <span className="leading-none inline-flex items-center font-black">{magneticFlux ?? 46}</span>
                           <span className="text-[9.5px] font-bold opacity-90 leading-none inline-flex items-center">μT</span>
                           {isMagneticInterference && <span className="text-[9px] font-black leading-none ml-0.5 text-rose-500">⚠</span>}
-                        </div>
-
-                        {/* Magnetic Declination (DEC) indicator */}
-                        <div className={cn(
-                          "h-[27px] sm:h-7 inline-flex items-center gap-1.5 px-2.5 sm:px-3 rounded-full border backdrop-blur-sm leading-none shrink-0 text-xs font-mono font-bold",
-                          palette.isLight
-                            ? "bg-cyan-600/15 border-cyan-600/40 text-cyan-950 font-black"
-                            : "bg-cyan-500/10 border-cyan-400/30 text-cyan-300"
-                        )}>
-                          <span className="font-bold text-[10px] uppercase leading-none inline-flex items-center text-cyan-600">DEC</span>
-                          <span className="leading-none inline-flex items-center">{declination === 0 ? '0.0°' : declination > 0 ? `+${declination.toFixed(1)}°` : `−${Math.abs(declination).toFixed(1)}°`}</span>
-                          <span className="text-[10px] font-sans uppercase font-bold opacity-80 leading-none inline-flex items-center">{declination > 0 ? 'E' : declination < 0 ? 'W' : ''}</span>
                         </div>
                       </div>
                     </div>

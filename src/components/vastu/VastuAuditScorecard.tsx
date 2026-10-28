@@ -170,22 +170,12 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
   // State: Record of room_id -> selected direction code ('N', 'NE', etc.)
   const [roomDirections, setRoomDirections] = useState<Record<string, string>>(() => {
     try {
-      const saved = localStorage.getItem('com.spiritual.compass.vastu_audit_rooms');
+      const saved = localStorage.getItem('com.spiritual.compass.vastu_audit_rooms_v2');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Failed to load Vastu audit room directions:', e);
     }
-    // Sensible standard default
-    return {
-      entrance: 'N',
-      pooja: 'NE',
-      kitchen: 'SE',
-      master_bedroom: 'SW',
-      living_room: 'E',
-      study: 'E',
-      toilet: 'NW',
-      water_tank: 'SW'
-    };
+    return {};
   });
 
   const [expandedRoomId, setExpandedRoomId] = useState<string | null>(null);
@@ -195,7 +185,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
   // Persist room directions
   useEffect(() => {
     try {
-      localStorage.setItem('com.spiritual.compass.vastu_audit_rooms', JSON.stringify(roomDirections));
+      localStorage.setItem('com.spiritual.compass.vastu_audit_rooms_v2', JSON.stringify(roomDirections));
     } catch (e) {
       console.error('Failed to save Vastu audit room directions:', e);
     }
@@ -220,14 +210,27 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
   };
 
   // Calculate room status and overall score
-  const { totalScore, roomEvaluations, doshaCount, auspiciousCount } = useMemo(() => {
+  const { totalScore, auditedCount, roomEvaluations, doshaCount, auspiciousCount } = useMemo(() => {
     let earnedWeight = 0;
     let totalPossibleWeight = 0;
     let doshas = 0;
     let auspicious = 0;
 
+    const audited = Object.keys(roomDirections).filter(k => Boolean(roomDirections[k]));
+
     const evals = VASTU_ROOM_DEFINITIONS.map(room => {
-      const selectedDir = roomDirections[room.id] || 'N';
+      const selectedDir = roomDirections[room.id] || null;
+
+      if (!selectedDir) {
+        return {
+          ...room,
+          selectedDir: null,
+          status: 'neutral' as const,
+          scorePercent: 0,
+          isPending: true
+        };
+      }
+
       totalPossibleWeight += room.weight;
 
       let status: 'auspicious' | 'neutral' | 'dosha' = 'neutral';
@@ -253,14 +256,16 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
         ...room,
         selectedDir,
         status,
-        scorePercent
+        scorePercent,
+        isPending: false
       };
     });
 
-    const finalPercent = Math.round((earnedWeight / totalPossibleWeight) * 100);
+    const finalPercent = totalPossibleWeight > 0 ? Math.round((earnedWeight / totalPossibleWeight) * 100) : null;
 
     return {
       totalScore: finalPercent,
+      auditedCount: audited.length,
       roomEvaluations: evals,
       doshaCount: doshas,
       auspiciousCount: auspicious
@@ -269,6 +274,15 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
 
   // Overall Vastu Rating Badge
   const ratingDetails = useMemo(() => {
+    if (totalScore === null || auditedCount === 0) {
+      return {
+        titleEn: 'Audit Pending — Tap rooms below to configure',
+        titleHi: 'ऑडिट प्रतीक्षारत — नीचे कमरों की दिशा सेट करें',
+        color: 'text-stone-400',
+        bg: 'bg-stone-500/10 border-stone-500/30',
+        barColor: 'from-stone-500 to-stone-400'
+      };
+    }
     if (totalScore >= 88) {
       return {
         titleEn: 'Param Shubh (Excellent Vastu)',
@@ -303,7 +317,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
       bg: 'bg-red-500/15 border-red-500/40',
       barColor: 'from-red-500 to-rose-400'
     };
-  }, [totalScore]);
+  }, [totalScore, auditedCount]);
 
   const handleShareReport = async () => {
     const lines = [
@@ -312,7 +326,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
       `${isHi ? 'शुभ कक्ष' : 'Auspicious Rooms'}: ${auspiciousCount} | ${isHi ? 'वास्तु दोष' : 'Doshas'}: ${doshaCount}\n`,
       ...roomEvaluations.map(r => {
         const symbol = r.status === 'auspicious' ? '✅' : r.status === 'dosha' ? '⚠️' : '🔹';
-        const dirName = isHi ? DIRECTION_LABELS[r.selectedDir]?.hi : DIRECTION_LABELS[r.selectedDir]?.en;
+        const dirName = r.selectedDir ? (isHi ? DIRECTION_LABELS[r.selectedDir]?.hi : DIRECTION_LABELS[r.selectedDir]?.en) : (isHi ? 'सेट नहीं' : 'Not set');
         return `${symbol} ${isHi ? r.nameHi : r.nameEn}: ${dirName} (${r.status.toUpperCase()})`;
       })
     ];
@@ -335,17 +349,9 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
   };
 
   const handleResetDefaults = () => {
-    setRoomDirections({
-      entrance: 'N',
-      pooja: 'NE',
-      kitchen: 'SE',
-      master_bedroom: 'SW',
-      living_room: 'E',
-      study: 'E',
-      toilet: 'NW',
-      water_tank: 'SW'
-    });
+    setRoomDirections({});
     try {
+      localStorage.removeItem('com.spiritual.compass.vastu_audit_rooms_v2');
       Haptics.impact({ style: ImpactStyle.Medium });
     } catch (e) {
       console.error('Haptics failed in VastuAuditScorecard reset:', e);
@@ -407,15 +413,17 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
               <path
                 className="stroke-current transition-all duration-1000 ease-out"
                 strokeWidth="3.8"
-                strokeDasharray={`${totalScore}, 100`}
+                strokeDasharray={`${totalScore ?? 0}, 100`}
                 strokeLinecap="round"
                 fill="none"
                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                style={{ stroke: totalScore >= 70 ? '#10B981' : totalScore >= 50 ? '#F59E0B' : '#EF4444' }}
+                style={{ stroke: totalScore === null ? '#9CA3AF' : totalScore >= 70 ? '#10B981' : totalScore >= 50 ? '#F59E0B' : '#EF4444' }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-xl font-black font-mono leading-none tracking-tight">{totalScore}%</span>
+              <span className="text-xl font-black font-mono leading-none tracking-tight">
+                {totalScore !== null ? `${totalScore}%` : '—'}
+              </span>
               <span className={cn("text-[7.5px] font-bold uppercase tracking-wider mt-0.5", palette.isLight ? "text-stone-600" : "text-stone-400")}>{isHi ? 'स्कोर' : 'SCORE'}</span>
             </div>
           </div>
@@ -513,10 +521,12 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                     </span>
                     <span className={cn(
                       "text-[10px] font-bold mt-0.5 flex items-center gap-1",
-                      isAuspicious ? (palette.isLight ? "text-emerald-700" : "text-emerald-400") : isDosha ? "text-rose-400" : palette.pillUnitText
+                      !room.selectedDir ? (palette.isLight ? "text-stone-700" : "text-stone-400") : isAuspicious ? (palette.isLight ? "text-emerald-700" : "text-emerald-400") : isDosha ? "text-rose-400" : palette.pillUnitText
                     )}>
-                      {isAuspicious ? '✓ ' + (isHi ? 'शुभ स्थिति' : 'Auspicious') : isDosha ? '⚠ ' + (isHi ? 'वास्तु दोष' : 'Vastu Dosha') : '• ' + (isHi ? 'सामान्य' : 'Neutral')}
-                      {' '}({isHi ? DIRECTION_LABELS[room.selectedDir]?.hi : DIRECTION_LABELS[room.selectedDir]?.en})
+                      {!room.selectedDir
+                        ? (isHi ? '○ दिशा सेट नहीं है (टैप करें)' : '○ Direction not set (tap)')
+                        : `${isAuspicious ? '✓ ' + (isHi ? 'शुभ स्थिति' : 'Auspicious') : isDosha ? '⚠ ' + (isHi ? 'वास्तु दोष' : 'Vastu Dosha') : '• ' + (isHi ? 'सामान्य' : 'Neutral')} (${isHi ? DIRECTION_LABELS[room.selectedDir]?.hi : DIRECTION_LABELS[room.selectedDir]?.en})`
+                      }
                     </span>
                   </div>
                 </div>
@@ -525,13 +535,15 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                   {/* Current Direction Badge */}
                   <span className={cn(
                     "px-2.5 py-1 rounded-lg font-black text-xs font-mono border tracking-tight",
-                    isAuspicious
+                    !room.selectedDir
+                      ? (palette.isLight ? "bg-stone-100 text-stone-600 border-stone-300" : "bg-white/5 text-stone-400 border-white/10")
+                      : isAuspicious
                       ? `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText} shadow-sm`
                       : isDosha
                       ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
                       : `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
                   )}>
-                    {room.selectedDir}
+                    {room.selectedDir ?? (isHi ? 'सेट करें' : 'Set')}
                   </span>
 
                   {isExpanded ? (

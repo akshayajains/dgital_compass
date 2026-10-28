@@ -860,86 +860,86 @@ export const AdvancedLevelView: React.FC<Props> = ({
       {/* ── ENGINEERING METRICS GRID (PITCH, ROLL, SLOPE %, ROOF 1:X, MM/M) ── */}
       <div className="w-full grid grid-cols-4 gap-1.5 my-1.5">
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[10px] font-black uppercase tracking-wider", isLight ? "text-stone-700" : "text-stone-400")}>{isHi ? 'पिच (X)' : 'Pitch (X)'}</span>
-          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5 truncate", isLight ? "text-sky-700" : "text-sky-400")}>
+          <span className={cn("text-[11px] font-black uppercase tracking-wider", isLight ? "text-stone-800" : "text-stone-300")}>{isHi ? 'पिच (X)' : 'Pitch (X)'}</span>
+          <span className={cn("text-base sm:text-lg font-black font-mono mt-0.5 truncate", isLight ? "text-sky-700" : "text-sky-400")}>
             {formatAngleUnit(displayPitch, levelUnit)}
           </span>
           {levelUnit !== 'deg' && (
-            <span className="text-[7.5px] font-mono text-stone-600">
+            <span className={cn("text-[9px] font-mono", isLight ? "text-stone-800 font-bold" : "text-stone-400")}>
               {displayPitch >= 0 ? `+${displayPitch.toFixed(1)}°` : `${displayPitch.toFixed(1)}°`}
             </span>
           )}
         </div>
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[10px] font-black uppercase tracking-wider", isLight ? "text-stone-700" : "text-stone-400")}>{isHi ? 'रोल (Y)' : 'Roll (Y)'}</span>
-          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5 truncate", isLight ? "text-teal-700" : "text-emerald-400")}>
+          <span className={cn("text-[11px] font-black uppercase tracking-wider", isLight ? "text-stone-800" : "text-stone-300")}>{isHi ? 'रोल (Y)' : 'Roll (Y)'}</span>
+          <span className={cn("text-base sm:text-lg font-black font-mono mt-0.5 truncate", isLight ? "text-teal-700" : "text-emerald-400")}>
             {formatAngleUnit(displayRoll, levelUnit)}
           </span>
           {levelUnit !== 'deg' && (
-            <span className="text-[7.5px] font-mono text-stone-600">
+            <span className={cn("text-[9px] font-mono", isLight ? "text-stone-800 font-bold" : "text-stone-400")}>
               {displayRoll >= 0 ? `+${displayRoll.toFixed(1)}°` : `${displayRoll.toFixed(1)}°`}
             </span>
           )}
         </div>
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[8.5px] font-black uppercase tracking-wider flex items-center gap-0.5", isLight ? "text-stone-700" : "text-stone-400")}>
-            <TrendingUp className="w-2 h-2" />{isHi ? 'ढलान %' : 'Slope %'}
+          <span className={cn("text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5", isLight ? "text-stone-800" : "text-stone-300")}>
+            <TrendingUp className="w-2.5 h-2.5" />{isHi ? 'ढलान %' : 'Slope %'}
           </span>
-          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5", isLight ? "text-amber-600" : "text-amber-400")}>{slopePercent}%</span>
-          <span className="text-[7.5px] font-mono text-stone-600">1:{roofRatio}</span>
+          <span className={cn("text-base sm:text-lg font-black font-mono mt-0.5", isLight ? "text-amber-700" : "text-amber-400")}>{slopePercent}%</span>
+          <span className={cn("text-[9px] font-mono font-bold", isLight ? "text-stone-700" : "text-stone-400")}>1:{roofRatio}</span>
         </div>
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[8.5px] font-black uppercase tracking-wider flex items-center gap-0.5", isLight ? "text-stone-700" : "text-stone-400")}>
-            <Ruler className="w-2 h-2" />{isHi ? 'पिच mm/m' : 'mm/m'}
+          <span className={cn("text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5", isLight ? "text-stone-800" : "text-stone-300")}>
+            <Ruler className="w-2.5 h-2.5" />{isHi ? 'पिच mm/m' : 'mm/m'}
           </span>
-          <span className={cn("text-sm sm:text-base font-black font-mono mt-0.5", isLight ? "text-orange-600" : "text-orange-400")}>{mmPerMeter}</span>
-          <span className="text-[7.5px] font-mono text-stone-600">{roofRatio}"/ft</span>
+          <span className={cn("text-base sm:text-lg font-black font-mono mt-0.5", isLight ? "text-orange-700" : "text-orange-400")}>{mmPerMeter}</span>
+          <span className={cn("text-[9px] font-mono font-bold", isLight ? "text-stone-700" : "text-stone-400")}>{roofRatio}"/ft</span>
         </div>
       </div>
 
       {/* ── STABILITY SPARKLINE & MAX/MIN TRACKER ── */}
       <div className={cn(
-        "w-full rounded-2xl p-2.5 border my-1 shadow-sm",
+        "w-full rounded-2xl p-3 border my-1.5 shadow-sm",
         isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10"
       )}>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1", isLight ? "text-stone-800 font-bold" : "text-stone-200 font-bold")}>
-            <TrendingUp className="w-2.5 h-2.5" />
+        <div className="flex items-center justify-between mb-2">
+          <span className={cn("text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5", isLight ? "text-stone-900" : "text-stone-200")}>
+            <TrendingUp className="w-3 h-3" />
             <span>{isHi ? 'अधिकतम / न्यूनतम झुकाव' : 'Max / Min Tilt Tracking'}</span>
           </span>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleResetMaxMin}
               className={cn(
-                "text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border transition-all active:scale-95",
-                isLight ? "bg-stone-100 border-stone-300 text-stone-600 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white"
+                "text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border transition-all active:scale-95 shadow-sm",
+                isLight ? "bg-stone-100 border-stone-300 text-stone-900 hover:bg-stone-200" : "bg-white/10 border-white/15 text-stone-200 hover:text-white"
               )}
             >
-              <RefreshCw className="w-2 h-2 inline mr-0.5" />
+              <RefreshCw className="w-2.5 h-2.5 inline mr-1" />
               {isHi ? 'रीसेट' : 'Reset'}
             </button>
             <button
               onClick={handleCopy}
               className={cn(
-                "text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border transition-all active:scale-95",
-                copied ? (isLight ? "bg-teal-600 text-white border-teal-500" : "bg-emerald-500 text-white border-emerald-400") : (isLight ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white/5 border-white/10 text-stone-300")
+                "text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border transition-all active:scale-95 shadow-sm",
+                copied ? (isLight ? "bg-teal-600 text-white border-teal-500" : "bg-emerald-500 text-white border-emerald-400") : (isLight ? "bg-stone-100 border-stone-300 text-stone-900 hover:bg-stone-200" : "bg-white/10 border-white/15 text-stone-200")
               )}
             >
-              {copied ? <Check className="w-2 h-2 inline mr-0.5" /> : <Copy className="w-2 h-2 inline mr-0.5" />}
+              {copied ? <Check className="w-2.5 h-2.5 inline mr-1" /> : <Copy className="w-2.5 h-2.5 inline mr-1" />}
               {copied ? (isHi ? 'कॉपी हुआ!' : 'Copied!') : (isHi ? 'कॉपी' : 'Copy')}
             </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <div className="flex items-baseline gap-1">
-            <span className={cn("text-sm font-black font-mono", isLight ? "text-red-600" : "text-red-400")}>{maxTilt.toFixed(1)}°</span>
-            <span className={cn("text-[10px] font-bold", isLight ? "text-stone-800 font-bold" : "text-stone-200 font-bold")}>/</span>
-            <span className={cn("text-sm font-black font-mono", isLight ? "text-teal-600" : "text-emerald-400")}>{minTilt.toFixed(1)}°</span>
+            <span className={cn("text-base font-black font-mono", isLight ? "text-red-600" : "text-red-400")}>{maxTilt.toFixed(1)}°</span>
+            <span className={cn("text-xs font-black", isLight ? "text-stone-600" : "text-stone-300")}>/</span>
+            <span className={cn("text-base font-black font-mono", isLight ? "text-teal-700" : "text-emerald-400")}>{minTilt.toFixed(1)}°</span>
           </div>
 
           {/* Throttled 24-point stability sparkline bar chart */}
-          <div className="flex-1 flex items-end gap-[3px] h-6 ml-2">
+          <div className="flex-1 flex items-end gap-[3px] h-7 ml-2">
             {history.map((v, i) => (
               <div
                 key={i}
@@ -956,19 +956,19 @@ export const AdvancedLevelView: React.FC<Props> = ({
 
       {/* ── SURFACE FLATNESS SCORE BAR ── */}
       <div className={cn(
-        "w-full rounded-2xl p-2.5 border my-1 shadow-sm",
+        "w-full rounded-2xl p-3 border my-1.5 shadow-sm",
         isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10"
       )}>
-        <div className="flex items-center justify-between mb-1">
-          <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1", isLight ? "text-stone-800 font-bold" : "text-stone-200 font-bold")}>
-            <Sliders className="w-2.5 h-2.5" />
+        <div className="flex items-center justify-between mb-1.5">
+          <span className={cn("text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5", isLight ? "text-stone-900" : "text-stone-200")}>
+            <Sliders className="w-3 h-3" />
             {isHi ? 'सतह की सपाटता (Surface Flatness)' : 'Surface Flatness Score'}
           </span>
-          <span className={cn("text-[10px] font-black", flatnessColor)}>{flatnessLabel} ({flatnessScore}%)</span>
+          <span className={cn("text-[11px] sm:text-xs font-black", flatnessColor)}>{flatnessLabel} ({flatnessScore}%)</span>
         </div>
-        <div className={cn("w-full h-1.5 rounded-full overflow-hidden", isLight ? "bg-stone-200" : "bg-stone-800")}>
+        <div className={cn("w-full h-2 rounded-full overflow-hidden", isLight ? "bg-stone-200" : "bg-stone-800")}>
           <div
-            className={cn("h-full rounded-full transition-all duration-300", flatnessScore >= 90 ? "bg-teal-400" : flatnessScore >= 70 ? "bg-teal-400" : flatnessScore >= 40 ? "bg-amber-400" : "bg-red-400")}
+            className={cn("h-full rounded-full transition-all duration-300", flatnessScore >= 90 ? "bg-teal-500" : flatnessScore >= 70 ? "bg-teal-500" : flatnessScore >= 40 ? "bg-amber-400" : "bg-red-400")}
             style={{ width: `${flatnessScore}%` }}
           />
         </div>
@@ -976,34 +976,34 @@ export const AdvancedLevelView: React.FC<Props> = ({
 
       {/* ── READING LOG / SAVED MEASUREMENTS ── */}
       <div className={cn(
-        "w-full rounded-2xl p-2.5 border my-1 shadow-sm",
+        "w-full rounded-2xl p-3 border my-1.5 shadow-sm",
         isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10"
       )}>
-        <div className="flex items-center justify-between mb-1.5">
-          <span className={cn("text-[9px] font-black uppercase tracking-wider flex items-center gap-1", isLight ? "text-stone-800 font-bold" : "text-stone-200 font-bold")}>
-            <History className="w-2.5 h-2.5" />
+        <div className="flex items-center justify-between mb-2">
+          <span className={cn("text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5", isLight ? "text-stone-900" : "text-stone-200")}>
+            <History className="w-3 h-3" />
             {isHi ? 'रीडिंग इतिहास' : 'Reading Log'} ({readings.length})
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={handleLogReading}
               className={cn(
-                "text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-0.5 transition-all active:scale-95 shadow-sm",
-                isLight ? "bg-stone-100 border-stone-300 text-stone-700 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white"
+                "text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border flex items-center gap-1 transition-all active:scale-95 shadow-sm",
+                isLight ? "bg-stone-100 border-stone-300 text-stone-900 hover:bg-stone-200" : "bg-white/10 border-white/15 text-stone-200 hover:text-white"
               )}
             >
-              <Plus className="w-2 h-2" />
-              {isHi ? 'लॉग' : '+ Log'}
+              <Plus className="w-2.5 h-2.5" />
+              {isHi ? '+ लॉग' : '+ Log'}
             </button>
             {readings.length > 0 && (
               <button
                 onClick={handleClearReadings}
                 className={cn(
-                  "text-[8.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border flex items-center gap-0.5 transition-all active:scale-95 shadow-sm",
-                  isLight ? "bg-stone-100 border-stone-300 text-stone-700 hover:text-stone-900" : "bg-white/5 border-white/10 text-stone-300 hover:text-white"
+                  "text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border flex items-center gap-1 transition-all active:scale-95 shadow-sm",
+                  isLight ? "bg-stone-100 border-stone-300 text-stone-900 hover:bg-stone-200" : "bg-white/10 border-white/15 text-stone-200 hover:text-white"
                 )}
               >
-                <Trash2 className="w-2 h-2" />
+                <Trash2 className="w-2.5 h-2.5" />
                 {isHi ? 'साफ़' : 'Clear'}
               </button>
             )}
@@ -1011,17 +1011,17 @@ export const AdvancedLevelView: React.FC<Props> = ({
         </div>
 
         {readings.length > 0 ? (
-          <div className="flex flex-col gap-1 max-h-24 overflow-y-auto no-scrollbar">
+          <div className="flex flex-col gap-1.5 max-h-28 overflow-y-auto no-scrollbar">
             {readings.map((r) => (
-              <div key={r.id} className={cn("flex items-center justify-between text-[9px] font-mono px-2 py-1 rounded-lg border", isLight ? "bg-stone-50 border-stone-200" : "bg-white/5 border-white/5")}>
-                <span className={isLight ? "text-stone-800 font-bold" : "text-stone-200 font-bold"}>{r.time}</span>
-                <span className={isLight ? "text-stone-700" : "text-stone-300"}>P {r.pitch >= 0 ? `+${r.pitch.toFixed(1)}°` : `${r.pitch.toFixed(1)}°`} R {r.roll >= 0 ? `+${r.roll.toFixed(1)}°` : `${r.roll.toFixed(1)}°`}</span>
-                <span className={r.total < 1.0 ? "text-teal-500 font-black" : "text-amber-400 font-black"}>{r.total.toFixed(1)}°</span>
+              <div key={r.id} className={cn("flex items-center justify-between text-[11px] font-mono px-2.5 py-1.5 rounded-lg border", isLight ? "bg-stone-50 border-stone-300 text-stone-900" : "bg-white/5 border-white/5")}>
+                <span className={cn("font-bold", isLight ? "text-stone-900" : "text-stone-200")}>{r.time}</span>
+                <span className={cn("font-medium", isLight ? "text-stone-800" : "text-stone-300")}>P {r.pitch >= 0 ? `+${r.pitch.toFixed(1)}°` : `${r.pitch.toFixed(1)}°`} R {r.roll >= 0 ? `+${r.roll.toFixed(1)}°` : `${r.roll.toFixed(1)}°`}</span>
+                <span className={cn("font-black", r.total < 1.0 ? "text-teal-600 dark:text-teal-400" : "text-amber-600 dark:text-amber-400")}>{r.total.toFixed(1)}°</span>
               </div>
             ))}
           </div>
         ) : (
-          <p className={cn("text-[9px] font-bold text-center py-1", isLight ? "text-stone-600" : "text-stone-500")}>
+          <p className={cn("text-[10.5px] font-bold text-center py-1.5", isLight ? "text-stone-700" : "text-stone-400")}>
             {isHi ? 'कोई रीडिंग नहीं — + लॉग दबाएं' : 'No readings yet — tap + Log to record'}
           </p>
         )}
@@ -1029,13 +1029,13 @@ export const AdvancedLevelView: React.FC<Props> = ({
 
       {/* ── Calibration Footer Guide ── */}
       <div className={cn(
-        "w-full rounded-2xl p-2.5 border mt-1 text-center shadow-sm",
-        isLight ? "border-amber-400/50 bg-amber-50 text-amber-950" : "border-amber-500/25 bg-amber-950/20 text-stone-300"
+        "w-full rounded-2xl p-3 border mt-1.5 text-center shadow-sm",
+        isLight ? "border-amber-400/60 bg-amber-50/90 text-amber-950" : "border-amber-500/25 bg-amber-950/20 text-stone-300"
       )}>
-        <div className={cn("text-[10px] font-black uppercase tracking-[0.20em]", isLight ? "text-amber-800" : "text-amber-300")}>
+        <div className={cn("text-[11px] sm:text-xs font-black uppercase tracking-[0.20em]", isLight ? "text-amber-900" : "text-amber-300")}>
           {isHi ? 'सर्कल रोल सेंसर कैलिब्रेशन' : 'Circular Sensor Calibration'}
         </div>
-        <p className="mt-0.5 text-[9px] leading-relaxed opacity-90">
+        <p className={cn("mt-1 text-[10.5px] sm:text-[11px] leading-relaxed font-medium", isLight ? "text-amber-950" : "text-stone-300 opacity-90")}>
           {displayLevel
             ? (isHi ? '✓ समतल लॉक प्राप्त। सतह माउंटिंग, फ्लोर-प्लान व कैमरा ऑडिट के लिए तैयार।' : '✓ Perfect level lock achieved. Ready for mounting, framing, and surface audits.')
             : (isHi ? 'सटीक शून्य विचलन के लिए फोन को झुकाकर लेवल स्क्वायर को केंद्र पर लाएं।' : 'Tilt phone to align level square to dead center target, and calibrate if needed.')}

@@ -189,6 +189,11 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
   const bubbleX = isDeviceFlat ? 0 : Math.max(-11, Math.min(11, -roll * 0.95));
   const bubbleY = isDeviceFlat ? 0 : Math.max(-11, Math.min(11, pitch * 0.95));
 
+  // Outer reference level circle displacement (glide with phone tilt; snaps concentric when level)
+  const maxOuterShift = 36;
+  const outerCircleX = isDeviceFlat ? 0 : Math.max(-maxOuterShift, Math.min(maxOuterShift, -roll * 1.8));
+  const outerCircleY = isDeviceFlat ? 0 : Math.max(-maxOuterShift, Math.min(maxOuterShift, pitch * 1.8));
+
   const handleCenterTap = (e: React.MouseEvent) => {
     e.stopPropagation();
     setRecenterPulse(true);
@@ -1658,6 +1663,19 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
         <div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
         >
+          {/* Floating outer level circle (matching exact dimensions of center cap: w-14 h-14) */}
+          <div
+            className={cn(
+              "absolute w-14 h-14 rounded-full pointer-events-none transition-transform duration-75 ease-out",
+              isDeviceFlat
+                ? "border-2 border-emerald-400 bg-emerald-400/10 shadow-[0_0_18px_rgba(16,185,129,0.85)] scale-100 opacity-95 z-20"
+                : "border-[1.5px] border-stone-400/60 dark:border-white/50 bg-white/5 dark:bg-white/[0.04] backdrop-blur-[1px] opacity-80 z-20"
+            )}
+            style={{
+              transform: `translate(${outerCircleX}px, ${outerCircleY}px)`,
+            }}
+          />
+
           <button
             onClick={handleCenterTap}
             title={isHi ? "पुनः केंद्रित करने के लिए टैप करें (Recenter)" : "Tap to re-center compass"}
