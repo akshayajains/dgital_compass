@@ -2,7 +2,7 @@ import React, { memo, useMemo } from 'react';
 import { getAppThemePalette } from '@/lib/themePalettes';
 import { CompassStyleId } from '@/types/compass';
 import { cn } from '@/lib/utils';
-import { Grid, Save, Trash2 } from 'lucide-react';
+import { Grid, Save, Trash2, RotateCcw } from 'lucide-react';
 import { ImpactStyle } from '@capacitor/haptics';
 import { useStyleTheme } from '@/contexts/StyleThemeContext';
 
@@ -16,6 +16,7 @@ interface VastuPanelProps {
   setSelectedRoom: (v: string) => void;
   doorDegree: number;
   setDoorDegree: (v: number) => void;
+  currentHeading?: number | null;
   house9Grid: Record<string, string>;
   setHouse9Grid: (updater: (prev: Record<string, string>) => Record<string, string>) => void;
   onHaptic: (style?: ImpactStyle) => void;
@@ -28,7 +29,7 @@ interface VastuPanelProps {
 
 export const VastuPanel = memo(({
   language, theme, selectedStyle, variantId, vastuScore, selectedRoom, setSelectedRoom,
-  doorDegree, setDoorDegree, house9Grid, setHouse9Grid, onHaptic,
+  doorDegree, setDoorDegree, currentHeading, house9Grid, setHouse9Grid, onHaptic,
   currentDir, savedRooms, onSaveRoom, onLoadRoom, onDeleteRoom
 }: VastuPanelProps) => {
   const palette = useMemo(() => getAppThemePalette(selectedStyle, variantId), [selectedStyle, variantId]);
@@ -194,6 +195,22 @@ export const VastuPanel = memo(({
               {language === 'hi' ? 'मुख्य द्वार की दिशा (डिग्री):' : 'Main Door Direction (Degrees):'}
             </label>
             <div className="flex items-center gap-1.5 shrink-0">
+              {currentHeading !== null && currentHeading !== undefined && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDoorDegree(Math.round(((currentHeading % 360) + 360) % 360));
+                    onHaptic(ImpactStyle.Light);
+                  }}
+                  className={cn(
+                    "px-2 py-1 rounded-lg text-[9.5px] font-bold border transition-transform active:scale-95 shadow-sm",
+                    palette.isLight ? "bg-stone-100 text-stone-800 border-stone-300 hover:bg-stone-200" : "bg-white/10 text-stone-200 border-white/20"
+                  )}
+                  title={language === 'hi' ? 'लाइव कंपास डिग्री का उपयोग करें' : 'Use live compass heading'}
+                >
+                  {language === 'hi' ? 'लाइव टैग' : 'Live Tag'}
+                </button>
+              )}
               <input
                 type="number"
                 min="0"
@@ -201,7 +218,7 @@ export const VastuPanel = memo(({
                 placeholder="e.g. 90"
                 value={doorDegree}
                 onChange={(e) => { setDoorDegree(Math.min(359, Math.max(0, parseInt(e.target.value) || 0))); onHaptic(ImpactStyle.Medium); }}
-                className="w-20 sm:w-24 text-sm font-extrabold px-2.5 py-1.5 rounded-xl outline-none border shadow-inner transition-colors duration-500 text-center"
+                className="w-16 sm:w-20 text-sm font-extrabold px-2 py-1.5 rounded-xl outline-none border shadow-inner transition-colors duration-500 text-center"
                 style={{
                   backgroundColor: palette.isLight ? '#ffffff' : 'rgb(2, 6, 23)',
                   borderColor: cardBorder,
@@ -333,14 +350,29 @@ export const VastuPanel = memo(({
                 <Grid className={cn("w-3.5 h-3.5", palette.pillUnitText)} />
                 {language === 'hi' ? '9-ग्रिड संपूर्ण घर वास्तु विश्लेषक' : 'Interactive 9-Grid Floorplan Mapper'}
               </h5>
-              <span className={cn(
-                "text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-sm",
-                vastuScore !== null
-                  ? `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
-                  : (palette.isLight ? "bg-stone-100 text-stone-500 border-stone-300" : "bg-white/5 text-stone-500 border-white/10")
-              )}>
-                {vastuScore !== null ? `${language === 'hi' ? 'वास्तु स्कोर: ' : 'Vastu Score: '}${vastuScore}%` : '—'}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={cn(
+                  "text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-sm",
+                  vastuScore !== null
+                    ? `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
+                    : (palette.isLight ? "bg-stone-100 text-stone-500 border-stone-300" : "bg-white/5 text-stone-500 border-white/10")
+                )}>
+                  {vastuScore !== null ? `${language === 'hi' ? 'स्कोर: ' : 'Score: '}${vastuScore}%` : '—'}
+                </span>
+                {Object.keys(house9Grid).some(k => Boolean(house9Grid[k])) && (
+                  <button
+                    onClick={() => { setHouse9Grid(() => ({})); onHaptic(ImpactStyle.Light); }}
+                    className={cn(
+                      "px-2 py-0.5 rounded-full text-[9.5px] font-bold border transition-transform active:scale-95 shadow-sm flex items-center gap-0.5",
+                      palette.isLight ? "bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200" : "bg-white/10 text-stone-200 border-white/15"
+                    )}
+                    title={language === 'hi' ? 'ग्रिड साफ़ करें' : 'Reset Grid'}
+                  >
+                    <RotateCcw className="w-2.5 h-2.5" />
+                    <span>{language === 'hi' ? 'रीसेट' : 'Reset'}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className={cn(

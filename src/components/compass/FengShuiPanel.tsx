@@ -64,7 +64,7 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
             <option value="315">{language === 'hi' ? 'वायव्य द्वार' : 'NW Door'}</option>
           </select>
         </div>
-        <p className={cn("text-[11px] leading-relaxed mb-3 transition-colors", theme === 'hi' ? "text-stone-600" : "text-stone-300")}>
+        <p className={cn("text-[11px] leading-relaxed mb-3 transition-colors", theme === 'light' ? "text-stone-700 font-medium" : "text-stone-300")}>
           {language === 'hi'
             ? 'अपने मुख्य द्वार की दिशा चुनें। कम्पास पर बागुआ मैप आपके घर के अनुसार घूम जाएगा।'
             : 'Select your front door facing direction to align the Bagua map dynamically.'}

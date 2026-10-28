@@ -71,7 +71,18 @@ export const NumerologyPanel = memo(({
             )}
           />
 
-          {numerologyDob && (
+          {!numerologyDob ? (
+            <div className={cn(
+              "p-3 rounded-xl border text-center my-2",
+              theme === 'light' ? "bg-white/80 border-cyan-200 text-stone-600" : "bg-black/30 border-white/10 text-stone-400"
+            )}>
+              <p className="text-xs font-semibold">
+                {language === 'hi'
+                  ? '📅 अपना मूलांक, भाग्यांक, शुभ दिशाएं व लो-शू चक्र देखने के लिए जन्म तिथि चुनें।'
+                  : '📅 Select your date of birth above to view your Mulank, Bhagyank, auspicious zones & Lo-Shu Grid.'}
+              </p>
+            </div>
+          ) : (
             <div className="space-y-3 mt-4">
               {/* Driver / Conductor Grid */}
               <div className="grid grid-cols-2 gap-2">

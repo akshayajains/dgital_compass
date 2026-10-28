@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { toast } from 'sonner';
 import { 
   Compass, 
   Home, 
@@ -196,14 +197,14 @@ export const VastuOthersView: React.FC<Props> = ({
   const [selectedRashiId, setSelectedRashiId] = useState<string>('aries');
   const [choghadiyaTimeSlot, setChoghadiyaTimeSlot] = useState<'day' | 'night'>('night');
 
-  // Numerology State (Default to 21/04/1979 as in screenshot)
-  const [birthDay, setBirthDay] = useState<string>('21');
-  const [birthMonth, setBirthMonth] = useState<string>('04');
-  const [birthYear, setBirthYear] = useState<string>('1979');
-  const [isNumerologyOpen, setIsNumerologyOpen] = useState<boolean>(true);
-
   // Sadhana State
-  const [japaCount, setJapaCount] = useState<number>(0);
+  const [japaCount, setJapaCount] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('com.spiritual.compass.japa_count');
+      if (saved) return parseInt(saved, 10);
+    } catch {}
+    return 0;
+  });
   const [japaTarget] = useState<number>(108);
   const [sadhanaRoutine, setSadhanaRoutine] = useState<'dhyan' | 'study' | 'sleep' | 'eating'>('dhyan');
   const [setupFacing, setSetupFacing] = useState<boolean>(true);
@@ -223,24 +224,49 @@ export const VastuOthersView: React.FC<Props> = ({
     return Math.round(((h % 360) + 360) % 360);
   });
   const [jainActivity, setJainActivity] = useState<string>('dhyan');
-  const [jainChecklist, setJainChecklist] = useState<Record<string, boolean>>({
-    'meditation': true, 'prayer': true, 'charity': false, 'study': false, 'fasting': false
+  const [jainChecklist, setJainChecklist] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('com.spiritual.compass.jain_checklist');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return { direction: false, katasanu: false, peaceful: false };
   });
   const [fengshuiDoor, setFengshuiDoor] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('com.spiritual.compass.fengshui_door');
+      if (saved !== null) return parseInt(saved, 10);
+    } catch {}
     const h = currentHeading ?? 0;
     return Math.round(((h % 360) + 360) % 360);
   });
-  const [jyotishRashi, setJyotishRashi] = useState<string>('aries');
-  const [numerologyDob, setNumerologyDob] = useState<string>('1979-04-21');
-  const [numerologyPhone, setNumerologyPhone] = useState<string>('');
-  const [numerologyHouse, setNumerologyHouse] = useState<string>('');
-  const [numerologyVehicle, setNumerologyVehicle] = useState<string>('');
+  const [jyotishRashi, setJyotishRashi] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('com.spiritual.compass.jyotish_rashi');
+      if (saved) return saved;
+    } catch {}
+    return 'aries';
+  });
+  const [numerologyDob, setNumerologyDob] = useState<string>(() => {
+    try {
+      return localStorage.getItem('com.spiritual.compass.numerology_dob') || '';
+    } catch {}
+    return '';
+  });
+  const [numerologyPhone, setNumerologyPhone] = useState<string>(() => {
+    try { return localStorage.getItem('com.spiritual.compass.numerology_phone') || ''; } catch { return ''; }
+  });
+  const [numerologyHouse, setNumerologyHouse] = useState<string>(() => {
+    try { return localStorage.getItem('com.spiritual.compass.numerology_house') || ''; } catch { return ''; }
+  });
+  const [numerologyVehicle, setNumerologyVehicle] = useState<string>(() => {
+    try { return localStorage.getItem('com.spiritual.compass.numerology_vehicle') || ''; } catch { return ''; }
+  });
   const [showARScanner, setShowARScanner] = useState<boolean>(false);
   const [showFloorPlan, setShowFloorPlan] = useState<boolean>(false);
   const [showWeather, setShowWeather] = useState<boolean>(false);
   const [selectedPadaModal, setSelectedPadaModal] = useState<VastuPada32 | null>(null);
 
-  // Persist Vastu sub-tab + selected room across sessions
+  // Persist Vastu sub-tab + preferences across sessions
   useEffect(() => {
     try { localStorage.setItem(VASTU_TAB_STORAGE_KEY, activeTab); } catch (e) { console.error('Failed to save Vastu tab:', e); }
   }, [activeTab]);
@@ -250,6 +276,38 @@ export const VastuOthersView: React.FC<Props> = ({
   useEffect(() => {
     try { localStorage.setItem('com.spiritual.compass.app_saved_rooms', JSON.stringify(savedRooms)); } catch (e) { console.error('Failed to save Vastu rooms:', e); }
   }, [savedRooms]);
+  useEffect(() => {
+    try { localStorage.setItem('com.spiritual.compass.japa_count', japaCount.toString()); } catch {}
+  }, [japaCount]);
+  useEffect(() => {
+    try { localStorage.setItem('com.spiritual.compass.jain_checklist', JSON.stringify(jainChecklist)); } catch {}
+  }, [jainChecklist]);
+  useEffect(() => {
+    try { localStorage.setItem('com.spiritual.compass.fengshui_door', fengshuiDoor.toString()); } catch {}
+  }, [fengshuiDoor]);
+  useEffect(() => {
+    try { localStorage.setItem('com.spiritual.compass.jyotish_rashi', jyotishRashi); } catch {}
+  }, [jyotishRashi]);
+  useEffect(() => {
+    try {
+      if (numerologyDob) localStorage.setItem('com.spiritual.compass.numerology_dob', numerologyDob);
+    } catch {}
+  }, [numerologyDob]);
+  useEffect(() => {
+    try {
+      if (numerologyPhone) localStorage.setItem('com.spiritual.compass.numerology_phone', numerologyPhone);
+    } catch {}
+  }, [numerologyPhone]);
+  useEffect(() => {
+    try {
+      if (numerologyHouse) localStorage.setItem('com.spiritual.compass.numerology_house', numerologyHouse);
+    } catch {}
+  }, [numerologyHouse]);
+  useEffect(() => {
+    try {
+      if (numerologyVehicle) localStorage.setItem('com.spiritual.compass.numerology_vehicle', numerologyVehicle);
+    } catch {}
+  }, [numerologyVehicle]);
 
   // Handle external signals from FeatureExplorer
   useEffect(() => {
@@ -283,11 +341,16 @@ export const VastuOthersView: React.FC<Props> = ({
     : null;
 
   const numerologyFromDob = useMemo(() => {
+    if (!numerologyDob) {
+      return { mulank: 0, bhagyank: 0, loShuCounts: null };
+    }
     try {
       const parts = numerologyDob.split('-');
-      const d = parseInt(parts[2], 10) || 1;
-      const m = parseInt(parts[1], 10) || 1;
-      const y = parseInt(parts[0], 10) || 1980;
+      if (parts.length < 3) return { mulank: 0, bhagyank: 0, loShuCounts: null };
+      const d = parseInt(parts[2], 10);
+      const m = parseInt(parts[1], 10);
+      const y = parseInt(parts[0], 10);
+      if (!d || !m || !y) return { mulank: 0, bhagyank: 0, loShuCounts: null };
       const mulank = reduceToSingle(d);
       const digitsSum = `${d}${m}${y}`.split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
       const bhagyank = reduceToSingle(digitsSum);
@@ -300,7 +363,7 @@ export const VastuOthersView: React.FC<Props> = ({
       }
       return { mulank, bhagyank, loShuCounts };
     } catch {
-      return { mulank: 3, bhagyank: 6, loShuCounts: { 4: 1, 9: 2, 2: 1, 3: 1, 7: 1, 1: 2, 6: 1 } };
+      return { mulank: 0, bhagyank: 0, loShuCounts: null };
     }
   }, [numerologyDob]);
 
@@ -377,44 +440,6 @@ export const VastuOthersView: React.FC<Props> = ({
   const selectedRashi = useMemo(() => {
     return VEDIC_RASHIS.find(r => r.id === selectedRashiId) || VEDIC_RASHIS[0];
   }, [selectedRashiId]);
-
-  // Numerology Details Calculation (matches Driver 3, Conductor 6 for 21/04/1979)
-  const numerologyDetails = useMemo(() => {
-    try {
-      const d = parseInt(birthDay, 10) || 1;
-      const m = parseInt(birthMonth, 10) || 1;
-      const y = parseInt(birthYear, 10) || 1980;
-
-      const reduce = (n: number): number => {
-        let sum = n;
-        while (sum > 9) {
-          sum = sum.toString().split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
-        }
-        return sum;
-      };
-
-      const mulank = reduce(d);
-      const digitsSum = `${d}${m}${y}`.split('').reduce((acc, digit) => acc + parseInt(digit, 10), 0);
-      const bhagyank = reduce(digitsSum);
-
-      // Lo Shu Magic Square Frequency Counter
-      const allDigits = `${d}${m}${y}`.replace(/0/g, '');
-      const loShuCounts: Record<number, number> = {};
-      for (let i = 1; i <= 9; i++) loShuCounts[i] = 0;
-      for (const char of allDigits) {
-        const num = parseInt(char, 10);
-        if (num >= 1 && num <= 9) loShuCounts[num] = (loShuCounts[num] || 0) + 1;
-      }
-
-      return {
-        mulank,
-        bhagyank,
-        loShuCounts
-      };
-    } catch {
-      return { mulank: 3, bhagyank: 6, loShuCounts: { 4: 1, 9: 2, 2: 1, 3: 1, 7: 1, 1: 2, 6: 1 } };
-    }
-  }, [birthDay, birthMonth, birthYear]);
 
   // Live heading advice (for Vastu)
   const liveHeadingAdvice = useMemo(() => {
@@ -587,6 +612,7 @@ export const VastuOthersView: React.FC<Props> = ({
     };
     setSavedRooms(prev => [newEntry, ...prev]);
     triggerHaptic();
+    toast.success(language === 'hi' ? `${newEntry.roomType} सहेजा गया!` : `${newEntry.roomType} saved!`);
   };
 
   const handleLoadRoom = (id: string) => {
@@ -1158,6 +1184,7 @@ export const VastuOthersView: React.FC<Props> = ({
             setSelectedRoom={setSelectedRoom}
             doorDegree={doorDegree}
             setDoorDegree={setDoorDegree}
+            currentHeading={currentHeading}
             house9Grid={house9Grid}
             setHouse9Grid={setHouse9Grid}
             onHaptic={triggerHaptic}
@@ -1165,7 +1192,11 @@ export const VastuOthersView: React.FC<Props> = ({
             savedRooms={savedRooms.map(r => ({ id: r.id, room: r.roomType, door: r.degrees, grid: {} }))}
             onSaveRoom={(name) => handleSaveRoom(name)}
             onLoadRoom={handleLoadRoom}
-            onDeleteRoom={(id) => setSavedRooms(prev => prev.filter(r => r.id !== id))}
+            onDeleteRoom={(id) => {
+              setSavedRooms(prev => prev.filter(r => r.id !== id));
+              triggerHaptic();
+              toast.info(language === 'hi' ? 'कक्ष हटाया गया' : 'Room deleted');
+            }}
           />
 
           {/* AR Vastu Scanner & Floor Plan & Weather quick actions — compact strip */}
