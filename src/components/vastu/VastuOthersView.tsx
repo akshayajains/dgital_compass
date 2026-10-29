@@ -776,7 +776,8 @@ export const VastuOthersView: React.FC<Props> = ({
         )}
       </div>
 
-      {/* Vastu Quick Dashboard Card — Matches active dial palette */}
+      {/* Vastu Quick Dashboard Card — shown only for Vastu tab */}
+      {activeTab === 'vastu' && (
       <div className={cn(
         "w-full max-w-xl rounded-[28px] p-4 border flex flex-col gap-3 my-2 transition-all duration-300",
         palette.telemetryCardBg,
@@ -786,7 +787,7 @@ export const VastuOthersView: React.FC<Props> = ({
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={cn(
-              "text-[9px] font-black uppercase tracking-wider",
+              "text-[10px] font-black uppercase tracking-wider",
               location?.accuracy != null
                 ? location.accuracy <= 15
                   ? (palette.isLight ? "text-teal-700" : "text-emerald-400")
@@ -799,7 +800,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 ? `${location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±${Math.round(location.accuracy)}m`
                 : 'HIGH ACC'}
             </span>
-            <span className={cn("text-[9px] font-black uppercase tracking-wider", palette.isLight ? "text-sky-700" : "text-sky-400")}>
+            <span className={cn("text-[10px] font-black uppercase tracking-wider", palette.isLight ? "text-sky-700" : "text-sky-400")}>
               Δ {declination > 0 ? `+${declination}°` : `${declination}°`}
             </span>
           </div>
@@ -835,14 +836,14 @@ export const VastuOthersView: React.FC<Props> = ({
               {displayDeg}° {language === 'hi' ? liveZone.nameHi : liveZone.nameEn} ({liveZone.code})
             </span>
             <span className={cn(
-              "text-[10px] font-bold tracking-wider",
+              "text-[11px] font-bold tracking-wider",
               palette.isLight ? "text-stone-600" : "text-stone-300"
             )}>
               {language === 'hi' ? `${liveZone.elementHi} • ${liveZone.deityHi}` : `${liveZone.element} • ${liveZone.deity}`} ({liveZone.startDeg}° - {liveZone.endDeg}°)
             </span>
           </div>
           <span className={cn(
-            "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shrink-0 border transition-colors",
+            "px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider shrink-0 border transition-colors",
             palette.pillBg,
             palette.pillBorder,
             palette.pillUnitText
@@ -853,11 +854,11 @@ export const VastuOthersView: React.FC<Props> = ({
 
         {/* Location & Coordinates (single clean line to save space) */}
         <div className="text-center px-1">
-          <div className={cn("text-[11px] font-black uppercase tracking-wider truncate", palette.isLight ? "text-stone-700" : "text-stone-200")}>
+          <div className={cn("text-[12px] font-black uppercase tracking-wider truncate", palette.isLight ? "text-stone-700" : "text-stone-200")}>
             {location?.city
               ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}${location.state ? `, ${language === 'hi' ? location.state : (location.stateEn || location.state)}` : ''}`
               : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
-            <span className={cn("text-[10px] font-mono font-bold ml-1.5", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <span className={cn("text-[11px] font-mono font-bold ml-1.5", palette.isLight ? "text-stone-600" : "text-stone-400")}>
               • {location ? `${location.latitude.toFixed(4)}°N, ${location.longitude.toFixed(4)}°E` : ''}
             </span>
           </div>
@@ -875,7 +876,7 @@ export const VastuOthersView: React.FC<Props> = ({
             )}
             title="Tap to inspect Devta Pada"
           >
-            <div className={cn("flex items-center justify-between text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <div className={cn("flex items-center justify-between text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
               <div className="flex items-center gap-1">
                 <ShieldCheck className={cn("w-3 h-3", palette.pillUnitText)} />
                 <span>Pada</span>
@@ -884,18 +885,18 @@ export const VastuOthersView: React.FC<Props> = ({
             </div>
             <div className={cn("mt-1 text-sm font-black flex items-center justify-between", palette.headingText)}>
               <span>{livePada.code}</span>
-              <span className={cn("text-[10px] font-bold font-sans", palette.pillUnitText)}>{language === 'hi' ? livePada.nameHi : livePada.nameEn}</span>
+              <span className={cn("text-[11px] font-bold font-sans", palette.pillUnitText)}>{language === 'hi' ? livePada.nameHi : livePada.nameEn}</span>
             </div>
           </div>
           <div className={cn("rounded-2xl border px-3 py-2", palette.isLight ? "border-stone-300/80 bg-white/70 shadow-sm" : "border-white/10 bg-black/25")}>
-            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <div className={cn("flex items-center gap-1 text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
               <Gauge className={cn("w-3 h-3", palette.pillUnitText)} />
               <span>Tilt</span>
             </div>
             <div className={cn("mt-1 text-sm font-black", palette.headingText)}>{totalTilt.toFixed(1)}°</div>
           </div>
           <div className={cn("rounded-2xl border px-3 py-2", palette.isLight ? "border-stone-300/80 bg-white/70 shadow-sm" : "border-white/10 bg-black/25")}>
-            <div className={cn("flex items-center gap-1 text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <div className={cn("flex items-center gap-1 text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
               <MapPinned className={cn("w-3 h-3", palette.pillUnitText)} />
               <span>Score</span>
             </div>
@@ -905,18 +906,19 @@ export const VastuOthersView: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Pitch / Roll / Level integrated into bottom of dashboard */}
+        {/* Pitch / Roll / Level — hidden when in Level mode to avoid duplication */}
+        {!isLevel && (
         <div className={cn("w-full flex items-center justify-between px-3 py-2 rounded-2xl border", palette.isLight ? "border-stone-300/80 bg-white/70" : "border-white/10 bg-black/25")}>
           <div className="flex items-center gap-1.5">
-            <span className={cn("text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>PITCH</span>
+            <span className={cn("text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>PITCH</span>
             <span className={cn("text-sm font-black font-mono", palette.pillUnitText)}>{Math.round(pitch)}°</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className={cn("text-[9px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>ROLL</span>
+            <span className={cn("text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>ROLL</span>
             <span className={cn("text-sm font-black font-mono", palette.pillUnitText)}>{Math.round(roll)}°</span>
           </div>
           <span className={cn(
-            "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase border tracking-wider",
+            "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border tracking-wider",
             isLevel
               ? (palette.isLight ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.4)]")
               : (palette.isLight ? "bg-rose-100 text-rose-700 border-rose-400" : "bg-rose-950/60 text-rose-300 border-rose-500/40")
@@ -924,20 +926,23 @@ export const VastuOthersView: React.FC<Props> = ({
             {isLevel ? 'LEVEL' : 'TILT'}
           </span>
         </div>
+        )}
       </div>
+      )}
 
-      {/* Live Premium Insight & 32-Pada Main Entrance Banner — Styled to active dial theme palette */}
+      {/* Live Premium Insight & 32-Pada Main Entrance Banner — shown only for Vastu tab */}
+      {activeTab === 'vastu' && (
       <div className={cn(
         "w-full max-w-xl rounded-[26px] p-4 border flex flex-col gap-2 mb-2 transition-all duration-300",
         palette.telemetryCardBg,
         palette.telemetryCardBorder
       )}>
-        <div className={cn("flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em]", palette.headingText)}>
+        <div className={cn("flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.22em]", palette.headingText)}>
           <ScanSearch className="w-3.5 h-3.5" />
           <span>{language === 'hi' ? 'लाइव प्रीमियम इनसाइट' : 'Live Premium Insight'}</span>
         </div>
-        <p className={cn("text-sm font-black", palette.headingText)}>{premiumInsight}</p>
-        <p className={cn("text-[11px] leading-relaxed", palette.isLight ? "text-stone-700" : "text-stone-300")}>
+        <p className={cn("text-base font-black", palette.headingText)}>{premiumInsight}</p>
+        <p className={cn("text-[12px] leading-relaxed", palette.isLight ? "text-stone-700" : "text-stone-300")}>
           {language === 'hi' ? 'इसके लिए आदर्श:' : 'Ideal for:'} <span className={palette.pillUnitText}>{liveHeadingAdvice.idealFor}</span>. {language === 'hi' ? 'इससे बचें:' : 'Avoid for:'} <span className={palette.dirText}>{liveHeadingAdvice.avoidFor}</span>.
         </p>
 
@@ -961,7 +966,7 @@ export const VastuOthersView: React.FC<Props> = ({
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className={cn("text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5", palette.headingText)}>
+                <span className={cn("text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5", palette.headingText)}>
                   <span>🚪</span>
                   <span>
                     {language === 'hi'
@@ -970,7 +975,7 @@ export const VastuOthersView: React.FC<Props> = ({
                   </span>
                 </span>
                 <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase shrink-0 border",
+                  "px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase shrink-0 border",
                   isBestEntrance
                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-black shadow-sm"
                     : isSevereEntrance
@@ -984,7 +989,7 @@ export const VastuOthersView: React.FC<Props> = ({
                     : (language === 'hi' ? 'सामान्य द्वार' : 'MODERATE DOOR')}
                 </span>
               </div>
-              <p className={cn("text-[10.5px] leading-snug", palette.isLight ? "text-stone-700" : "text-stone-300")}>
+              <p className={cn("text-[11.5px] leading-snug", palette.isLight ? "text-stone-700" : "text-stone-300")}>
                 {isBestEntrance
                   ? (language === 'hi'
                       ? `32-पद वास्तु के अनुसार ${livePada.code} (${livePada.nameHi}) मुख्य प्रवेश द्वार के लिए 8 सर्वश्रेष्ठ शुभ पदों में से एक है।`
@@ -997,6 +1002,7 @@ export const VastuOthersView: React.FC<Props> = ({
           );
         })()}
       </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 3. TAB CONTENT: 1. VASTU (LIVE DIRECTION & FIND BEST DIRECTION LIVE HERE) */}

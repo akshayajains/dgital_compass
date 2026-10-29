@@ -1241,23 +1241,24 @@ export const CompassView = () => {
 
       {/* Top Header — Cohesive with active dialer palette */}
       <header className={cn(
-        "w-full max-w-xl flex items-center justify-between py-1.5 px-1.5 mb-2 relative z-50 rounded-2xl transition-all duration-300",
+        "w-full max-w-xl flex flex-col items-center justify-between py-2 px-3 mb-2 relative z-50 rounded-2xl transition-all duration-300 shrink-0 gap-1.5",
         palette.headerBg,
         palette.headerBorder
       )}>
-        <div className="flex items-center gap-2.5">
-          <div className={cn(
-            "w-10 h-10 rounded-full shrink-0 overflow-hidden ring-2 transition-all duration-300",
-            palette.headerRing
-          )}>
-            <img 
-              src="/icon-192.png?v=2" 
-              alt={t.appTitle} 
-              className="w-full h-full rounded-full object-cover scale-[1.02]" 
-            />
-          </div>
-          <div className="flex flex-col text-left justify-center">
-            <h1 className="text-base sm:text-lg font-black tracking-tight leading-snug pt-0.5 pb-0">
+        {/* Line 1: Logo + Title */}
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={cn(
+              "w-9 h-9 rounded-full shrink-0 overflow-hidden ring-2 transition-all duration-300",
+              palette.headerRing
+            )}>
+              <img 
+                src="/icon-192.png?v=2" 
+                alt={t.appTitle} 
+                className="w-full h-full rounded-full object-cover scale-[1.02]" 
+              />
+            </div>
+            <h1 className="text-base sm:text-lg font-black tracking-tight leading-snug pt-0.5 pb-0 truncate">
               <span className={cn(
                 "bg-clip-text text-transparent",
                 palette.isLight
@@ -1275,70 +1276,50 @@ export const CompassView = () => {
                 COMPASS
               </span>
             </h1>
-            <span className={cn(
-              "text-[8.5px] sm:text-[9.5px] font-bold tracking-widest uppercase leading-tight -mt-0.5 transition-colors",
-              palette.headerSubtext
-            )}>
-              {language === 'hi' ? 'सटीक 360° एवं सैटेलाइट सूट' : 'PRECISION 360° & SATELLITE SUITE'}
-            </span>
           </div>
-        </div>
 
-        {/* Header Controls: Calibrate, All Tools & Settings Cog */}
-        <div className="flex items-center gap-1.5">
-          {/* Dedicated Small Calibration Button on Home Page */}
-          <button
-            onClick={() => {
-              setShowCalibrationModal(true);
-              triggerHapticFeedback();
-            }}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border active:scale-95 transition-all shadow-sm",
-              palette.headerBtnBg,
-              palette.headerBtnBorder,
-              palette.headerBtnText
-            )}
-            title={language === 'hi' ? 'कंपास कैलिब्रेट करें' : 'Calibrate Compass'}
-          >
-            <RotateCcw className={cn("w-3.5 h-3.5", palette.headerBtnIcon)} />
-            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
-              {language === 'hi' ? 'कैलिब्रेट' : 'Calibrate'}
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setShowFeatureExplorer(true);
-              triggerHapticFeedback();
-            }}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border active:scale-95 transition-all shadow-sm",
-              palette.headerBtnBg,
-              palette.headerBtnBorder,
-              palette.headerBtnText
-            )}
-            title={language === 'hi' ? 'सभी 13+ टूल्स एवं फीचर्स (टूलबॉक्स)' : 'All 13+ Tools & Features (Toolbox)'}
-          >
-            <Sparkles className={cn("w-3.5 h-3.5 animate-pulse", palette.headerBtnIcon)} />
-            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider">
-              {language === 'hi' ? 'टूलबॉक्स' : 'All Tools'}
-            </span>
-          </button>
-
+          {/* Line 1 Right: Settings only */}
           <button
             onClick={() => {
               setShowSettings(true);
               triggerHapticFeedback();
             }}
             className={cn(
-              "p-2 rounded-xl active:scale-95 transition-all shadow-sm border",
+              "p-1 rounded-lg active:scale-95 transition-all shadow-sm border",
               palette.headerBtnBg,
               palette.headerBtnBorder,
               palette.headerBtnText
             )}
             title={t.settings}
           >
-            <Settings className={cn("w-4 h-4", palette.headerBtnIcon)} />
+            <Settings className={cn("w-3.5 h-3.5", palette.headerBtnIcon)} />
+          </button>
+        </div>
+        {/* Line 2: Subtitle + All Tools */}
+        <div className="w-full flex items-center justify-between">
+          <span className={cn(
+            "text-[8.5px] sm:text-[9.5px] font-bold tracking-widest uppercase leading-tight transition-colors",
+            palette.headerSubtext
+          )}>
+            {language === 'hi' ? 'सटीक 360° एवं सैटलाइट सूट' : 'PRECISION 360° & SATELLITE SUITE'}
+          </span>
+          <button
+            onClick={() => {
+              setShowFeatureExplorer(true);
+              triggerHapticFeedback();
+            }}
+            className={cn(
+              "flex items-center gap-1 px-2 py-1 rounded-lg border active:scale-95 transition-all shadow-sm",
+              palette.headerBtnBg,
+              palette.headerBtnBorder,
+              palette.headerBtnText
+            )}
+            title={language === 'hi' ? 'सभी 13+ टूल्स एवं फीचर्स (टूलबॉक्स)' : 'All 13+ Tools & Features (Toolbox)'}
+          >
+            <Sparkles className={cn("w-3 h-3 animate-pulse", palette.headerBtnIcon)} />
+            <span className="text-[9px] font-black uppercase tracking-wider whitespace-nowrap">
+              {language === 'hi' ? 'सभी टूल्स' : 'All Tools'}
+            </span>
           </button>
         </div>
       </header>
@@ -2612,7 +2593,7 @@ export const CompassView = () => {
             )}
           >
             <Compass className={cn("w-5 h-5 shrink-0 transition-transform", mainTab === 'compass' ? "stroke-[2.5] scale-105" : "opacity-75")} />
-            <span className="text-[10.5px] sm:text-[11.5px] font-black uppercase tracking-wider mt-0.5 truncate">
+            <span className="text-[11.5px] sm:text-[12.5px] font-black uppercase tracking-wider mt-0.5 truncate">
               {t.tabCompass}
             </span>
           </button>
@@ -2631,7 +2612,7 @@ export const CompassView = () => {
             )}
           >
             <CircleDot className={cn("w-5 h-5 shrink-0 transition-transform", mainTab === 'level' ? "stroke-[2.5] scale-105" : "opacity-75")} />
-            <span className="text-[10.5px] sm:text-[11.5px] font-black uppercase tracking-wider mt-0.5 truncate">
+            <span className="text-[11.5px] sm:text-[12.5px] font-black uppercase tracking-wider mt-0.5 truncate">
               {t.tabLevel}
             </span>
           </button>
@@ -2650,7 +2631,7 @@ export const CompassView = () => {
             )}
           >
             <Sparkles className={cn("w-5 h-5 shrink-0 transition-transform", mainTab === 'vastu' ? "stroke-[2.5] scale-105" : "opacity-75")} />
-            <span className="text-[10.5px] sm:text-[11.5px] font-black uppercase tracking-wider mt-0.5 truncate">
+            <span className="text-[11.5px] sm:text-[12.5px] font-black uppercase tracking-wider mt-0.5 truncate">
               {t.tabVastu}
             </span>
           </button>
@@ -2935,11 +2916,11 @@ export const CompassView = () => {
 
                 {/* App Version & Certified Precision Info */}
                 <div className={cn(
-                  "flex items-center justify-between text-[10.5px] font-medium pt-3 mt-1 border-t text-stone-400 select-none",
+                  "flex items-center justify-between text-[11.5px] font-medium pt-3 mt-1 border-t text-stone-400 select-none",
                   theme === 'light' ? "border-stone-200/60 text-stone-600" : "border-white/5 text-stone-400"
                 )}>
                   <span className="font-mono">v5.8.8 (Build 52)</span>
-                  <span className="text-[9.5px] uppercase font-bold tracking-wider opacity-80">{language === 'hi' ? 'ऑफलाइन प्रमाणित' : 'Offline Certified'}</span>
+                  <span className="text-[10.5px] uppercase font-bold tracking-wider opacity-80">{language === 'hi' ? 'ऑफलाइन प्रमाणित' : 'Offline Certified'}</span>
                 </div>
               </div>
             </div>

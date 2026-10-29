@@ -21,9 +21,9 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo.
-echo 🤖 Step 3: Compiling Android APK / AAB...
+echo 🤖 Step 3: Compiling Android AAB...
 cd android
-call gradlew.bat assembleRelease
+call gradlew.bat bundleRelease
 if %ERRORLEVEL% neq 0 (
     echo ❌ Gradle compilation failed!
     cd ..
@@ -32,5 +32,6 @@ if %ERRORLEVEL% neq 0 (
 cd ..
 
 echo =========================================
-echo 🎉 Success! Digital Compass Build Complete!
+echo 🎉 Success! Digital Compass AAB Build Complete!
+echo 📦 AAB location: android\app\build\outputs\bundle\release\app-release.aab
 echo =========================================

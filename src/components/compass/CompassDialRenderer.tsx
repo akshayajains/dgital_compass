@@ -315,6 +315,45 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
   return (
     <div className="relative my-2 flex flex-col items-center justify-center">
+      {/* Outer cardinal direction labels — full localized names fixed outside the compass circle */}
+      {styleId !== 'vedic_mandala' && styleId !== 'satellite_earth' && (() => {
+        const outerColor = styleId === 'royal_gold'
+          ? "text-[#3D2E05] font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]"
+          : isGraphite
+          ? "text-slate-200 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+          : activeVariant?.cardinalColor
+          ? activeVariant.cardinalColor
+          : "text-stone-300";
+        const northColor = "text-red-900 font-black tracking-tight";
+        return (
+          <>
+            {/* N - North (Top) */}
+            <div className="absolute -top-0 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+              <span className="text-base font-black tracking-tight" style={{ color: '#7f1d1d' }}>
+                {isHi ? 'उत्तर' : 'North'}
+              </span>
+            </div>
+            {/* S - South (Bottom) */}
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+              <span className={cn("text-base font-black tracking-tight", outerColor)}>
+                {isHi ? 'दक्षिण' : 'South'}
+              </span>
+            </div>
+            {/* E - East (Right) */}
+            <div className="absolute -right-0 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+              <span className={cn("text-base font-black tracking-tight", outerColor)} style={{ writingMode: 'vertical-rl', rotate: '0deg' }}>
+                {isHi ? 'पूर्व' : 'East'}
+              </span>
+            </div>
+            {/* W - West (Left) */}
+            <div className="absolute -left-0 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+              <span className={cn("text-base font-black tracking-tight", outerColor)} style={{ writingMode: 'vertical-rl', rotate: '180deg' }}>
+                {isHi ? 'पश्चिम' : 'West'}
+              </span>
+            </div>
+          </>
+        );
+      })()}
       {/* Precision stationary needle — overlaid perfectly centered on the dial using inset-0.
           The needle SVG pivot is at (100,100) in 200×200 viewbox = exact geometric center.
           This div uses absolute inset-0 so it never shifts regardless of bezel border width. */}
@@ -851,17 +890,17 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(45deg)' }}>
                     <div className="flex flex-col items-center mt-[3.85rem] select-none">
                       <div className={cn(
-                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full",
                         isLightDial
-                          ? "bg-[#FFFFFF]/90 border-[#8C6239]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
-                          : "bg-black/75 border-amber-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                          ? "bg-[#FFFFFF]/60 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                          : "bg-black/40 shadow-[0_1px_6px_rgba(0,0,0,0.6)]"
                       )}>
                         <div className={cn(
                           "w-1.5 h-1.5 rounded-full",
                           isLightDial ? "bg-[#B45309] shadow-[0_0_4px_rgba(180,83,9,0.8)]" : "bg-amber-400 shadow-[0_0_8px_#f59e0b]"
                         )} />
                         <span className={cn(
-                          "text-[8.5px] font-black tracking-wide leading-none",
+                          "text-[9.5px] font-black tracking-wide leading-none",
                           isLightDial ? "text-[#78350F]" : "text-amber-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
                         )}>
                           {isHi ? 'मंदिर' : 'Temple'}
@@ -874,17 +913,17 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(135deg)' }}>
                     <div className="flex flex-col items-center mt-[3.85rem] select-none">
                       <div className={cn(
-                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full",
                         isLightDial
-                          ? "bg-[#FFFFFF]/90 border-[#C2410C]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
-                          : "bg-black/75 border-orange-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                          ? "bg-[#FFFFFF]/60 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                          : "bg-black/40 shadow-[0_1px_6px_rgba(0,0,0,0.6)]"
                       )}>
                         <div className={cn(
                           "w-1.5 h-1.5 rounded-full",
                           isLightDial ? "bg-[#C2410C] shadow-[0_0_4px_rgba(194,65,12,0.8)]" : "bg-orange-500 shadow-[0_0_8px_#f97316]"
                         )} />
                         <span className={cn(
-                          "text-[8.5px] font-black tracking-wide leading-none",
+                          "text-[9.5px] font-black tracking-wide leading-none",
                           isLightDial ? "text-[#9A3412]" : "text-orange-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
                         )}>
                           {isHi ? 'रसोई' : 'Kitchen'}
@@ -897,17 +936,17 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(225deg)' }}>
                     <div className="flex flex-col items-center mt-[3.85rem] select-none">
                       <div className={cn(
-                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full",
                         isLightDial
-                          ? "bg-[#FFFFFF]/90 border-[#A16207]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
-                          : "bg-black/75 border-yellow-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                          ? "bg-[#FFFFFF]/60 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                          : "bg-black/40 shadow-[0_1px_6px_rgba(0,0,0,0.6)]"
                       )}>
                         <div className={cn(
                           "w-1.5 h-1.5 rounded-full",
                           isLightDial ? "bg-[#A16207] shadow-[0_0_4px_rgba(161,98,7,0.8)]" : "bg-yellow-400 shadow-[0_0_8px_#eab308]"
                         )} />
                         <span className={cn(
-                          "text-[8.5px] font-black tracking-wide leading-none",
+                          "text-[9.5px] font-black tracking-wide leading-none",
                           isLightDial ? "text-[#713F12]" : "text-yellow-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
                         )}>
                           {isHi ? 'शयन' : 'Master'}
@@ -920,17 +959,17 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
                   <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: 'rotate(315deg)' }}>
                     <div className="flex flex-col items-center mt-[3.85rem] select-none">
                       <div className={cn(
-                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full border shadow-sm",
+                        "flex items-center gap-1 px-1.5 py-0.5 rounded-full",
                         isLightDial
-                          ? "bg-[#FFFFFF]/90 border-[#0369A1]/25 shadow-[0_1px_4px_rgba(0,0,0,0.12)]"
-                          : "bg-black/75 border-sky-400/30 shadow-[0_2px_8px_rgba(0,0,0,0.85)]"
+                          ? "bg-[#FFFFFF]/60 shadow-[0_1px_3px_rgba(0,0,0,0.08)]"
+                          : "bg-black/40 shadow-[0_1px_6px_rgba(0,0,0,0.6)]"
                       )}>
                         <div className={cn(
                           "w-1.5 h-1.5 rounded-full",
                           isLightDial ? "bg-[#0369A1] shadow-[0_0_4px_rgba(3,105,161,0.8)]" : "bg-sky-400 shadow-[0_0_8px_#38bdf8]"
                         )} />
                         <span className={cn(
-                          "text-[8.5px] font-black tracking-wide leading-none",
+                          "text-[9.5px] font-black tracking-wide leading-none",
                           isLightDial ? "text-[#0C4A6E]" : "text-sky-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
                         )}>
                           {isHi ? 'अतिथि' : 'Guest'}
@@ -1037,30 +1076,29 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               ))}
             </>
           ) : (
-            cardinalPoints.map((pt) => (
-              <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
-                <div className="flex flex-col items-center select-none mt-5">
-                  <span className={cn(
-                    "font-black tracking-tight",
-                    styleId === 'royal_gold'
-                      ? (pt.isNorth
-                          ? "text-[#8B0000] text-lg font-black font-serif drop-shadow-[0_1px_0px_#FFFFFF] drop-shadow-[0_0_3px_#FDE047] scale-110"
-                          : "text-[#3D2E05] text-sm font-black font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]")
-                      : pt.isNorth
-                      ? "text-[#EF4444] text-base font-black scale-110 drop-shadow-[0_0_8px_#ef4444] animate-pulse-subtle"
-                      : styleId === 'satellite_earth'
-                      ? (['NE', 'SE', 'SW', 'NW'].includes(pt.code) ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]" : "text-white text-sm font-black")
-                      : isGraphite
-                      ? "text-slate-200 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
-                      : activeVariant?.cardinalColor
-                      ? activeVariant.cardinalColor
-                      : ""
-                  )}>
-                    {pt.label}
-                  </span>
+            <>
+              {/* Intercardinal directions (NE, SE, SW, NW) on dial */}
+              {cardinalPoints.filter(pt => !['N', 'S', 'E', 'W'].includes(pt.code)).map((pt) => (
+                <div key={pt.deg} className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${pt.deg}deg)` }}>
+                  <div className="flex flex-col items-center select-none mt-5">
+                    <span className={cn(
+                      "font-black tracking-tight",
+                      styleId === 'royal_gold'
+                        ? "text-[#3D2E05] text-sm font-black font-serif drop-shadow-[0_1px_1px_rgba(255,255,255,0.85)]"
+                        : styleId === 'satellite_earth'
+                        ? "text-[#00F0FF] text-sm font-black drop-shadow-[0_0_8px_#00f0ff]"
+                        : isGraphite
+                        ? "text-slate-200 text-sm drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
+                        : activeVariant?.cardinalColor
+                        ? activeVariant.cardinalColor
+                        : "text-stone-300 text-sm"
+                    )}>
+                      {pt.label}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))
+              ))}
+            </>
           )}
 
           {/* Sun Badge (Real-time Solar Position) — hidden for minimal_onyx */}
@@ -1078,7 +1116,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           {/* Qibla Indicator on Dial */}
           {isQiblaMode && (
             <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${qiblaBearing}deg)` }}>
-              <div className="flex flex-col items-center mt-7 animate-bounce">
+              <div className="flex flex-col items-center mt-7">
                 <div className={cn(
                   "flex items-center gap-1.5 px-2.5 py-1 rounded-full border shadow-2xl transition-all duration-300",
                   isFacingQibla

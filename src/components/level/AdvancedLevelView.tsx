@@ -572,8 +572,8 @@ export const AdvancedLevelView: React.FC<Props> = ({
         </button>
       </div>
 
-      {/* ── Quick Tools Grid (Hold, Sound, Mode, Target, Calibrate) ── */}
-      <div className="w-full grid grid-cols-5 gap-1.5 mb-2">
+      {/* ── Quick Tools Grid (Hold, Sound, Mode, Reference) ── */}
+      <div className="w-full grid grid-cols-4 gap-1.5 mb-2">
         {/* Hold to Freeze */}
         <button
           onClick={handleHold}
@@ -638,19 +638,6 @@ export const AdvancedLevelView: React.FC<Props> = ({
         >
           <Lock className="w-3.5 h-3.5" />
           <span className="text-[8.5px] font-black uppercase tracking-wider">{referenceLock ? (isHi ? 'रेफरेंस' : 'Ref Locked') : (isHi ? 'रेफरेंस' : 'Ref Lock')}</span>
-        </button>
-
-        {/* 8-Motion Calibrate */}
-        <button
-          onClick={() => { onCalibrate?.(); }}
-          title={isHi ? 'सेंसर कैलिब्रेशन' : 'Calibrate Sensors'}
-          className={cn(
-            "flex flex-col items-center justify-center gap-1 py-2 rounded-xl border transition-all active:scale-95 shadow-sm",
-            isLight ? "bg-stone-100/90 border-stone-300 text-stone-800 hover:text-stone-950 font-bold" : "bg-white/10 border-white/15 text-stone-200 hover:text-white hover:bg-white/15 font-bold"
-          )}
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span className="text-[8.5px] font-black uppercase tracking-wider">{isHi ? 'कैलिब्रेट' : 'Calibrate'}</span>
         </button>
       </div>
 
@@ -857,30 +844,8 @@ export const AdvancedLevelView: React.FC<Props> = ({
         </div>
       )}
 
-      {/* ── ENGINEERING METRICS GRID (PITCH, ROLL, SLOPE %, ROOF 1:X, MM/M) ── */}
-      <div className="w-full grid grid-cols-4 gap-1.5 my-1.5">
-        <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[11px] font-black uppercase tracking-wider", isLight ? "text-stone-800" : "text-stone-300")}>{isHi ? 'पिच (X)' : 'Pitch (X)'}</span>
-          <span className={cn("text-base sm:text-lg font-black font-mono mt-0.5 truncate", isLight ? "text-sky-700" : "text-sky-400")}>
-            {formatAngleUnit(displayPitch, levelUnit)}
-          </span>
-          {levelUnit !== 'deg' && (
-            <span className={cn("text-[9px] font-mono", isLight ? "text-stone-800 font-bold" : "text-stone-400")}>
-              {displayPitch >= 0 ? `+${displayPitch.toFixed(1)}°` : `${displayPitch.toFixed(1)}°`}
-            </span>
-          )}
-        </div>
-        <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
-          <span className={cn("text-[11px] font-black uppercase tracking-wider", isLight ? "text-stone-800" : "text-stone-300")}>{isHi ? 'रोल (Y)' : 'Roll (Y)'}</span>
-          <span className={cn("text-base sm:text-lg font-black font-mono mt-0.5 truncate", isLight ? "text-teal-700" : "text-emerald-400")}>
-            {formatAngleUnit(displayRoll, levelUnit)}
-          </span>
-          {levelUnit !== 'deg' && (
-            <span className={cn("text-[9px] font-mono", isLight ? "text-stone-800 font-bold" : "text-stone-400")}>
-              {displayRoll >= 0 ? `+${displayRoll.toFixed(1)}°` : `${displayRoll.toFixed(1)}°`}
-            </span>
-          )}
-        </div>
+      {/* ── ENGINEERING METRICS GRID (SLOPE %, ROOF 1:X, MM/M) ── */}
+      <div className="w-full grid grid-cols-2 gap-1.5 my-1.5">
         <div className={cn("p-2 rounded-xl border flex flex-col items-center shadow-sm", isLight ? "bg-white border-stone-200" : "bg-stone-900/80 border-white/10")}>
           <span className={cn("text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5", isLight ? "text-stone-800" : "text-stone-300")}>
             <TrendingUp className="w-2.5 h-2.5" />{isHi ? 'ढलान %' : 'Slope %'}
