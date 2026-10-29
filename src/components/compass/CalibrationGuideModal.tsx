@@ -41,6 +41,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   const [visitedSegments, setVisitedSegments] = useState<Set<number>>(new Set());
   const [progress, setProgress] = useState<number>(0);
   const [isCalibrated, setIsCalibrated] = useState<boolean>(false);
+  const [highlightAngleDeg, setHighlightAngleDeg] = useState<number>(0);
 
   const completedRef = useRef<boolean>(false);
   const hasSensorRef = useRef<boolean>(false);
@@ -49,6 +50,12 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   const angleRad = (ballAngleDeg * Math.PI) / 180;
   const ballX = CX + Math.sin(angleRad) * RADIUS;
   const ballY = CY - Math.cos(angleRad) * RADIUS;
+
+  // Highlight circle position — follows the ball, starting from top (0°)
+  const highlightRad = (highlightAngleDeg * Math.PI) / 180;
+  const highlightX = CX + Math.sin(highlightRad) * RADIUS;
+  const highlightY = CY - Math.cos(highlightRad) * RADIUS;
+
   const progressOffset = CIRCUMFERENCE - (progress / 100) * CIRCUMFERENCE;
 
   const ingestSample = useCallback(
@@ -57,6 +64,8 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
       const rad = Math.atan2(gamma, -beta);
       const deg = ((rad * 180) / Math.PI + 360) % 360;
       setBallAngleDeg(deg);
+      // Highlight circle only moves when the ball moves
+      setHighlightAngleDeg(deg);
 
       const seg = Math.floor(deg / 10) % TOTAL_SEGMENTS;
       if (!visitedRef.current.has(seg)) {
@@ -95,6 +104,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setBallAngleDeg(0);
+      setHighlightAngleDeg(0);
       setVisitedSegments(new Set());
       setProgress(0);
       setIsCalibrated(false);
@@ -239,6 +249,28 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
                 strokeLinecap="round"
                 transform={'rotate(-90 ' + CX + ' ' + CY + ')'}
                 style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.4s ease' }}
+              />
+
+              {/* Highlighted circle — follows the ball, starts at top */}
+              <circle
+                cx={highlightX}
+                cy={highlightY}
+                r={14}
+                fill="none"
+                stroke={palette.progressRing}
+                strokeWidth={3}
+                opacity={0.85}
+                style={{ transition: 'cx 0.08s linear, cy 0.08s linear, stroke 0.4s ease' }}
+              />
+              <circle
+                cx={highlightX}
+                cy={highlightY}
+                r={18}
+                fill="none"
+                stroke={palette.progressRing}
+                strokeWidth={1.5}
+                opacity={0.35}
+                style={{ transition: 'cx 0.08s linear, cy 0.08s linear, stroke 0.4s ease' }}
               />
 
               {/* Center icon */}

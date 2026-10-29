@@ -340,13 +340,13 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
               </span>
             </div>
             {/* E - East (Right) */}
-            <div className="absolute -right-0 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+            <div className="absolute -right-1 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
               <span className={cn("text-base font-black tracking-tight", outerColor)} style={{ writingMode: 'vertical-rl', rotate: '0deg' }}>
                 {isHi ? 'पूर्व' : 'East'}
               </span>
             </div>
             {/* W - West (Left) */}
-            <div className="absolute -left-0 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
+            <div className="absolute -left-1 top-1/2 -translate-y-1/2 z-30 pointer-events-none">
               <span className={cn("text-base font-black tracking-tight", outerColor)} style={{ writingMode: 'vertical-rl', rotate: '180deg' }}>
                 {isHi ? 'पश्चिम' : 'West'}
               </span>
@@ -806,9 +806,9 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
 
                 {/* Cardinal Direction Labels inside the Sacred Lotus (Localized) */}
                 <text x="100" y="46" textAnchor="middle" fill="#EF4444" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_#ef4444]">{isHi ? 'उत्तर' : 'NORTH'}</text>
-                <text x="154" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'पूर्व' : 'EAST'}</text>
+                <text x="151" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'पूर्व' : 'EAST'}</text>
                 <text x="100" y="157" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'दक्षिण' : 'SOUTH'}</text>
-                <text x="46" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'पश्चिम' : 'WEST'}</text>
+                <text x="45" y="101.5" textAnchor="middle" fill="#FDE047" fontSize="4.2" fontWeight="900" className="drop-shadow-[0_0_6px_rgba(245,158,11,0.7)]">{isHi ? 'पश्चिम' : 'WEST'}</text>
 
                 {/* Central Sacred Sri Yantra Concentric Rings & Interlocking Triangles */}
                 <circle cx="100" cy="100" r="26" fill="rgba(11, 19, 27, 0.85)" stroke="#F59E0B" strokeWidth="0.75" />
@@ -1104,7 +1104,7 @@ export const CompassDialRenderer = React.memo(function CompassDialRenderer({
           {/* Sun Badge (Real-time Solar Position) — hidden for minimal_onyx */}
           {sunPos !== null && (styleId as string) !== 'minimal_onyx' && !isMinimalOnyx && (
             <div className="absolute inset-0 flex justify-center pointer-events-none" style={{ transform: `rotate(${sunPos}deg)` }}>
-              <div className="flex flex-col items-center mt-14 animate-pulse">
+              <div className="flex flex-col items-center mt-10 animate-pulse">
                 <div className="flex items-center gap-1 bg-amber-500/90 text-stone-950 px-1.5 py-0.5 rounded-full shadow-[0_0_12px_rgba(245,158,11,0.9)] border border-amber-300">
                   <Sun className="w-3 h-3 fill-amber-300 text-stone-950" />
                   <span className="text-[8px] font-black tracking-wider leading-none">{isHi ? 'सूर्य' : 'Sun'}</span>

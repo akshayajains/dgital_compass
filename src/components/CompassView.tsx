@@ -1744,6 +1744,24 @@ export const CompassView = () => {
                 >
                   <Share2 className={cn("w-4 h-4", palette.headerBtnIcon)} />
                 </button>
+
+                {/* 9. Calibrate Compass — always visible */}
+                <button
+                  onClick={() => {
+                    triggerHapticFeedback();
+                    setShowCalibrationModal(true);
+                  }}
+                  className={cn(
+                    "w-9 h-9 rounded-xl border flex items-center justify-center active:scale-95 transition-all duration-200",
+                    palette.actionBtnBg,
+                    palette.actionBtnBorder,
+                    palette.actionBtnText,
+                    palette.actionBtnHover
+                  )}
+                  title={language === 'hi' ? 'कंपास कैलिब्रेट करें' : 'Calibrate Compass'}
+                >
+                  <Sparkles className={cn("w-4 h-4", palette.headerBtnIcon)} />
+                </button>
               </div>
             </div>
 
