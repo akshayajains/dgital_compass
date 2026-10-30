@@ -756,7 +756,7 @@ export const VastuOthersView: React.FC<Props> = ({
             <button
               onClick={onToggleHeadingLock}
               className={cn(
-                "px-3.5 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md",
+                "px-3.5 py-1.5 rounded-full border text-[12px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md",
                 isHeadingLocked
                   ? "bg-amber-500 text-stone-950 border-amber-300 shadow-[0_0_16px_rgba(245,158,11,0.55)]"
                   : palette.isLight
@@ -787,7 +787,7 @@ export const VastuOthersView: React.FC<Props> = ({
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className={cn(
-              "text-[10px] font-black uppercase tracking-wider",
+              "text-[12px] font-black uppercase tracking-wider",
               location?.accuracy != null
                 ? location.accuracy <= 15
                   ? (palette.isLight ? "text-teal-700" : "text-emerald-400")
@@ -800,7 +800,7 @@ export const VastuOthersView: React.FC<Props> = ({
                 ? `${location.accuracy <= 15 ? 'HIGH' : location.accuracy <= 50 ? 'MED' : 'LOW'} ACC ±${Math.round(location.accuracy)}m`
                 : 'HIGH ACC'}
             </span>
-            <span className={cn("text-[10px] font-black uppercase tracking-wider", palette.isLight ? "text-sky-700" : "text-sky-400")}>
+            <span className={cn("text-[12px] font-black uppercase tracking-wider", palette.isLight ? "text-sky-700" : "text-sky-400")}>
               Δ {declination > 0 ? `+${declination}°` : `${declination}°`}
             </span>
           </div>
@@ -837,7 +837,7 @@ export const VastuOthersView: React.FC<Props> = ({
             </span>
             <span className={cn(
               "text-[11px] font-bold tracking-wider",
-              palette.isLight ? "text-stone-600" : "text-stone-300"
+              palette.isLight ? "text-stone-500" : "text-stone-300"
             )}>
               {language === 'hi' ? `${liveZone.elementHi} • ${liveZone.deityHi}` : `${liveZone.element} • ${liveZone.deity}`} ({liveZone.startDeg}° - {liveZone.endDeg}°)
             </span>
@@ -858,7 +858,7 @@ export const VastuOthersView: React.FC<Props> = ({
             {location?.city
               ? `${language === 'hi' ? location.city : (location.cityEn || location.city)}${location.state ? `, ${language === 'hi' ? location.state : (location.stateEn || location.state)}` : ''}`
               : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
-            <span className={cn("text-[11px] font-mono font-bold ml-1.5", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <span className={cn("text-[11px] font-mono font-bold ml-1.5", palette.isLight ? "text-stone-500" : "text-stone-300")}>
               • {location ? `${location.latitude.toFixed(4)}°N, ${location.longitude.toFixed(4)}°E` : ''}
             </span>
           </div>
@@ -876,7 +876,7 @@ export const VastuOthersView: React.FC<Props> = ({
             )}
             title="Tap to inspect Devta Pada"
           >
-            <div className={cn("flex items-center justify-between text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <div className={cn("flex items-center justify-between text-[12px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-500" : "text-stone-300")}>
               <div className="flex items-center gap-1">
                 <ShieldCheck className={cn("w-3 h-3", palette.pillUnitText)} />
                 <span>Pada</span>
@@ -889,14 +889,14 @@ export const VastuOthersView: React.FC<Props> = ({
             </div>
           </div>
           <div className={cn("rounded-2xl border px-3 py-2", palette.isLight ? "border-stone-300/80 bg-white/70 shadow-sm" : "border-white/10 bg-black/25")}>
-            <div className={cn("flex items-center gap-1 text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <div className={cn("flex items-center gap-1 text-[12px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-500" : "text-stone-300")}>
               <Gauge className={cn("w-3 h-3", palette.pillUnitText)} />
               <span>Tilt</span>
             </div>
             <div className={cn("mt-1 text-sm font-black", palette.headingText)}>{totalTilt.toFixed(1)}°</div>
           </div>
           <div className={cn("rounded-2xl border px-3 py-2", palette.isLight ? "border-stone-300/80 bg-white/70 shadow-sm" : "border-white/10 bg-black/25")}>
-            <div className={cn("flex items-center gap-1 text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+            <div className={cn("flex items-center gap-1 text-[12px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-500" : "text-stone-300")}>
               <MapPinned className={cn("w-3 h-3", palette.pillUnitText)} />
               <span>Score</span>
             </div>
@@ -910,15 +910,15 @@ export const VastuOthersView: React.FC<Props> = ({
         {!isLevel && (
         <div className={cn("w-full flex items-center justify-between px-3 py-2 rounded-2xl border", palette.isLight ? "border-stone-300/80 bg-white/70" : "border-white/10 bg-black/25")}>
           <div className="flex items-center gap-1.5">
-            <span className={cn("text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>PITCH</span>
+            <span className={cn("text-[12px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-500" : "text-stone-300")}>PITCH</span>
             <span className={cn("text-sm font-black font-mono", palette.pillUnitText)}>{Math.round(pitch)}°</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className={cn("text-[10px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-600" : "text-stone-400")}>ROLL</span>
+            <span className={cn("text-[12px] uppercase tracking-[0.18em]", palette.isLight ? "text-stone-500" : "text-stone-300")}>ROLL</span>
             <span className={cn("text-sm font-black font-mono", palette.pillUnitText)}>{Math.round(roll)}°</span>
           </div>
           <span className={cn(
-            "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border tracking-wider",
+            "px-2.5 py-0.5 rounded-full text-[12px] font-black uppercase border tracking-wider",
             isLevel
               ? (palette.isLight ? "bg-emerald-100 text-emerald-800 border-emerald-400" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.4)]")
               : (palette.isLight ? "bg-rose-100 text-rose-700 border-rose-400" : "bg-rose-950/60 text-rose-300 border-rose-500/40")
@@ -975,7 +975,7 @@ export const VastuOthersView: React.FC<Props> = ({
                   </span>
                 </span>
                 <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase shrink-0 border",
+                  "px-2 py-0.5 rounded-full text-[11px] font-black uppercase shrink-0 border",
                   isBestEntrance
                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 font-black shadow-sm"
                     : isSevereEntrance
@@ -1022,13 +1022,13 @@ export const VastuOthersView: React.FC<Props> = ({
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
                 {isActivityMatched ? (
-                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-stone-950 shadow-md animate-pulse">
+                  <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-black uppercase tracking-wider bg-emerald-500 text-stone-950 shadow-md animate-pulse">
                     <Sparkles className="w-3 h-3 text-stone-950 fill-stone-950" />
                     {language === 'hi' ? '⭐ सर्वोत्तम दिशा सुमेलित' : '⭐ BEST DIRECTION MATCH'}
                   </span>
                 ) : isAuspiciousDirection ? (
                   <span className={cn(
-                    "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                    "flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-black uppercase tracking-wider border",
                     palette.pillBg,
                     palette.pillBorder,
                     palette.pillUnitText
@@ -1038,7 +1038,7 @@ export const VastuOthersView: React.FC<Props> = ({
                   </span>
                 ) : (
                   <span className={cn(
-                    "px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                    "px-2.5 py-1 rounded-full text-[12px] font-black uppercase tracking-wider border",
                     palette.isLight ? "bg-white/60 border-stone-300 text-stone-700" : "bg-black/40 border-white/10 text-stone-300"
                   )}>
                     {language === 'hi' ? `दिशा क्षेत्र: ${liveZone.code}` : `ZONE: ${liveZone.code}`}
@@ -1047,7 +1047,7 @@ export const VastuOthersView: React.FC<Props> = ({
               </div>
 
               <div className={cn(
-                "flex items-center gap-1 px-2.5 py-1 rounded-xl border text-[10px] font-mono font-bold",
+                "flex items-center gap-1 px-2.5 py-1 rounded-xl border text-[12px] font-mono font-bold",
                 palette.pillBg,
                 palette.pillBorder,
                 palette.pillUnitText
@@ -1059,7 +1059,7 @@ export const VastuOthersView: React.FC<Props> = ({
 
             {/* Quick Activity Selector Chips */}
             <div className="w-full flex flex-col gap-1.5">
-              <div className={cn("flex items-center justify-between text-[9px] font-black uppercase tracking-widest", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+              <div className={cn("flex items-center justify-between text-[11px] font-black uppercase tracking-widest", palette.isLight ? "text-stone-500" : "text-stone-300")}>
                 <span>{language === 'hi' ? 'उद्देश्य अनुसार दिशा जांचें' : 'Check Alignment For:'}</span>
                 <span className={cn("font-bold", palette.headingText)}>{activityDirections.title}</span>
               </div>
@@ -1074,7 +1074,7 @@ export const VastuOthersView: React.FC<Props> = ({
                         triggerHaptic();
                       }}
                       className={cn(
-                        "px-2.5 py-1 rounded-xl text-[10px] font-black whitespace-nowrap flex items-center gap-1 transition-all active:scale-95 shrink-0 border",
+                        "px-2.5 py-1 rounded-xl text-[12px] font-black whitespace-nowrap flex items-center gap-1 transition-all active:scale-95 shrink-0 border",
                         isSelected
                           ? `${palette.pillBg} ${palette.pillBorder} ${palette.headingText} font-extrabold shadow-md scale-[1.02]`
                           : (palette.isLight
@@ -1110,7 +1110,7 @@ export const VastuOthersView: React.FC<Props> = ({
                     {language === 'hi' ? 'वर्तमान मुख:' : 'Facing:'} {displayDeg}° {language === 'hi' ? liveZone.nameHi.split(' ')[0] : liveZone.nameEn.split(' ')[0]} ({liveZone.code})
                   </span>
                 </span>
-                <span className={cn("text-[10px] font-mono font-black", isActivityMatched ? "text-emerald-400" : "text-amber-400")}>
+                <span className={cn("text-[12px] font-mono font-black", isActivityMatched ? "text-emerald-400" : "text-amber-400")}>
                   {isActivityMatched
                     ? '✓ 100% MATCH'
                     : `${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? (language === 'hi' ? 'बाएं ↶' : 'Left ↶') : (language === 'hi' ? 'दाएं ↷' : 'Right ↷')}`}
@@ -1139,7 +1139,7 @@ export const VastuOthersView: React.FC<Props> = ({
                       style={{ width: `${Math.max(10, 100 - Math.min(100, Math.abs(headingDeviation) * 1.5))}%` }}
                     />
                   </div>
-                  <span className="text-[9px] font-mono font-bold opacity-75">{Math.round(Math.max(10, 100 - Math.min(100, Math.abs(headingDeviation) * 1.5)))}%</span>
+                  <span className="text-[11px] font-mono font-bold opacity-75">{Math.round(Math.max(10, 100 - Math.min(100, Math.abs(headingDeviation) * 1.5)))}%</span>
                 </div>
               )}
 
@@ -1150,7 +1150,7 @@ export const VastuOthersView: React.FC<Props> = ({
                       ? `${activityDirections.title} के लिए ${Math.round(activityDirections.targetDeg)}° की ओर ${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'बाएं ↶' : 'दाएं ↷'} घूमें। ${activityDirections.facing}`
                       : `Turn ${Math.abs(Math.round(headingDeviation))}° ${headingDeviation > 0 ? 'Left ↶' : 'Right ↷'} towards ${Math.round(activityDirections.targetDeg)}° for optimal energy. ${activityDirections.facing}`)}
               </p>
-              <div className="text-[10px] pt-1.5 border-t border-current/15 flex flex-col gap-0.5">
+              <div className="text-[12px] pt-1.5 border-t border-current/15 flex flex-col gap-0.5">
                 <div><span className="font-black">{language === 'hi' ? 'आदर्श कार्य:' : 'Ideal for:'}</span> {liveHeadingAdvice.idealFor}</div>
                 <div><span className="font-black text-rose-400">{language === 'hi' ? 'वर्जित कार्य:' : 'Avoid for:'}</span> {liveHeadingAdvice.avoidFor}</div>
               </div>
@@ -1210,7 +1210,7 @@ export const VastuOthersView: React.FC<Props> = ({
             <button
               onClick={() => { setShowARScanner(true); triggerHaptic(); }}
               className={cn(
-                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
+                "flex-1 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
                 palette.pillBg,
                 palette.pillBorder,
                 palette.headingText
@@ -1222,7 +1222,7 @@ export const VastuOthersView: React.FC<Props> = ({
             <button
               onClick={() => { setShowFloorPlan(true); triggerHaptic(); }}
               className={cn(
-                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
+                "flex-1 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
                 palette.pillBg,
                 palette.pillBorder,
                 palette.headingText
@@ -1234,7 +1234,7 @@ export const VastuOthersView: React.FC<Props> = ({
             <button
               onClick={() => { setShowWeather(true); triggerHaptic(); }}
               className={cn(
-                "flex-1 py-2 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
+                "flex-1 py-2 rounded-xl border text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm",
                 palette.pillBg,
                 palette.pillBorder,
                 palette.headingText
@@ -1358,9 +1358,9 @@ export const VastuOthersView: React.FC<Props> = ({
             </span>
 
             <div className={cn("p-3 rounded-2xl border flex flex-col items-center gap-1", palette.isLight ? "bg-white border-stone-200" : "bg-black/40 border-white/10")}>
-              <span className={cn("text-[10px] uppercase font-bold", palette.isLight ? "text-stone-600" : "text-stone-400")}>{language === 'hi' ? 'आपके GPS से काबा बेयरिंग:' : 'Kaaba Bearing from Your GPS:'}</span>
+              <span className={cn("text-[12px] uppercase font-bold", palette.isLight ? "text-stone-500" : "text-stone-300")}>{language === 'hi' ? 'आपके GPS से काबा बेयरिंग:' : 'Kaaba Bearing from Your GPS:'}</span>
               <span className={cn("text-3xl font-black font-mono", palette.isLight ? "text-teal-700" : "text-emerald-400")}>{qiblaData ? `${qiblaData.qiblaBearing}°` : '—'}</span>
-              <span className={cn("text-[10.5px] font-bold", palette.isLight ? "text-stone-600" : "text-stone-300")}>
+              <span className={cn("text-[12px] font-bold", palette.isLight ? "text-stone-500" : "text-stone-300")}>
                 {qiblaData ? (language === 'hi' ? `दूरी: ${qiblaData.distanceKm} किमी` : `Distance: ${qiblaData.distanceKm} km`) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}
               </span>
             </div>
@@ -1369,7 +1369,7 @@ export const VastuOthersView: React.FC<Props> = ({
               "p-3 rounded-2xl border flex items-center justify-center gap-2 font-black transition-all",
               qiblaData?.isFacingQibla
                 ? (palette.isLight ? "bg-teal-100 text-teal-800 border-teal-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/60 shadow-[0_0_15px_rgba(16,185,129,0.5)]")
-                : (palette.isLight ? "bg-white text-stone-700 border-stone-300" : "bg-stone-900 text-stone-400 border-white/10")
+                : (palette.isLight ? "bg-white text-stone-700 border-stone-300" : "bg-stone-900 text-stone-300 border-white/10")
             )}>
               <Navigation className="w-4 h-4" />
               <span>{qiblaData ? (qiblaData.isFacingQibla ? (language === 'hi' ? 'काबा की ओर संरेखित ✓' : 'ALIGNED WITH KAABA ✓') : (language === 'hi' ? `किबला की ओर मुड़ने के लिए ${qiblaData.qiblaBearing}° घुमाएं` : `Rotate to ${qiblaData.qiblaBearing}° to face Qibla`)) : (language === 'hi' ? 'स्थान उपलब्ध नहीं' : 'Location unavailable')}</span>
@@ -1391,16 +1391,16 @@ export const VastuOthersView: React.FC<Props> = ({
           <h4 className={cn("text-sm font-serif font-black tracking-wider uppercase", palette.isLight ? "text-amber-900" : "text-amber-300")}>
             BY AADISH JAIN
           </h4>
-          <span className="px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-amber-500 text-stone-950 shadow-sm">
+          <span className="px-2 py-0.5 rounded-full text-[12px] font-black uppercase tracking-wider bg-amber-500 text-stone-950 shadow-sm">
             CREATOR
           </span>
         </div>
 
-        <p className={cn("text-[10.5px] font-bold tracking-wide", palette.isLight ? "text-amber-900" : "text-stone-300")}>
+        <p className={cn("text-[12px] font-bold tracking-wide", palette.isLight ? "text-amber-900" : "text-stone-300")}>
           Spiritual & Vastu Guidance Services
         </p>
 
-        <span className={cn("text-[9px] mt-1 flex items-center gap-1 font-bold", palette.isLight ? "text-amber-700" : "text-stone-400")}>
+        <span className={cn("text-[11px] mt-1 flex items-center gap-1 font-bold", palette.isLight ? "text-amber-700" : "text-stone-300")}>
           <span>Made with</span>
           <span className="text-rose-500">❤️</span>
           <span>for Spiritual Alignment</span>

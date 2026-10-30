@@ -374,7 +374,7 @@ export const ARVastuScanner = ({
                 }
               }}
               className={cn(
-                "px-3 py-1.5 rounded-full border backdrop-blur-md active:scale-90 transition-all flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider",
+                "px-3 py-1.5 rounded-full border backdrop-blur-md active:scale-90 transition-all flex items-center gap-1.5 text-[12px] font-black uppercase tracking-wider",
                 frozenHeading !== null
                   ? "bg-amber-500 border-amber-300 text-stone-950 shadow-[0_0_14px_rgba(245,158,11,0.6)]"
                   : "bg-black/60 border-white/20 text-white"
@@ -406,7 +406,7 @@ export const ARVastuScanner = ({
               const isCard = deg % 90 === 0;
               return (
                 <div key={i} className="flex flex-col items-center shrink-0 w-8">
-                  <span className={cn("text-[10px]", isCard ? "text-amber-400 font-black text-xs" : "text-stone-300")}>
+                  <span className={cn("text-[12px]", isCard ? "text-amber-400 font-black text-xs" : "text-stone-300")}>
                     {isCard ? (deg === 0 ? 'N' : deg === 90 ? 'E' : deg === 180 ? 'S' : 'W') : `${deg}°`}
                   </span>
                   <div className={cn("w-0.5 bg-white/40", isCard ? "h-3 bg-amber-400" : "h-1.5")} />
@@ -438,7 +438,7 @@ export const ARVastuScanner = ({
             </span>
 
             {/* Devta Pada Badge */}
-            <div className="mt-2 px-2.5 py-0.5 rounded-full bg-black/60 border border-white/20 text-[10px] font-black text-amber-300">
+            <div className="mt-2 px-2.5 py-0.5 rounded-full bg-black/60 border border-white/20 text-[12px] font-black text-amber-300">
               {currentDevta.name} ({currentDevta.id})
             </div>
           </div>
@@ -469,7 +469,7 @@ export const ARVastuScanner = ({
       {/* Bottom Action Controls & Snapshot */}
       <div className="relative z-20 pb-8 px-6 flex items-center justify-between bg-gradient-to-t from-black/90 via-black/50 to-transparent pt-6">
         <div className="text-left">
-          <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
+          <span className="text-[12px] font-bold text-stone-500 uppercase tracking-wider block">
             {language === 'hi' ? 'सक्रिय कमरा' : 'Target Room'}
           </span>
           <span className="text-xs font-black text-white">
@@ -514,7 +514,7 @@ export const ARVastuScanner = ({
         </div>
 
         <div className="text-right">
-          <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
+          <span className="text-[12px] font-bold text-stone-500 uppercase tracking-wider block">
             {language === 'hi' ? 'तत्व' : 'Element'}
           </span>
           <span className="text-xs font-black text-amber-300">

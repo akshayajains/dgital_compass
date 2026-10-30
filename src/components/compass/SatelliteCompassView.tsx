@@ -50,7 +50,7 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
 
   const getCardinal = (deg: number) => {
     const val = Math.round(((deg % 360 + 360) % 360) / 45) % 8;
-    const arr = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const arr = language === 'hi' ? ['उ', 'ई', 'पू', 'आ', 'द', 'नै', 'प', 'वा'] : ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     return arr[val];
   };
 
@@ -60,28 +60,16 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col items-center select-none relative overflow-hidden rounded-[2.5rem] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.9)] my-2 min-h-[580px] bg-[#04070c]">
+    <div className="w-full flex flex-col items-center select-none relative overflow-hidden rounded-[2.5rem] border border-cyan-500/20 shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_40px_rgba(34,211,238,0.15)] my-2 min-h-[580px] bg-[#04070c]">
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <MapCompassView heading={heading} location={location} />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(34,211,238,0.18),transparent_28%),radial-gradient(circle_at_50%_70%,rgba(239,68,68,0.14),transparent_24%)] pointer-events-none" />
-        <div className="absolute inset-0 opacity-30 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:28px_28px] pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black/80 pointer-events-none" />
+        <MapCompassView heading={heading} location={location} backgroundOnly={true} />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(34,211,238,0.22),transparent_28%),radial-gradient(circle_at_50%_70%,rgba(239,68,68,0.18),transparent_24%),radial-gradient(circle_at_80%_20%,rgba(168,85,247,0.12),transparent_20%)] pointer-events-none" />
+        <div className="absolute inset-0 opacity-40 bg-[linear-gradient(rgba(34,211,238,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.04)_1px,transparent_1px)] bg-[size:28px_28px] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-black/70 pointer-events-none" />
       </div>
 
-      <div className="w-full z-10 pt-4 px-3 flex flex-col items-center gap-3">
-        <div className="w-full flex items-center justify-between px-1">
-          <div className="flex items-center gap-2 rounded-full bg-black/55 border border-white/10 px-3 py-1.5 backdrop-blur-md">
-            <div className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.95)]" />
-            <span className="text-[11px] font-black uppercase tracking-[0.22em] text-white/90">
-              {language === 'hi' ? 'ऑर्बिटल वास्तु सूट' : 'Orbital Vastu Suite'}
-            </span>
-          </div>
-          <div className="rounded-full bg-black/55 border border-white/10 px-3 py-1.5 backdrop-blur-md">
-            <span className="text-[10px] font-mono font-black uppercase tracking-[0.18em] text-cyan-300">{precisionScore}% {copy.sync}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 p-1 rounded-full bg-black/70 border border-white/15 backdrop-blur-md shadow-2xl">
+      <div className="w-full z-10 pt-3 px-3 flex flex-col items-center gap-3">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-full bg-black/80 border border-cyan-500/20 backdrop-blur-xl shadow-[0_0_30px_rgba(34,211,238,0.2)]">
           {[
             { id: 'telescope', label: copy.telescope },
             { id: 'satellite', label: copy.satellite },
@@ -103,8 +91,8 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
                   }
                 }}
                 className={cn(
-                  "px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider transition-all duration-300 active:scale-95",
-                  isActive ? "bg-gradient-to-r from-[#EF4444] to-[#DC2626] text-white shadow-[0_0_15px_rgba(239,68,68,0.8)] scale-105" : "text-stone-300 hover:text-white hover:bg-white/10"
+                  "px-5 py-2 rounded-full text-[12px] font-black uppercase tracking-wider transition-all duration-300 active:scale-95",
+                  isActive ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.8)] scale-105" : "text-stone-400 hover:text-white hover:bg-white/10"
                 )}
               >
                 {tab.label}
@@ -114,33 +102,33 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
         </div>
 
         <div className="w-full flex items-center justify-between px-3">
-          <div className="flex items-center gap-1.5 bg-black/45 px-3 py-1.5 rounded-full border border-white/15 backdrop-blur-md shadow-md">
-            <MapPin className="w-3.5 h-3.5 text-red-500 shrink-0 fill-red-500 animate-pulse" />
-            <span className="text-xs font-bold text-white tracking-wide drop-shadow">{city}</span>
+          <div className="flex items-center gap-2 bg-black/55 px-4 py-2 rounded-full border border-cyan-500/20 backdrop-blur-xl shadow-[0_0_15px_rgba(34,211,238,0.15)]">
+            <MapPin className="w-4 h-4 text-red-500 shrink-0 fill-red-500 animate-pulse" />
+            <span className="text-[13px] font-bold text-white tracking-wide drop-shadow">{city}</span>
           </div>
 
           <div className="flex items-center gap-2">
             {currentMode === 'map' && (
               <div className="flex items-center gap-1">
                 {onOpenMap && (
-                  <button onClick={onOpenMap} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600/80 hover:bg-emerald-600 border border-emerald-400/50 text-white text-[10px] font-bold shadow-md active:scale-90 transition-transform" title="Open Interactive Floor Plan & Map">
+                  <button onClick={onOpenMap} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-600/80 hover:bg-emerald-600 border border-emerald-400/50 text-white text-[12px] font-bold shadow-md active:scale-90 transition-transform" title="Open Interactive Floor Plan & Map">
                     <Maximize2 className="w-3 h-3" />
                     <span>{copy.fullMap}</span>
                   </button>
                 )}
-                <button onClick={openGoogleMaps} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-600/80 hover:bg-sky-600 border border-sky-400/50 text-white text-[10px] font-bold shadow-md active:scale-90 transition-transform" title="Open in Google Maps">
+                <button onClick={openGoogleMaps} className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-sky-600/80 hover:bg-sky-600 border border-sky-400/50 text-white text-[12px] font-bold shadow-md active:scale-90 transition-transform" title="Open in Google Maps">
                   <ExternalLink className="w-3 h-3" />
                   <span>{copy.maps}</span>
                 </button>
               </div>
             )}
 
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-stone-400 via-stone-200 to-white p-0.5 shadow-[0_4px_12px_rgba(0,0,0,0.8)] flex items-center justify-center cursor-pointer active:scale-90 transition-transform" title="North Heading Indicator">
-              <div className="w-full h-full rounded-full bg-[#1A222D] border border-stone-400 flex items-center justify-center relative overflow-hidden">
+            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-cyan-400 via-cyan-200 to-white p-0.5 shadow-[0_4px_16px_rgba(34,211,238,0.4)] flex items-center justify-center cursor-pointer active:scale-90 transition-transform" title="North Heading Indicator">
+              <div className="w-full h-full rounded-full bg-[#0F172A] border border-cyan-500/40 flex items-center justify-center relative overflow-hidden">
                 <div className="w-full h-full relative flex items-center justify-center" style={{ transform: `rotate(${-displayHeading}deg)`, willChange: 'transform' }}>
-                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[12px] border-b-red-600 absolute top-1.5 drop-shadow" />
-                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[12px] border-t-stone-300 absolute bottom-1.5" />
-                  <div className="w-2 h-2 rounded-full bg-white z-10 shadow border border-stone-300" />
+                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[14px] border-b-red-500 absolute top-1 drop-shadow-[0_0_6px_rgba(239,68,68,0.8)]" />
+                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[14px] border-t-slate-400 absolute bottom-1" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-cyan-300 z-10 shadow-[0_0_8px_rgba(34,211,238,0.8)] border border-cyan-200" />
                 </div>
               </div>
             </div>
@@ -148,32 +136,33 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
         </div>
       </div>
 
-      <div className="w-full z-10 px-4 mt-1 grid grid-cols-3 gap-2">
+      <div className="w-full z-10 px-4 mt-2 grid grid-cols-3 gap-2">
         {[
-          { label: copy.heading, value: `${Math.round(displayHeading)}° ${getCardinal(displayHeading)}`, icon: CompassIcon, tone: 'text-cyan-300' },
-          { label: copy.level, value: levelQuality, icon: Gauge, tone: totalTilt < 1 ? 'text-emerald-300' : totalTilt < 3 ? 'text-amber-300' : 'text-rose-300' },
-          { label: copy.altitude, value: `${altitudeFeet || 0} ft`, icon: Mountain, tone: 'text-white' }
+          { label: copy.heading, value: `${Math.round(displayHeading)}° ${getCardinal(displayHeading)}`, icon: CompassIcon, tone: 'text-cyan-300', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.2)]' },
+          { label: copy.level, value: levelQuality, icon: Gauge, tone: totalTilt < 1 ? 'text-emerald-300' : totalTilt < 3 ? 'text-amber-300' : 'text-rose-300', glow: totalTilt < 1 ? 'shadow-[0_0_15px_rgba(52,211,153,0.2)]' : 'shadow-[0_0_15px_rgba(251,191,36,0.15)]' },
+          { label: copy.altitude, value: `${altitudeFeet || 0} ft`, icon: Mountain, tone: 'text-white', glow: 'shadow-[0_0_15px_rgba(255,255,255,0.1)]' }
         ].map((item) => (
-          <div key={item.label} className="rounded-[1.35rem] border border-white/10 bg-black/45 px-3 py-2.5 backdrop-blur-md shadow-xl">
-            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-stone-600">
+          <div key={item.label} className={cn("rounded-[1.5rem] border border-cyan-500/15 bg-black/55 px-3 py-3 backdrop-blur-xl", item.glow)}>
+            <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-stone-400">
               <item.icon className="w-3.5 h-3.5" />
               <span>{item.label}</span>
             </div>
-            <div className={cn("mt-2 text-[12px] font-mono font-black", item.tone)}>{item.value}</div>
+            <div className={cn("mt-1.5 text-[14px] font-mono font-black", item.tone)}>{item.value}</div>
           </div>
         ))}
       </div>
 
       <div className="relative w-[21.5rem] h-[21.5rem] sm:w-[23.5rem] sm:h-[23.5rem] rounded-full flex items-center justify-center my-3 z-10">
-        <div className="absolute -inset-3 rounded-full border border-cyan-300/20 bg-cyan-300/5 blur-[1px]" />
-        <div className="absolute -inset-1 rounded-full border border-amber-300/25 shadow-[0_0_28px_rgba(34,211,238,0.18),inset_0_0_24px_rgba(251,191,36,0.08)]" />
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center">
-          <div className="w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-t-[16px] border-t-[#EF4444] drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]" />
-          <div className="w-2 h-2 rounded-full bg-white -mt-1 shadow-[0_0_8px_#ffffff]" />
+        <div className="absolute -inset-4 rounded-full border border-cyan-400/25 bg-cyan-400/5 blur-[2px]" />
+        <div className="absolute -inset-2 rounded-full border border-cyan-300/20 shadow-[0_0_35px_rgba(34,211,238,0.25),inset_0_0_30px_rgba(34,211,238,0.08)]" />
+        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center">
+          <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[18px] border-t-red-500 drop-shadow-[0_0_16px_rgba(239,68,68,0.9)]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-cyan-200 -mt-1 shadow-[0_0_12px_rgba(34,211,238,0.9)]" />
         </div>
-        <div className="absolute inset-0 rounded-full border-[12px] sm:border-[14px] border-[#0F172A]/85 shadow-[0_0_40px_rgba(0,0,0,0.9),0_0_22px_rgba(34,211,238,0.18),inset_0_0_20px_rgba(255,255,255,0.12)] backdrop-blur-md bg-[conic-gradient(from_210deg,#0f172a,#164e63,#1e293b,#713f12,#0f172a)]" />
-        <div className="absolute inset-3.5 rounded-full border border-white/25 pointer-events-none" />
-        <div className="absolute inset-6 rounded-full border border-teal-400/30 pointer-events-none" />
+        <div className="absolute inset-0 rounded-full border-[14px] sm:border-[16px] border-[#0F172A]/90 shadow-[0_0_50px_rgba(0,0,0,0.95),0_0_30px_rgba(34,211,238,0.2),inset_0_0_25px_rgba(34,211,238,0.1)] backdrop-blur-md bg-[conic-gradient(from_210deg,#0f172a,#164e63,#1e293b,#0f766e,#0f172a)]" />
+        <div className="absolute inset-3.5 rounded-full border border-cyan-400/30 pointer-events-none" />
+        <div className="absolute inset-6 rounded-full border border-teal-400/25 pointer-events-none" />
+        <div className="absolute inset-10 rounded-full border border-cyan-500/15 pointer-events-none" />
 
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ transform: `rotate(${-displayHeading}deg)`, willChange: 'transform' }}>
           {[...Array(72)].map((_, i) => {
@@ -189,17 +178,13 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
 
           {[
             { l: 'N', d: 0, isRed: true },
-            { l: 'NE', d: 45, isRed: false },
             { l: 'E', d: 90, isRed: false },
-            { l: 'SE', d: 135, isRed: false },
             { l: 'S', d: 180, isRed: false },
-            { l: 'SW', d: 225, isRed: false },
-            { l: 'W', d: 270, isRed: false },
-            { l: 'NW', d: 315, isRed: false }
+            { l: 'W', d: 270, isRed: false }
           ].map((pt) => (
-            <div key={pt.l} className="absolute inset-0 flex justify-center" style={{ transform: `rotate(${pt.d}deg)` }}>
-              <div className="flex flex-col items-center select-none mt-6">
-                <span className={cn("font-black font-sans tracking-wider drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]", pt.isRed ? "text-red-500 text-lg font-black" : pt.l.length === 1 ? "text-white text-base font-black" : "text-teal-300 text-xs font-bold")}>{pt.l}</span>
+            <div key={pt.d} className="absolute inset-0 flex justify-center" style={{ transform: `rotate(${pt.d}deg)` }}>
+              <div className="flex flex-col items-center select-none mt-5">
+                <span className={cn("font-black font-sans tracking-wider", pt.isRed ? "text-red-500 text-xl drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]" : "text-cyan-100 text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)]")}>{pt.l}</span>
               </div>
             </div>
           ))}
@@ -226,8 +211,9 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
           </div>
         </div>
 
-        <div className="absolute z-20 flex flex-col items-center justify-center pointer-events-none mt-20">
-          <span className="text-xl sm:text-2xl font-black font-sans tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{Math.round(displayHeading) % 360}° {getCardinal(displayHeading)}</span>
+        <div className="absolute z-20 flex flex-col items-center justify-center pointer-events-none mt-16">
+          <span className="text-2xl sm:text-3xl font-black font-sans tracking-wide text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">{Math.round(displayHeading)}°</span>
+          <span className="text-sm font-bold text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] mt-0.5">{getCardinal(displayHeading)}</span>
         </div>
       </div>
 
@@ -238,55 +224,70 @@ export const SatelliteCompassView: React.FC<SatelliteCompassViewProps> = ({
               <div className="absolute inset-x-0 top-1/2 h-[0.5px] bg-white/25 pointer-events-none" />
               <div className="absolute inset-y-0 left-1/2 w-[0.5px] bg-white/25 pointer-events-none" />
               <div className="w-6 h-6 rounded-full border border-white/25 pointer-events-none" />
-              <span className="absolute top-1 text-[7.5px] font-black text-red-500 leading-none">0°</span>
-              <span className="absolute right-1 text-[7px] font-black text-white leading-none">90°</span>
-              <span className="absolute bottom-1 text-[7px] font-black text-white leading-none">180°</span>
-              <span className="absolute left-1 text-[7px] font-black text-white leading-none">270°</span>
+              <span className="absolute top-1 text-[10px] font-black text-red-500 leading-none">0°</span>
+              <span className="absolute right-1 text-[11px] font-black text-cyan-200 leading-none">90°</span>
+              <span className="absolute bottom-1 text-[11px] font-black text-cyan-200 leading-none">180°</span>
+              <span className="absolute left-1 text-[11px] font-black text-cyan-200 leading-none">270°</span>
               <div className={cn("absolute w-3 h-3 rounded-full shadow-[0_0_8px_currentColor] border border-white transition-transform duration-75", totalTilt < 1 ? "bg-emerald-400 text-emerald-400 shadow-emerald-400" : "bg-red-500 text-red-500 shadow-red-500")} style={{ transform: `translate(${Math.max(-18, Math.min(18, -roll * 1.5))}px, ${Math.max(-18, Math.min(18, pitch * 1.5))}px)` }} />
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-white/35 rounded-full pointer-events-none" />
             </div>
           </div>
-          <span className="text-[10px] font-mono font-black text-white drop-shadow mt-1">{totalTilt.toFixed(2)}°</span>
+          <span className="text-[12px] font-mono font-black text-white drop-shadow mt-1">{totalTilt.toFixed(2)}°</span>
         </div>
 
         <div className="flex items-center gap-1.5 pb-1">
-          <div className="w-14 sm:w-16 py-2 px-1 rounded-2xl bg-black/75 border border-white/15 backdrop-blur-md shadow-xl flex flex-col items-center justify-center text-center">
-            <span className="text-[7.5px] uppercase font-bold text-red-500 leading-tight text-center">{copy.magnetic}</span>
-            <span className="text-xs font-mono font-black text-white mt-1 leading-none">{magneticField} µT</span>
+          <div className="w-16 sm:w-18 py-2.5 px-1 rounded-2xl bg-black/75 border border-cyan-500/20 backdrop-blur-xl shadow-[0_0_15px_rgba(34,211,238,0.15)] flex flex-col items-center justify-center text-center">
+            <span className="text-[10px] uppercase font-bold text-red-400 leading-tight text-center">{copy.magnetic}</span>
+            <span className="text-[13px] font-mono font-black text-white mt-1 leading-none">{magneticField} µT</span>
           </div>
-          <div className="w-14 sm:w-16 py-2 px-1 rounded-2xl bg-black/75 border border-white/15 backdrop-blur-md shadow-xl flex flex-col items-center justify-center text-center">
-            <span className="text-[7.5px] uppercase font-bold text-amber-400 leading-tight text-center">{copy.trueHeading}</span>
-            <span className="text-xs font-mono font-black text-white mt-1 leading-none">{Math.round(displayHeading) % 360} {getCardinal(displayHeading)}</span>
+          <div className="w-16 sm:w-18 py-2.5 px-1 rounded-2xl bg-black/75 border border-amber-500/20 backdrop-blur-xl shadow-[0_0_15px_rgba(251,191,36,0.15)] flex flex-col items-center justify-center text-center">
+            <span className="text-[10px] uppercase font-bold text-amber-400 leading-tight text-center">{copy.trueHeading}</span>
+            <span className="text-[13px] font-mono font-black text-white mt-1 leading-none">{Math.round(displayHeading)}°</span>
           </div>
-          <div className="w-14 sm:w-16 py-2 px-1 rounded-2xl bg-black/75 border border-white/15 backdrop-blur-md shadow-xl flex flex-col items-center justify-center text-center">
-            <span className="text-[7.5px] uppercase font-bold text-emerald-400 leading-tight text-center">{copy.axis}</span>
-            <span className="text-[9px] font-mono font-black text-white mt-1 leading-none">X {(-roll).toFixed(1)}°</span>
-            <span className="text-[9px] font-mono font-black text-white mt-0.5 leading-none">Y {pitch.toFixed(1)}°</span>
+          <div className="w-16 sm:w-18 py-2.5 px-1 rounded-2xl bg-black/75 border border-emerald-500/20 backdrop-blur-xl shadow-[0_0_15px_rgba(52,211,153,0.15)] flex flex-col items-center justify-center text-center">
+            <span className="text-[10px] uppercase font-bold text-emerald-400 leading-tight text-center">{copy.axis}</span>
+            <span className="text-[12px] font-mono font-black text-white mt-1 leading-none">X {(-roll).toFixed(1)}°</span>
+            <span className="text-[12px] font-mono font-black text-white mt-0.5 leading-none">Y {pitch.toFixed(1)}°</span>
           </div>
         </div>
       </div>
 
       <div className="w-full z-10 px-4 pb-4 -mt-1">
-        <div className="rounded-[1.8rem] border border-white/10 bg-black/55 backdrop-blur-xl px-4 py-3 shadow-2xl">
+        <div className="rounded-[2rem] border border-cyan-500/20 bg-black/60 backdrop-blur-xl px-5 py-4 shadow-[0_0_30px_rgba(34,211,238,0.15)]">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-emerald-300">
-                <Sparkles className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.2em] text-cyan-300">
+                <Sparkles className="w-4 h-4" />
                 <span>{copy.insight}</span>
               </div>
-              <p className="mt-1 text-sm font-black text-white">{currentMode === 'satellite' ? copy.satelliteTip : copy.mapTip}</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-stone-300">{totalTilt < 1.2 ? copy.steady : copy.holdFlat}</p>
+              <p className="mt-1.5 text-[13px] font-bold text-white/90">{currentMode === 'satellite' ? copy.satelliteTip : copy.mapTip}</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-stone-300">{totalTilt < 1.2 ? copy.steady : copy.holdFlat}</p>
             </div>
             <div className="flex flex-col gap-2 shrink-0">
-              <button onClick={onOpenAR} className="flex items-center gap-1.5 rounded-full border border-cyan-400/35 bg-cyan-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300 active:scale-95 transition-transform">
-                <ScanSearch className="w-3.5 h-3.5" />
+              <button onClick={onOpenAR} className="flex items-center gap-1.5 rounded-full border border-cyan-400/40 bg-cyan-500/15 px-4 py-2 text-[12px] font-black uppercase tracking-[0.15em] text-cyan-300 active:scale-95 transition-transform shadow-[0_0_10px_rgba(34,211,238,0.2)]">
+                <ScanSearch className="w-4 h-4" />
                 <span>AR</span>
               </button>
-              <button onClick={onOpenMap} className="flex items-center gap-1.5 rounded-full border border-emerald-400/35 bg-emerald-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300 active:scale-95 transition-transform">
-                <Orbit className="w-3.5 h-3.5" />
+              <button onClick={onOpenMap} className="flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-500/15 px-4 py-2 text-[12px] font-black uppercase tracking-[0.15em] text-emerald-300 active:scale-95 transition-transform shadow-[0_0_10px_rgba(52,211,153,0.2)]">
+                <Orbit className="w-4 h-4" />
                 <span>{currentMode === 'map' ? 'Overlay' : 'Map'}</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Orbital Vastu Suite bar moved below compass */}
+      <div className="w-full z-10 px-3 pb-2">
+        <div className="w-full flex items-center justify-between px-1 gap-2">
+          <div className="flex items-center gap-2 rounded-full bg-black/60 border border-cyan-500/20 px-4 py-2 backdrop-blur-xl shrink shadow-[0_0_12px_rgba(34,211,238,0.15)]">
+            <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.95)] animate-pulse" />
+            <span className="text-[12px] font-black uppercase tracking-[0.15em] text-cyan-100 truncate">
+              {language === 'hi' ? 'ऑर्बिटल वास्तु सूट' : 'Orbital Vastu Suite'}
+            </span>
+          </div>
+          <div className="rounded-full bg-black/60 border border-cyan-500/20 px-3 py-2 backdrop-blur-xl shrink-0 shadow-[0_0_12px_rgba(34,211,238,0.15)]">
+            <span className="text-[13px] font-mono font-black uppercase tracking-[0.12em] text-cyan-300">{precisionScore}% {copy.sync}</span>
           </div>
         </div>
       </div>

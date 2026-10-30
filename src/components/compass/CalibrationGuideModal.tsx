@@ -41,7 +41,6 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   const [visitedSegments, setVisitedSegments] = useState<Set<number>>(new Set());
   const [progress, setProgress] = useState<number>(0);
   const [isCalibrated, setIsCalibrated] = useState<boolean>(false);
-  const [highlightAngleDeg, setHighlightAngleDeg] = useState<number>(0);
 
   const completedRef = useRef<boolean>(false);
   const hasSensorRef = useRef<boolean>(false);
@@ -51,10 +50,9 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   const ballX = CX + Math.sin(angleRad) * RADIUS;
   const ballY = CY - Math.cos(angleRad) * RADIUS;
 
-  // Highlight circle position — follows the ball, starting from top (0°)
-  const highlightRad = (highlightAngleDeg * Math.PI) / 180;
-  const highlightX = CX + Math.sin(highlightRad) * RADIUS;
-  const highlightY = CY - Math.cos(highlightRad) * RADIUS;
+  // Highlight circle — static at top (0°) as a starting guide
+  const highlightX = CX;
+  const highlightY = CY - RADIUS;
 
   const progressOffset = CIRCUMFERENCE - (progress / 100) * CIRCUMFERENCE;
 
@@ -64,8 +62,6 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
       const rad = Math.atan2(gamma, -beta);
       const deg = ((rad * 180) / Math.PI + 360) % 360;
       setBallAngleDeg(deg);
-      // Highlight circle only moves when the ball moves
-      setHighlightAngleDeg(deg);
 
       const seg = Math.floor(deg / 10) % TOTAL_SEGMENTS;
       if (!visitedRef.current.has(seg)) {
@@ -104,7 +100,6 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setBallAngleDeg(0);
-      setHighlightAngleDeg(0);
       setVisitedSegments(new Set());
       setProgress(0);
       setIsCalibrated(false);
@@ -154,8 +149,8 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
       : 'bg-gradient-to-b from-[#1c1917]/95 via-[#181512]/95 to-black/95 border-amber-500/20 text-amber-100',
     closeBtn: isLight
       ? 'text-stone-500 hover:text-stone-900'
-      : 'text-stone-400 hover:bg-white/10 hover:text-white',
-    subText: isLight ? 'text-stone-600' : 'text-stone-400',
+      : 'text-stone-300 hover:bg-white/10 hover:text-white',
+    subText: isLight ? 'text-stone-500' : 'text-stone-300',
     trackCircle: isLight ? '#d97706' : '#92400e',
     progressRing: isCalibrated ? '#10b981' : '#f59e0b',
     interfereBg: isLight
@@ -196,7 +191,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
           {/* Heading badge */}
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">
+            <span className="text-[12px] font-black uppercase tracking-[0.2em] text-amber-500">
               {isHi ? 'कम्पास कैलिब्रेशन' : 'Compass Calibration'}
             </span>
           </div>
@@ -251,7 +246,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
                 style={{ transition: 'stroke-dashoffset 0.3s ease, stroke 0.4s ease' }}
               />
 
-              {/* Highlighted circle — follows the ball, starts at top */}
+              {/* Highlighted circle — static at top as starting guide */}
               <circle
                 cx={highlightX}
                 cy={highlightY}
@@ -260,7 +255,6 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
                 stroke={palette.progressRing}
                 strokeWidth={3}
                 opacity={0.85}
-                style={{ transition: 'cx 0.08s linear, cy 0.08s linear, stroke 0.4s ease' }}
               />
               <circle
                 cx={highlightX}
@@ -270,7 +264,6 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
                 stroke={palette.progressRing}
                 strokeWidth={1.5}
                 opacity={0.35}
-                style={{ transition: 'cx 0.08s linear, cy 0.08s linear, stroke 0.4s ease' }}
               />
 
               {/* Center icon */}
@@ -331,7 +324,7 @@ export const CalibrationGuideModal: React.FC<CalibrationGuideModalProps> = ({
           {magneticInterference && (
             <div
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-bold mb-3',
+                'flex items-center gap-1.5 px-3 py-1 rounded-full border text-[12px] font-bold mb-3',
                 palette.interfereBg
               )}
             >

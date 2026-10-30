@@ -322,7 +322,7 @@ export const FeatureExplorerModal: React.FC<Props> = ({
               <h3 className="text-base sm:text-lg font-black tracking-tight leading-none">
                 {isHi ? '✨ संपूर्ण सुविधा डायरेक्टरी (Toolbox)' : '✨ All Features & Toolbox Explorer'}
               </h3>
-              <p className={cn("text-[11px] font-medium mt-1", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+              <p className={cn("text-[11px] font-medium mt-1", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                 {isHi ? 'किसी भी टूल पर 1-टैप करके सीधे उपयोग करें' : 'Explore all compass, Vastu & spiritual tools with 1 tap'}
               </p>
             </div>
@@ -330,7 +330,7 @@ export const FeatureExplorerModal: React.FC<Props> = ({
 
           <button
             onClick={onClose}
-            className={cn("p-2 rounded-full border active:scale-90 transition-all", theme === 'light' ? "bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 border-stone-300" : "bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-white border-white/10")}
+            className={cn("p-2 rounded-full border active:scale-90 transition-all", theme === 'light' ? "bg-stone-100 hover:bg-stone-200 text-stone-500 hover:text-stone-900 border-stone-300" : "bg-stone-800/80 hover:bg-stone-700 text-stone-300 hover:text-white border-white/10")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -339,7 +339,7 @@ export const FeatureExplorerModal: React.FC<Props> = ({
         {/* Search Bar & Category Filter Pills */}
         <div className="p-3 sm:p-4 border-b border-white/5 flex flex-col gap-2.5 bg-black/10">
           <div className="relative w-full">
-            <Search className={cn("w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none", theme === 'light' ? "text-stone-600" : "text-stone-400")} />
+            <Search className={cn("w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none", theme === 'light' ? "text-stone-500" : "text-stone-300")} />
             <input
               type="text"
               value={searchQuery}
@@ -348,14 +348,14 @@ export const FeatureExplorerModal: React.FC<Props> = ({
               className={cn(
                 "w-full pl-9 pr-8 py-2 rounded-xl text-xs font-medium border focus:outline-none transition-colors",
                 theme === 'light'
-                  ? "bg-stone-100 border-stone-300 text-stone-900 placeholder:text-stone-600 focus:border-amber-500"
-                  : "bg-stone-900/90 border-white/10 text-white placeholder:text-stone-600 focus:border-amber-400/60"
+                  ? "bg-stone-100 border-stone-300 text-stone-900 placeholder:text-stone-500 focus:border-amber-500"
+                  : "bg-stone-900/90 border-white/10 text-white placeholder:text-stone-500 focus:border-amber-400/60"
               )}
             />
             {searchQuery && (
               <button 
                 onClick={() => setSearchQuery('')}
-                className={cn("absolute right-2.5 top-1/2 -translate-y-1/2 text-xs", theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-400 hover:text-white")}
+                className={cn("absolute right-2.5 top-1/2 -translate-y-1/2 text-xs", theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-300 hover:text-white")}
               >
                 ✕
               </button>
@@ -375,12 +375,12 @@ export const FeatureExplorerModal: React.FC<Props> = ({
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id as any)}
                 className={cn(
-                  "px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all border shrink-0",
+                  "px-3 py-1 rounded-xl text-[12px] font-black uppercase tracking-wider whitespace-nowrap transition-all border shrink-0",
                   activeCategory === cat.id
                     ? "bg-amber-500 text-stone-950 border-amber-300 shadow-md scale-[1.02]"
                     : theme === 'light'
                     ? "bg-stone-100 border-stone-200 text-stone-700 hover:text-stone-900"
-                    : "bg-stone-900 border-white/10 text-stone-600 hover:text-white"
+                    : "bg-stone-900 border-white/10 text-stone-500 hover:text-white"
                 )}
               >
                 {isHi ? cat.labelHi : cat.labelEn}
@@ -411,17 +411,17 @@ export const FeatureExplorerModal: React.FC<Props> = ({
                     <span className="text-xs font-black truncate group-hover:text-amber-400 transition-colors">
                       {isHi ? feat.titleHi : feat.titleEn}
                     </span>
-                    <span className={cn("px-2 py-0.5 rounded-md text-[8.5px] font-bold uppercase tracking-wider border shrink-0", theme === 'light' ? "bg-stone-200/60 border-stone-300 text-stone-700" : "bg-white/10 border-white/10 text-stone-300")}>
+                    <span className={cn("px-2 py-0.5 rounded-md text-[12px] font-bold uppercase tracking-wider border shrink-0", theme === 'light' ? "bg-stone-200/60 border-stone-300 text-stone-700" : "bg-white/10 border-white/10 text-stone-300")}>
                       {isHi ? feat.tagHi : feat.tagEn}
                     </span>
                   </div>
-                  <p className={cn("text-[11px] leading-snug line-clamp-2", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <p className={cn("text-[11px] leading-snug line-clamp-2", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     {isHi ? feat.descHi : feat.descEn}
                   </p>
                 </div>
               </div>
 
-              <div className={cn("flex items-center justify-between pt-1 border-t text-[10px] font-bold", theme === 'light' ? "border-stone-200 text-amber-700" : "border-white/5 text-amber-400")}>
+              <div className={cn("flex items-center justify-between pt-1 border-t text-[12px] font-bold", theme === 'light' ? "border-stone-200 text-amber-700" : "border-white/5 text-amber-400")}>
                 <span>{isHi ? 'खोलें / शुरू करें' : 'Open Feature'}</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
               </div>
@@ -429,7 +429,7 @@ export const FeatureExplorerModal: React.FC<Props> = ({
           ))}
 
           {filteredFeatures.length === 0 && (
-            <div className={cn("col-span-full py-8 text-center text-xs", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+            <div className={cn("col-span-full py-8 text-center text-xs", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
               {isHi ? 'कोई टूल नहीं मिला। कृपया अन्य शब्द खोजें।' : 'No matching tools found. Try another search term.'}
             </div>
           )}
@@ -437,7 +437,7 @@ export const FeatureExplorerModal: React.FC<Props> = ({
 
         {/* Modal Footer Quick Action Bar */}
         <div className={cn("p-3 sm:p-4 border-t flex items-center justify-between gap-2", theme === 'light' ? "border-stone-200 bg-stone-50" : "border-white/10 bg-black/20")}>
-          <span className={cn("text-[10px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+          <span className={cn("text-[12px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
             {isHi ? `कुल ${features.length} प्रीमियम सुविधाएं सक्रिय` : `All ${features.length} Precision Features Included`}
           </span>
           <button

@@ -171,7 +171,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
               <h3 className={cn("text-base font-black tracking-wide", dark ? "text-amber-400" : "text-amber-600")}>
                 {t.styleGallery}
               </h3>
-              <span className={cn("text-[10px]", dark ? "text-stone-600" : "text-stone-600")}>
+              <span className={cn("text-[12px]", dark ? "text-stone-500" : "text-stone-500")}>
                 {isHi ? `${COMPASS_STYLES.length} प्रीमियम डायल शैलियां` : `${COMPASS_STYLES.length} premium compass dialers`}
               </span>
             </div>
@@ -180,7 +180,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
             onClick={onClose}
             className={cn(
               "p-2 rounded-full transition-colors",
-              dark ? "hover:bg-white/10 text-stone-600 hover:text-white" : "hover:bg-stone-200 text-stone-600 hover:text-stone-900"
+              dark ? "hover:bg-white/10 text-stone-500 hover:text-white" : "hover:bg-stone-200 text-stone-500 hover:text-stone-900"
             )}
           >
             <X className="w-5 h-5" />
@@ -198,8 +198,8 @@ export const StyleSelectorModal: React.FC<Props> = ({
                 selectedCategory === cat.id
                   ? "bg-amber-500 text-stone-950 font-black shadow-md border-amber-400 scale-105"
                   : dark
-                    ? "bg-white/5 text-stone-600 hover:text-white border-white/10"
-                    : "bg-white text-stone-600 hover:text-stone-900 border-stone-200"
+                    ? "bg-white/5 text-stone-500 hover:text-white border-white/10"
+                    : "bg-white text-stone-500 hover:text-stone-900 border-stone-200"
               )}
             >
               {cat.label}
@@ -298,7 +298,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
                     <span className="text-xs font-black text-white leading-tight drop-shadow-sm">
                       {isHi ? style.nameHi : style.nameEn}
                     </span>
-                    <span className="text-[9px] text-stone-300 font-medium leading-tight mt-0.5 line-clamp-2 opacity-80">
+                    <span className="text-[11px] text-stone-300 font-medium leading-tight mt-0.5 line-clamp-2 opacity-80">
                       {isHi ? style.tagHi : style.tagEn}
                     </span>
                   </div>
@@ -307,7 +307,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
                 {/* ── Variant Color Swatches ── */}
                 {hasVariants && (
                   <div className="px-3 pb-3 pt-1 flex flex-col gap-1.5">
-                    <span className="text-[8px] font-black uppercase tracking-[0.18em] text-stone-600">
+                    <span className="text-[12px] font-black uppercase tracking-[0.18em] text-stone-500">
                       {isHi ? 'रंग चुनें' : 'COLORS'}
                     </span>
                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -342,7 +342,7 @@ export const StyleSelectorModal: React.FC<Props> = ({
                       })}
                     </div>
                     {isSelected && selectedVariantId && (
-                      <span className="text-[8px] font-bold text-amber-400/80 leading-none">
+                      <span className="text-[12px] font-bold text-amber-400/80 leading-none">
                         {(() => {
                           const activeV = style.variants!.find(v => v.id === selectedVariantId);
                           if (!activeV) return null;

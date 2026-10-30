@@ -33,11 +33,9 @@ allprojects {
             if (project.extensions.findByName('java') != null) {
                 project.java.toolchain.languageVersion.set(JavaLanguageVersion.of(21))
             }
-            project.tasks.configureEach { task ->
-                if (task.class.name.startsWith('org.jetbrains.kotlin.gradle.tasks.KotlinCompile')) {
-                    task.kotlinOptions {
-                        jvmTarget = "21"
-                    }
+            project.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach { task ->
+                task.kotlinOptions {
+                    jvmTarget = "21"
                 }
             }
         }

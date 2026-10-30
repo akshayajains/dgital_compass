@@ -6,6 +6,7 @@ interface Props {
   heading: number | null;
   location: { latitude: number; longitude: number } | null;
   onCenterUser?: () => void;
+  backgroundOnly?: boolean;
 }
 
 // Slippy map exact fractional tile math
@@ -19,7 +20,8 @@ function lat2tileExact(lat: number, zoom: number) {
 
 export const MapCompassView: React.FC<Props> = ({
   heading,
-  location
+  location,
+  backgroundOnly = false
 }) => {
   const defaultLat = 20.5937;
   const defaultLon = 78.9629;
@@ -94,7 +96,7 @@ export const MapCompassView: React.FC<Props> = ({
         <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-2 bg-[#0A0E14]/95 backdrop-blur-sm">
           <MapPin className="w-8 h-8 text-red-500 animate-pulse" />
           <span className="text-sm font-black text-white uppercase tracking-wider">Location Unavailable</span>
-          <span className="text-[10px] text-stone-600 text-center px-8">Enable GPS or grant location permission to see the map</span>
+          <span className="text-[12px] text-stone-500 text-center px-8">Enable GPS or grant location permission to see the map</span>
         </div>
       )}
 
@@ -177,80 +179,86 @@ export const MapCompassView: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* 3. Top Telemetry Banner */}
-      <div className="absolute top-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
-        <div className="px-3 py-1.5 rounded-2xl bg-black/70 backdrop-blur-md border border-white/15 text-white flex items-center gap-2 shadow-lg">
-          <MapPin className="w-3.5 h-3.5 text-red-500" />
-          <span className="text-[11px] font-mono font-bold">
-            {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'}, {Math.abs(lon).toFixed(4)}°{lon >= 0 ? 'E' : 'W'}
-          </span>
+      {/* 3. Top Telemetry Banner — hidden in background-only mode */}
+      {!backgroundOnly && (
+        <div className="absolute top-3 inset-x-3 z-30 flex items-center justify-between pointer-events-none">
+          <div className="px-3 py-1.5 rounded-2xl bg-black/70 backdrop-blur-md border border-white/15 text-white flex items-center gap-2 shadow-lg">
+            <MapPin className="w-3.5 h-3.5 text-red-500" />
+            <span className="text-[11px] font-mono font-bold">
+              {Math.abs(lat).toFixed(4)}°{lat >= 0 ? 'N' : 'S'}, {Math.abs(lon).toFixed(4)}°{lon >= 0 ? 'E' : 'W'}
+            </span>
+          </div>
+
+          <div className="px-3 py-1.5 rounded-2xl bg-black/70 backdrop-blur-md border border-cyan-400/50 text-cyan-400 flex items-center gap-1.5 shadow-lg">
+            <Navigation2 className="w-3.5 h-3.5 fill-cyan-400" />
+            <span className="text-xs font-mono font-black">{displayDeg}°</span>
+          </div>
         </div>
+      )}
 
-        <div className="px-3 py-1.5 rounded-2xl bg-black/70 backdrop-blur-md border border-cyan-400/50 text-cyan-400 flex items-center gap-1.5 shadow-lg">
-          <Navigation2 className="w-3.5 h-3.5 fill-cyan-400" />
-          <span className="text-xs font-mono font-black">{displayDeg}°</span>
-        </div>
-      </div>
-
-      {/* 4. Map Control Overlays (Top Right & Bottom Right) */}
-      <div className="absolute top-14 right-3 z-30 flex flex-col gap-1.5 pointer-events-auto">
-        {/* Layer Switcher */}
-        <button
-          onClick={() => {
-            const types: Array<'satellite' | 'streets' | 'dark'> = ['satellite', 'streets', 'dark'];
-            const next = types[(types.indexOf(mapType) + 1) % types.length];
-            setMapType(next);
-          }}
-          className="w-8 h-8 rounded-xl bg-black/70 backdrop-blur-md border border-white/15 text-white hover:text-cyan-400 flex items-center justify-center shadow-lg active:scale-95 transition-all"
-          title="Switch Map Layer"
-        >
-          <Layers className="w-4 h-4" />
-        </button>
-
-        {/* Heading Up vs North Up */}
-        <button
-          onClick={() => setHeadingUp(!headingUp)}
-          className={cn(
-            "w-8 h-8 rounded-xl backdrop-blur-md border flex items-center justify-center shadow-lg active:scale-95 transition-all text-[10px] font-mono font-black",
-            headingUp
-              ? "bg-cyan-500 text-black border-cyan-400 shadow-[0_0_12px_#00f0ff]"
-              : "bg-black/70 text-white border-white/15 hover:text-cyan-400"
-          )}
-          title="Toggle Heading Up Map Rotation"
-        >
-          {headingUp ? 'HDG' : 'N-UP'}
-        </button>
-      </div>
-
-      {/* Bottom Controls */}
-      <div className="absolute bottom-3 inset-x-3 z-30 flex items-center justify-between pointer-events-auto">
-        {/* Zoom In/Out Buttons */}
-        <div className="flex items-center gap-1 bg-black/70 backdrop-blur-md p-1 rounded-2xl border border-white/15 shadow-lg">
+      {/* 4. Map Control Overlays (Top Right & Bottom Right) — hidden in background-only mode */}
+      {!backgroundOnly && (
+        <div className="absolute top-14 right-3 z-30 flex flex-col gap-1.5 pointer-events-auto">
+          {/* Layer Switcher */}
           <button
-            onClick={() => setZoom(Math.min(18, zoom + 1))}
-            className="w-7 h-7 rounded-xl bg-stone-800 text-white hover:text-cyan-400 flex items-center justify-center active:scale-95"
-            title="Zoom In"
+            onClick={() => {
+              const types: Array<'satellite' | 'streets' | 'dark'> = ['satellite', 'streets', 'dark'];
+              const next = types[(types.indexOf(mapType) + 1) % types.length];
+              setMapType(next);
+            }}
+            className="w-8 h-8 rounded-xl bg-black/70 backdrop-blur-md border border-white/15 text-white hover:text-cyan-400 flex items-center justify-center shadow-lg active:scale-95 transition-all"
+            title="Switch Map Layer"
           >
-            <Plus className="w-4 h-4" />
+            <Layers className="w-4 h-4" />
           </button>
+
+          {/* Heading Up vs North Up */}
           <button
-            onClick={() => setZoom(Math.max(10, zoom - 1))}
-            className="w-7 h-7 rounded-xl bg-stone-800 text-white hover:text-cyan-400 flex items-center justify-center active:scale-95"
-            title="Zoom Out"
+            onClick={() => setHeadingUp(!headingUp)}
+            className={cn(
+              "w-8 h-8 rounded-xl backdrop-blur-md border flex items-center justify-center shadow-lg active:scale-95 transition-all text-[12px] font-mono font-black",
+              headingUp
+                ? "bg-cyan-500 text-black border-cyan-400 shadow-[0_0_12px_#00f0ff]"
+                : "bg-black/70 text-white border-white/15 hover:text-cyan-400"
+            )}
+            title="Toggle Heading Up Map Rotation"
           >
-            <Minus className="w-4 h-4" />
+            {headingUp ? 'HDG' : 'N-UP'}
           </button>
         </div>
+      )}
 
-        {/* Recenter Button */}
-        <button
-          onClick={resetToCenter}
-          className="px-3 py-1.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.5)] active:scale-95 transition-all"
-        >
-          <Compass className="w-3.5 h-3.5" />
-          <span>CENTER GPS</span>
-        </button>
-      </div>
+      {/* Bottom Controls — hidden in background-only mode */}
+      {!backgroundOnly && (
+        <div className="absolute bottom-3 inset-x-3 z-30 flex items-center justify-between pointer-events-auto">
+          {/* Zoom In/Out Buttons */}
+          <div className="flex items-center gap-1 bg-black/70 backdrop-blur-md p-1 rounded-2xl border border-white/15 shadow-lg">
+            <button
+              onClick={() => setZoom(Math.min(18, zoom + 1))}
+              className="w-7 h-7 rounded-xl bg-stone-800 text-white hover:text-cyan-400 flex items-center justify-center active:scale-95"
+              title="Zoom In"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setZoom(Math.max(10, zoom - 1))}
+              className="w-7 h-7 rounded-xl bg-stone-800 text-white hover:text-cyan-400 flex items-center justify-center active:scale-95"
+              title="Zoom Out"
+            >
+              <Minus className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Recenter Button */}
+          <button
+            onClick={resetToCenter}
+            className="px-3 py-1.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.5)] active:scale-95 transition-all"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            <span>CENTER GPS</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };

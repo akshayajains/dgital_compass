@@ -97,10 +97,10 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
     <button
       onClick={() => { setActiveSection(id); onHaptic(); }}
       className={cn(
-        "flex-1 py-2 rounded-xl text-[9px] font-black uppercase tracking-wider flex flex-col items-center gap-1 border transition-all active:scale-95 shadow-sm",
+        "flex-1 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider flex flex-col items-center gap-1 border transition-all active:scale-95 shadow-sm",
         activeSection === id
           ? `${palette.pillBg} ${palette.pillBorder} ${palette.headingText} font-black shadow-md scale-[1.02]`
-          : (palette.isLight ? "bg-white/70 border-stone-300 text-stone-600 hover:bg-white" : "bg-black/35 border-white/10 text-stone-300 hover:bg-black/50")
+          : (palette.isLight ? "bg-white/70 border-stone-300 text-stone-500 hover:bg-white" : "bg-black/35 border-white/10 text-stone-300 hover:bg-black/50")
       )}
     >
       {icon}
@@ -126,7 +126,7 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
           palette.telemetryCardBorder,
           palette.isLight ? "text-stone-900" : "text-stone-100"
         )}>
-          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[12px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <Home className="w-3.5 h-3.5 text-amber-400" />
             {isHi ? '8-दिशा वास्तु नक्शा' : '8-Zone Vastu Map'}
           </h5>
@@ -161,9 +161,9 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
                       : (theme === 'light' ? "bg-white border-stone-300" : "bg-stone-900/60 border-white/10")
                   )}
                 >
-                  <span className={cn("text-[8px] font-black uppercase", theme === 'light' ? "text-stone-600" : "text-stone-300")}>{sec.name}</span>
-                  {zone && <span className="text-[10px]">{zone.icon}</span>}
-                  {isCurrent && <span className={cn("text-[7px] font-black animate-pulse", theme === 'light' ? "text-amber-600" : "text-amber-300")}>●</span>}
+                  <span className={cn("text-[12px] font-black uppercase", theme === 'light' ? "text-stone-500" : "text-stone-300")}>{sec.name}</span>
+                  {zone && <span className="text-[12px]">{zone.icon}</span>}
+                  {isCurrent && <span className={cn("text-[11px] font-black animate-pulse", theme === 'light' ? "text-amber-600" : "text-amber-300")}>●</span>}
                 </div>
               );
             })}
@@ -175,10 +175,10 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
             theme === 'light' ? "border-amber-500/40 bg-amber-50" : "border-amber-500/30 bg-amber-500/10"
           )}>
             <div className="flex items-center justify-between">
-              <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
+              <span className={cn("text-[12px] font-black uppercase tracking-wider", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
                 {isHi ? 'वर्तमान दिशा' : 'Current Direction'}
               </span>
-              <span className={cn("text-[10px] font-black", theme === 'light' ? "text-amber-800" : "text-amber-300")}>{currentZone}</span>
+              <span className={cn("text-[12px] font-black", theme === 'light' ? "text-amber-800" : "text-amber-300")}>{currentZone}</span>
             </div>
             <p className={cn("text-[11px] font-medium mt-1", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
               {isHi
@@ -199,8 +199,8 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
               if (abs < 5) return null;
               return (
                 <div className={cn("mt-2 pt-2 border-t flex items-center gap-2", theme === 'light' ? "border-amber-500/30" : "border-amber-500/20")}>
-                  <span className={cn("text-[10px] font-black", theme === 'light' ? "text-amber-700" : "text-amber-300")}>↻</span>
-                  <span className={cn("text-[10px] font-bold", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
+                  <span className={cn("text-[12px] font-black", theme === 'light' ? "text-amber-700" : "text-amber-300")}>↻</span>
+                  <span className={cn("text-[12px] font-bold", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                     {isHi
                       ? `सर्वोत्तम (${idealZone}) के लिए ${abs}° ${dir} घुमाएं`
                       : `Rotate ${abs}° ${dir} to align with ${idealZone}`}
@@ -220,7 +220,7 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
           palette.telemetryCardBorder,
           palette.isLight ? "text-stone-900" : "text-stone-100"
         )}>
-          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[12px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <Search className="w-3.5 h-3.5 text-amber-400" />
             {isHi ? 'किसके लिए सर्वोत्तम दिशा?' : 'Best Direction For...'}
           </h5>
@@ -231,10 +231,10 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
                 key={a.id}
                 onClick={() => { setSearchActivity(a.id); onHaptic(); }}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-[10px] font-black whitespace-nowrap border transition-all active:scale-95",
+                  "px-3 py-1.5 rounded-full text-[12px] font-black whitespace-nowrap border transition-all active:scale-95",
                   searchActivity === a.id
                     ? "bg-amber-500 text-stone-950 border-amber-400"
-                    : (theme === 'light' ? "bg-stone-50 border-stone-200 text-stone-600" : "bg-stone-900 border-stone-800 text-stone-400")
+                    : (theme === 'light' ? "bg-stone-50 border-stone-200 text-stone-500" : "bg-stone-900 border-stone-800 text-stone-300")
                 )}
               >
                 {isHi ? a.labelHi : a.labelEn}
@@ -250,10 +250,10 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
                 theme === 'light' ? "border-amber-500/40 bg-amber-50" : "border-amber-500/30 bg-amber-500/10"
               )}>
                 <div className="flex items-center justify-between">
-                  <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
+                  <span className={cn("text-[12px] font-black uppercase tracking-wider", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
                     {isHi ? 'सर्वोत्तम दिशाएं' : 'Best Zones'}
                   </span>
-                  <span className={cn("text-[10px] font-black", theme === 'light' ? "text-amber-800" : "text-amber-300")}>{act.best.join(', ')}</span>
+                  <span className={cn("text-[12px] font-black", theme === 'light' ? "text-amber-800" : "text-amber-300")}>{act.best.join(', ')}</span>
                 </div>
                 <p className={cn("text-[11px] font-medium mt-1.5", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                   {isHi ? act.facing : act.facing}
@@ -262,7 +262,7 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
                   {act.best.map(z => {
                     const zone = ZONES.find(x => x.code === z);
                     return (
-                      <span key={z} className={cn("px-2 py-0.5 rounded-full text-[9px] font-black border", zone?.color)}>
+                      <span key={z} className={cn("px-2 py-0.5 rounded-full text-[11px] font-black border", zone?.color)}>
                         {zone?.icon} {z}
                       </span>
                     );
@@ -280,7 +280,7 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
           "rounded-2xl p-4 border transition-colors duration-300",
           theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
         )}>
-          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[12px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
             {isHi ? 'वास्तु दोष डिटेक्टर' : 'Vastu Dosha Detector'}
           </h5>
@@ -296,14 +296,14 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
                 <span className="text-base leading-none">{d.severity === 'major' ? '🔴' : '🟡'}</span>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <span className={cn("text-[10px] font-black uppercase tracking-wider", d.severity === 'major' ? (theme === 'light' ? "text-red-700" : "text-red-400") : (theme === 'light' ? "text-amber-700" : "text-amber-400"))}>
+                    <span className={cn("text-[12px] font-black uppercase tracking-wider", d.severity === 'major' ? (theme === 'light' ? "text-red-700" : "text-red-400") : (theme === 'light' ? "text-amber-700" : "text-amber-400"))}>
                       {isHi ? d.labelHi : d.labelEn}
                     </span>
-                    <span className={cn("text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full border", d.severity === 'major' ? (theme === 'light' ? "text-red-700 border-red-500/50" : "text-red-400 border-red-500/40") : (theme === 'light' ? "text-amber-700 border-amber-500/50" : "text-amber-400 border-amber-500/40"))}>
+                    <span className={cn("text-[12px] font-black uppercase px-1.5 py-0.5 rounded-full border", d.severity === 'major' ? (theme === 'light' ? "text-red-700 border-red-500/50" : "text-red-400 border-red-500/40") : (theme === 'light' ? "text-amber-700 border-amber-500/50" : "text-amber-400 border-amber-500/40"))}>
                       {d.severity === 'major' ? (isHi ? 'गंभीर' : 'Major') : (isHi ? 'मध्यम' : 'Moderate')}
                     </span>
                   </div>
-                  <p className={cn("text-[10px] font-medium mt-1", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
+                  <p className={cn("text-[12px] font-medium mt-1", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                     {isHi ? d.remedyHi : d.remedyEn}
                   </p>
                 </div>
@@ -319,7 +319,7 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
           "rounded-2xl p-4 border transition-colors duration-300",
           theme === 'light' ? "bg-white border-amber-500/20" : "bg-stone-950/80 border-stone-800"
         )}>
-          <h5 className="text-[10px] text-stone-600 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
+          <h5 className="text-[12px] text-stone-500 uppercase font-black tracking-wider mb-3 flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-amber-400" />
             {isHi ? 'आज का मुहूर्त' : "Today's Muhurat"}
           </h5>
@@ -333,14 +333,14 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
               : "bg-sky-500/10 border-sky-500/30"
           )}>
             <div>
-              <div className={cn("text-[10px] font-black uppercase tracking-wider", choghadiya.currentSlot.color)}>
+              <div className={cn("text-[12px] font-black uppercase tracking-wider", choghadiya.currentSlot.color)}>
                 {isHi ? choghadiya.currentSlot.nameHi : choghadiya.currentSlot.name}
               </div>
-              <div className={cn("text-[10px] font-bold mt-0.5", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
+              <div className={cn("text-[12px] font-bold mt-0.5", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                 {choghadiya.currentSlot.startTime} - {choghadiya.currentSlot.endTime}
               </div>
             </div>
-            <span className={cn("text-[9px] font-black uppercase px-2 py-1 rounded-full border", choghadiya.currentSlot.color)}>
+            <span className={cn("text-[11px] font-black uppercase px-2 py-1 rounded-full border", choghadiya.currentSlot.color)}>
               {choghadiya.currentSlot.type === 'good' ? (isHi ? 'शुभ' : 'Good') : choghadiya.currentSlot.type === 'avoid' ? (isHi ? 'वर्जित' : 'Avoid') : (isHi ? 'सामान्य' : 'Neutral')}
             </span>
           </div>
@@ -350,10 +350,10 @@ export const VastuEnhancements = memo(({ language, theme, selectedStyle, variant
               "mt-2 p-2.5 rounded-xl border flex items-center justify-between",
               theme === 'light' ? "border-teal-400 bg-teal-50" : "border-emerald-500/30 bg-emerald-500/10"
             )}>
-              <span className={cn("text-[10px] font-black uppercase tracking-wider", theme === 'light' ? "text-teal-700" : "text-emerald-300")}>
+              <span className={cn("text-[12px] font-black uppercase tracking-wider", theme === 'light' ? "text-teal-700" : "text-emerald-300")}>
                 {isHi ? 'अगला शुभ मुहूर्त' : 'Next Good Muhurat'}
               </span>
-              <span className={cn("text-[10px] font-black", theme === 'light' ? "text-teal-700" : "text-emerald-300")}>
+              <span className={cn("text-[12px] font-black", theme === 'light' ? "text-teal-700" : "text-emerald-300")}>
                 {isHi ? choghadiya.nextGoodSlot.nameHi : choghadiya.nextGoodSlot.name} · {choghadiya.nextGoodSlot.startTime}
               </span>
             </div>

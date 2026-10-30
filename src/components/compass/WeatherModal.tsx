@@ -191,7 +191,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
               "flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all relative",
               activeTab === 'weather'
                 ? (theme === 'light' ? "text-stone-950 font-black" : "text-white font-black")
-                : (theme === 'light' ? "text-stone-500 hover:text-stone-800" : "text-stone-400 hover:text-stone-200")
+                : (theme === 'light' ? "text-stone-500 hover:text-stone-800" : "text-stone-300 hover:text-stone-200")
             )}
           >
             <span>{language === 'hi' ? 'मौसम' : 'WEATHER'}</span>
@@ -209,7 +209,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
               "flex-1 py-3 text-xs font-black uppercase tracking-widest transition-all relative",
               activeTab === 'moon'
                 ? (theme === 'light' ? "text-stone-950 font-black" : "text-white font-black")
-                : (theme === 'light' ? "text-stone-500 hover:text-stone-800" : "text-stone-400 hover:text-stone-200")
+                : (theme === 'light' ? "text-stone-500 hover:text-stone-800" : "text-stone-300 hover:text-stone-200")
             )}
           >
             <span>{language === 'hi' ? 'चंद्रमा' : 'MOON'}</span>
@@ -226,7 +226,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
             <>
               {/* Date Header */}
               <div className="text-center flex flex-col items-center">
-                <span className={cn("text-xs font-semibold mt-0.5", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                <span className={cn("text-xs font-semibold mt-0.5", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                   {formattedDate}
                 </span>
               </div>
@@ -240,7 +240,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
                   <span className={cn("text-4xl sm:text-5xl font-black font-sans tracking-tight mt-0.5", theme === 'light' ? "text-stone-950" : "text-white")}>
                     {fmt(current.tempC, '°C')}
                   </span>
-                  <span className={cn("text-xs font-semibold mt-1", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-xs font-semibold mt-1", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     {fmt(current.tempMaxC, '°C')} / {fmt(current.tempMinC, '°C')}
                   </span>
                 </div>
@@ -250,7 +250,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
                   <div className="relative flex items-center justify-center">
                     <Sun className="w-20 h-20 text-amber-500 drop-shadow-[0_0_25px_rgba(251,191,36,0.5)] animate-spin-slow" />
                   </div>
-                  <span className={cn("text-[9px] font-mono mt-2 font-medium", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] font-mono mt-2 font-medium", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     last update: {current.lastUpdated}
                   </span>
                 </div>
@@ -260,7 +260,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
               <div className={cn("grid grid-cols-3 gap-2 pt-3 border-t text-left", theme === 'light' ? "border-stone-200" : "border-white/10")}>
                 {/* 1. Precipitation */}
                 <div className={cn("flex flex-col p-2.5 rounded-xl border", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     PRECIPITATION
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
@@ -271,7 +271,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
 
                 {/* 2. Wind */}
                 <div className={cn("flex flex-col p-2.5 rounded-xl border", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     WIND
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
@@ -282,7 +282,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
 
                 {/* 3. Pressure */}
                 <div className={cn("flex flex-col p-2.5 rounded-xl border", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     PRESSURE
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
@@ -293,7 +293,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
 
                 {/* 4. Humidity */}
                 <div className={cn("flex flex-col p-2.5 rounded-xl border", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     HUMIDITY
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
@@ -304,7 +304,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
 
                 {/* 5. Wind Direction */}
                 <div className={cn("flex flex-col p-2.5 rounded-xl border", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     WIND DIRECTION
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
@@ -315,7 +315,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
 
                 {/* 6. Clouds */}
                 <div className={cn("flex flex-col p-2.5 rounded-xl border", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     CLOUDS
                   </span>
                   <div className="flex items-center gap-1.5 mt-1">
@@ -327,7 +327,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
 
               {/* NEXT HOURS Forecast Carousel matching Screenshot */}
               <div className={cn("pt-3 border-t text-left", theme === 'light' ? "border-stone-200" : "border-white/10")}>
-                <span className={cn("text-[10px] font-black uppercase tracking-wider block mb-2", theme === 'light' ? "text-stone-800" : "text-stone-300")}>
+                <span className={cn("text-[12px] font-black uppercase tracking-wider block mb-2", theme === 'light' ? "text-stone-800" : "text-stone-300")}>
                   NEXT HOURS
                 </span>
                 <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
@@ -336,7 +336,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
                       "flex flex-col items-center justify-center p-2 rounded-xl border text-center min-w-[68px] shrink-0",
                       theme === 'light' ? "bg-white border-stone-200 shadow-sm" : "bg-white/5 border-white/5"
                     )}>
-                      <span className={cn("text-[10px] font-mono font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>{h.time}</span>
+                      <span className={cn("text-[12px] font-mono font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>{h.time}</span>
                       <span className={cn("text-xs font-black font-mono my-1", theme === 'light' ? "text-stone-950" : "text-white")}>{h.tempC}°C</span>
                       <div className="w-6 h-6 flex items-center justify-center">
                         {h.icon === 'sun' ? <Sun className="w-5 h-5 text-amber-500" /> :
@@ -345,11 +345,11 @@ export const WeatherModal = memo<WeatherModalProps>(({
                          h.icon === 'thunder' ? <CloudLightning className="w-5 h-5 text-yellow-500" /> :
                          <Cloud className="w-5 h-5 text-slate-500" />}
                       </div>
-                      <span className={cn("text-[7.5px] font-bold mt-0.5 truncate max-w-[64px]", theme === 'light' ? "text-stone-700" : "text-stone-400")}>{h.condition}</span>
+                      <span className={cn("text-[7.5px] font-bold mt-0.5 truncate max-w-[64px]", theme === 'light' ? "text-stone-700" : "text-stone-300")}>{h.condition}</span>
                     </div>
                   ))}
                   {(!current.hourly || current.hourly.length === 0) && (
-                    <div className={cn("w-full text-center text-[10px] py-2", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                    <div className={cn("w-full text-center text-[12px] py-2", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                       {language === 'hi' ? 'घंटेवार पूर्वानुमान उपलब्ध नहीं' : 'Hourly forecast unavailable'}
                     </div>
                   )}
@@ -377,7 +377,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
                 <p className={cn("text-xs font-mono font-bold mt-1", theme === 'light' ? "text-amber-800" : "text-amber-300")}>
                   {Math.round(moonIllum.fraction * 100)}% {language === 'hi' ? 'प्रकाशित' : 'Illuminated'}
                 </p>
-                <span className={cn("text-[10.5px] mt-1 font-medium", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                <span className={cn("text-[12px] mt-1 font-medium", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                   {language === 'hi' ? `चंद्र चक्र: दिन ${(moonIllum.phase * 29.53).toFixed(1)} / 29.5 दिन` : `Lunar Age: Day ${(moonIllum.phase * 29.53).toFixed(1)} of 29.5`}
                 </span>
               </div>
@@ -385,7 +385,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
               {/* Moon Telemetry Grid */}
               <div className="grid grid-cols-2 gap-2 text-left">
                 <div className={cn("p-3 rounded-xl border flex flex-col", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     {language === 'hi' ? 'चंद्रोदय (Moonrise)' : 'MOONRISE'}
                   </span>
                   <span className={cn("text-xs font-mono font-black mt-1", theme === 'light' ? "text-stone-900" : "text-white")}>
@@ -394,7 +394,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
                 </div>
 
                 <div className={cn("p-3 rounded-xl border flex flex-col", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     {language === 'hi' ? 'चंद्रास्त (Moonset)' : 'MOONSET'}
                   </span>
                   <span className={cn("text-xs font-mono font-black mt-1", theme === 'light' ? "text-stone-900" : "text-white")}>
@@ -403,7 +403,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
                 </div>
 
                 <div className={cn("p-3 rounded-xl border flex flex-col", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     {language === 'hi' ? 'अगली पूर्णिमा' : 'NEXT FULL MOON'}
                   </span>
                   <span className={cn("text-xs font-mono font-black mt-1", theme === 'light' ? "text-amber-700" : "text-amber-300")}>
@@ -412,7 +412,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
                 </div>
 
                 <div className={cn("p-3 rounded-xl border flex flex-col", theme === 'light' ? "bg-white border-stone-200/90 shadow-sm" : "bg-white/5 border-white/10")}>
-                  <span className={cn("text-[9px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                  <span className={cn("text-[11px] uppercase tracking-wider font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                     {language === 'hi' ? 'दूरी' : 'DISTANCE'}
                   </span>
                   <span className={cn("text-xs font-mono font-black mt-1", theme === 'light' ? "text-sky-700" : "text-sky-300")}>
@@ -425,7 +425,7 @@ export const WeatherModal = memo<WeatherModalProps>(({
         </div>
 
         {/* Footer */}
-        <div className={cn("p-3 border-t flex items-center justify-between text-[10px] shrink-0", theme === 'light' ? "border-stone-200 bg-stone-100/70 text-stone-600" : "border-white/10 bg-black/20 text-stone-400")}>
+        <div className={cn("p-3 border-t flex items-center justify-between text-[12px] shrink-0", theme === 'light' ? "border-stone-200 bg-stone-100/70 text-stone-500" : "border-white/10 bg-black/20 text-stone-300")}>
           <span className="flex items-center gap-1 font-medium">
             <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
             <span>{language === 'hi' ? 'सटीक उपग्रह एवं मौसम पूर्वानुमान' : 'Live Precision Satellite Weather'}</span>

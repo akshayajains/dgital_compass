@@ -207,17 +207,17 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
           {/* Top Header Bar */}
           <div className="w-full flex items-center justify-between pb-2 border-b border-current/10">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">
+              <span className="text-[12px] font-black uppercase tracking-[0.2em] opacity-60">
                 {isHi ? 'ऐप गाइड' : 'WELCOME GUIDE'}
               </span>
-              <span className="text-[9px] font-mono px-2 py-0.5 rounded-full border border-current/15 opacity-75">
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded-full border border-current/15 opacity-75">
                 {currentSlideIndex + 1} / {ONBOARDING_SLIDES.length}
               </span>
             </div>
 
             <button
               onClick={handleComplete}
-              className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity flex items-center gap-1"
+              className="px-2.5 py-1 rounded-full text-[12px] font-black uppercase tracking-wider opacity-60 hover:opacity-100 transition-opacity flex items-center gap-1"
             >
               <span>{isHi ? 'छोड़ें' : 'Skip'}</span>
               <X className="w-3 h-3" />
@@ -245,7 +245,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
                   </div>
 
                   <span className={cn(
-                    "px-2.5 py-1 rounded-full text-[9.5px] font-black uppercase tracking-wider border",
+                    "px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border",
                     slide.badgeColor
                   )}>
                     {isHi ? slide.badgeHi : slide.badgeEn}

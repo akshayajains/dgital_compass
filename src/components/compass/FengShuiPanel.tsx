@@ -48,7 +48,7 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
             value={fengshuiDoor}
             onChange={(e) => setFengshuiDoor(Number(e.target.value))}
             className={cn(
-              "text-[10px] uppercase font-black px-2 py-1 rounded outline-none border transition-all duration-300",
+              "text-[12px] uppercase font-black px-2 py-1 rounded outline-none border transition-all duration-300",
               theme === 'light'
                 ? "bg-white border-stone-200 text-stone-700"
                 : "bg-stone-900 border border-stone-800 text-stone-300"
@@ -74,29 +74,29 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
             "p-2 rounded-lg border transition-colors duration-300",
             theme === 'light' ? "bg-white border-blue-500/10" : "bg-stone-900 border-stone-800"
           )}>
-            <span className="text-[10px] text-stone-600 uppercase font-black">{language === 'hi' ? 'धन-सम्पत्ति' : 'Wealth'}</span>
-            <p className="text-[10px] text-blue-500 font-bold">{language === 'hi' ? 'दक्षिण-पूर्व' : 'South-East'}</p>
+            <span className="text-[12px] text-stone-500 uppercase font-black">{language === 'hi' ? 'धन-सम्पत्ति' : 'Wealth'}</span>
+            <p className="text-[12px] text-blue-500 font-bold">{language === 'hi' ? 'दक्षिण-पूर्व' : 'South-East'}</p>
           </div>
           <div className={cn(
             "p-2 rounded-lg border transition-colors duration-300",
             theme === 'light' ? "bg-white border-blue-500/10" : "bg-stone-900 border-stone-800"
           )}>
-            <span className="text-[10px] text-stone-600 uppercase font-black">{language === 'hi' ? 'प्रेम / विवाह' : 'Love'}</span>
-            <p className="text-[10px] text-pink-500 font-bold">{language === 'hi' ? 'दक्षिण-पश्चिम' : 'South-West'}</p>
+            <span className="text-[12px] text-stone-500 uppercase font-black">{language === 'hi' ? 'प्रेम / विवाह' : 'Love'}</span>
+            <p className="text-[12px] text-pink-500 font-bold">{language === 'hi' ? 'दक्षिण-पश्चिम' : 'South-West'}</p>
           </div>
           <div className={cn(
             "p-2 rounded-lg border transition-colors duration-300",
             theme === 'light' ? "bg-white border-blue-500/10" : "bg-stone-900 border-stone-800"
           )}>
-            <span className="text-[10px] text-stone-600 uppercase font-black">{language === 'hi' ? 'कैरियर' : 'Career'}</span>
-            <p className="text-[10px] text-sky-500 font-bold">{language === 'hi' ? 'उत्तर' : 'North'}</p>
+            <span className="text-[12px] text-stone-500 uppercase font-black">{language === 'hi' ? 'कैरियर' : 'Career'}</span>
+            <p className="text-[12px] text-sky-500 font-bold">{language === 'hi' ? 'उत्तर' : 'North'}</p>
           </div>
           <div className={cn(
             "p-2 rounded-lg border transition-colors duration-300",
             theme === 'light' ? "bg-white border-blue-500/10" : "bg-stone-900 border-stone-800"
           )}>
-            <span className="text-[10px] text-stone-600 uppercase font-black">{language === 'hi' ? 'परिवार' : 'Family'}</span>
-            <p className="text-[10px] text-emerald-500 font-bold">{language === 'hi' ? 'पूर्व' : 'East'}</p>
+            <span className="text-[12px] text-stone-500 uppercase font-black">{language === 'hi' ? 'परिवार' : 'Family'}</span>
+            <p className="text-[12px] text-emerald-500 font-bold">{language === 'hi' ? 'पूर्व' : 'East'}</p>
           </div>
         </div>
       </div>
@@ -111,7 +111,7 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
         <h3 className={cn("font-serif font-black mb-1 transition-colors text-sm", theme === 'light' ? "text-teal-800" : "text-emerald-400")}>
           {language === 'hi' ? '🌿 फेंग शूई उपचार सुझाव' : '🌿 Feng Shui Curing Suggestions'}
         </h3>
-        <p className={cn("text-[10px] leading-relaxed mb-3", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+        <p className={cn("text-[12px] leading-relaxed mb-3", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
           {language === 'hi'
             ? 'प्रत्येक बागुआ क्षेत्र के लिए उपचार चुनने के लिए उस पर टैप करें।'
             : 'Tap on any Bagua area below to see personalized curing suggestions.'}
@@ -141,11 +141,11 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
                     <span className={cn("text-xs font-bold", theme === 'light' ? "text-stone-700" : "text-stone-300")}>
                       {lang === 'hi' ? area.lifeAspect.hi : area.lifeAspect.en}
                     </span>
-                    <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-bold", theme === 'light' ? "bg-stone-100 text-stone-500" : "bg-stone-800 text-stone-500")}>
+                    <span className={cn("text-[11px] px-1.5 py-0.5 rounded-full font-bold", theme === 'light' ? "bg-stone-100 text-stone-500" : "bg-stone-800 text-stone-500")}>
                       {lang === 'hi' ? area.elementHi : area.element}
                     </span>
                   </div>
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-stone-600" /> : <ChevronDown className="w-4 h-4 text-stone-600" />}
+                  {isExpanded ? <ChevronUp className="w-4 h-4 text-stone-500" /> : <ChevronDown className="w-4 h-4 text-stone-500" />}
                 </button>
 
                 {isExpanded && (
@@ -153,7 +153,7 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
                     {/* Warnings */}
                     {area.warnings.map((warning, wi) => (
                       <div key={wi} className={cn(
-                        "text-[9px] px-2 py-1.5 rounded-lg mt-2",
+                        "text-[11px] px-2 py-1.5 rounded-lg mt-2",
                         theme === 'light' ? "bg-amber-50 text-amber-700" : "bg-amber-500/10 text-amber-400"
                       )}>
                         ⚠️ {warning}
@@ -174,13 +174,13 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
                             </span>
                           </div>
                           <span className={cn(
-                            "text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase border",
+                            "text-[12px] px-1.5 py-0.5 rounded-full font-bold uppercase border",
                             priorityColors[cure.priority]
                           )}>
                             {cure.priority}
                           </span>
                         </div>
-                        <p className={cn("text-[10px] leading-relaxed", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                        <p className={cn("text-[12px] leading-relaxed", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                           {lang === 'hi' ? cure.description.hi : cure.description.en}
                         </p>
                       </div>
@@ -188,7 +188,7 @@ export const FengShuiPanel = memo(({ language, theme, fengshuiDoor, setFengshuiD
 
                     {/* Enhancements */}
                     <div className={cn(
-                      "text-[9px] px-2 py-1.5 rounded-lg",
+                      "text-[11px] px-2 py-1.5 rounded-lg",
                       theme === 'light' ? "bg-teal-50 text-teal-700" : "bg-emerald-500/10 text-emerald-400"
                     )}>
                       ✨ {language === 'hi' ? 'सुधार:' : 'Enhancements:'} {area.enhancements.join(', ')}

@@ -333,7 +333,7 @@ export const SensorsInspectorModal = memo(({
               <h2 className="text-sm sm:text-base font-black tracking-tight flex items-center gap-1.5">
                 <span>{language === 'hi' ? 'डिवाइस सेंसर परीक्षण' : 'Device Sensors Check'}</span>
               </h2>
-              <p className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+              <p className="text-[12px] font-bold text-emerald-400 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>{sensorsList.length} {language === 'hi' ? 'हार्डवेयर सेंसर सक्रिय' : 'Hardware Sensors Live'}</span>
               </p>
@@ -346,7 +346,7 @@ export const SensorsInspectorModal = memo(({
               onClick={runDiagnostics}
               disabled={isTesting}
               className={cn(
-                "px-2.5 py-1 rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95 border",
+                "px-2.5 py-1 rounded-xl font-black text-[12px] uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95 border",
                 isTesting
                   ? "bg-amber-500/20 text-amber-300 border-amber-500/30 animate-pulse cursor-wait"
                   : testComplete
@@ -379,7 +379,7 @@ export const SensorsInspectorModal = memo(({
               }}
               className={cn(
                 "w-7 h-7 rounded-full flex items-center justify-center transition-colors active:scale-90 border",
-                theme === 'light' ? "bg-stone-100 border-stone-200 text-stone-600 hover:bg-stone-200" : "bg-white/5 border-white/10 text-stone-300 hover:bg-white/10"
+                theme === 'light' ? "bg-stone-100 border-stone-200 text-stone-500 hover:bg-stone-200" : "bg-white/5 border-white/10 text-stone-300 hover:bg-white/10"
               )}
             >
               <X className="w-3.5 h-3.5" />
@@ -404,7 +404,7 @@ export const SensorsInspectorModal = memo(({
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span>{language === 'hi' ? 'सभी 10 सेंसर पूर्णतः कैलिब्रेटेड एवं स्वस्थ हैं' : 'All 10 Sensors 100% Calibrated & Healthy'}</span>
             </div>
-            <span className="font-mono font-black text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-md text-emerald-200 border border-emerald-500/30">
+            <span className="font-mono font-black text-[12px] bg-emerald-500/20 px-2 py-0.5 rounded-md text-emerald-200 border border-emerald-500/30">
               10/10 PASS
             </span>
           </div>
@@ -445,7 +445,7 @@ export const SensorsInspectorModal = memo(({
                         ? "bg-amber-500/20 text-amber-300 border-amber-400/50 animate-pulse"
                         : isTestPassed
                         ? (theme === 'light' ? "bg-teal-100 text-teal-600 border-teal-400" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30")
-                        : (theme === 'light' ? "bg-stone-100 text-stone-700 border-stone-200" : "bg-white/5 text-stone-400 border-white/10")
+                        : (theme === 'light' ? "bg-stone-100 text-stone-700 border-stone-200" : "bg-white/5 text-stone-300 border-white/10")
                     )}>
                       <Icon className="w-3.5 h-3.5" />
                     </div>
@@ -454,7 +454,7 @@ export const SensorsInspectorModal = memo(({
                       <span className="text-[11px] font-bold tracking-tight truncate leading-tight">
                         {sensor.name}
                       </span>
-                      <span className={cn("text-[9px] font-mono font-bold truncate leading-tight", theme === 'light' ? "text-teal-600/90" : "text-emerald-400/90")}>
+                      <span className={cn("text-[11px] font-mono font-bold truncate leading-tight", theme === 'light' ? "text-teal-600/90" : "text-emerald-400/90")}>
                         {liveValue}
                       </span>
                     </div>
@@ -463,7 +463,7 @@ export const SensorsInspectorModal = memo(({
                   {/* Compact Status Pill */}
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span className={cn(
-                      "px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-tight border",
+                      "px-2 py-0.5 rounded-full text-[11px] font-mono font-bold tracking-tight border",
                       isBeingTested
                         ? "bg-amber-500/20 text-amber-300 border-amber-400/40 animate-pulse"
                         : isTestPassed
@@ -472,7 +472,7 @@ export const SensorsInspectorModal = memo(({
                     )}>
                       {isBeingTested ? 'TESTING...' : isTestPassed ? '✓ PASS' : sensor.getTestStatus()}
                     </span>
-                    {isExpanded ? <ChevronDown className="w-3 h-3 text-stone-600" /> : <ChevronRight className="w-3 h-3 text-stone-600" />}
+                    {isExpanded ? <ChevronDown className="w-3 h-3 text-stone-500" /> : <ChevronRight className="w-3 h-3 text-stone-500" />}
                   </div>
                 </div>
 
@@ -482,12 +482,12 @@ export const SensorsInspectorModal = memo(({
                     "px-3 pb-2.5 pt-1.5 text-left border-t space-y-1.5 text-xs",
                     theme === 'light' ? "border-stone-200 bg-stone-100/50" : "border-white/5 bg-black/30"
                   )}>
-                    <div className="flex items-center justify-between text-[10px] text-stone-600">
+                    <div className="flex items-center justify-between text-[12px] text-stone-500">
                       <span>{sensor.description}</span>
-                      <span className="font-mono text-stone-600 text-[9px] truncate max-w-[12rem]">{sensor.vendor}</span>
+                      <span className="font-mono text-stone-500 text-[11px] truncate max-w-[12rem]">{sensor.vendor}</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-1.5 pt-0.5 font-mono text-[10px]">
+                    <div className="grid grid-cols-2 gap-1.5 pt-0.5 font-mono text-[12px]">
                       {Object.entries(telemetry).map(([key, value]) => (
                         <div 
                           key={key} 
@@ -496,7 +496,7 @@ export const SensorsInspectorModal = memo(({
                             theme === 'light' ? "bg-white border-stone-200" : "bg-stone-900/90 border-white/10"
                           )}
                         >
-                          <span className="text-[8px] font-sans font-black uppercase text-stone-600">{key}</span>
+                          <span className="text-[12px] font-sans font-black uppercase text-stone-500">{key}</span>
                           <span className={cn("font-bold", theme === 'light' ? "text-teal-700" : "text-emerald-400")}>{value}</span>
                         </div>
                       ))}
@@ -509,7 +509,7 @@ export const SensorsInspectorModal = memo(({
         </div>
 
         {/* Compact Footer */}
-        <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-stone-600 shrink-0">
+        <div className="pt-2 border-t border-white/10 flex items-center justify-between text-[12px] text-stone-500 shrink-0">
           <span className="flex items-center gap-1 font-medium">
             <CheckCircle2 className={cn("w-3 h-3 shrink-0", theme === 'light' ? "text-teal-600" : "text-emerald-400")} />
             <span>{language === 'hi' ? 'सेंसर सटीकता: उच्च (High Precision)' : 'Sensor Precision: High (Fused)'}</span>

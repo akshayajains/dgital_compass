@@ -153,7 +153,7 @@ export const DevtaPadaModal: React.FC<DevtaPadaModalProps> = ({
               "p-3 rounded-2xl border",
               isDark ? "bg-stone-900/60 border-white/10" : "bg-white/80 border-stone-200"
             )}>
-              <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
+              <span className="text-[12px] font-bold text-stone-500 uppercase tracking-wider block">
                 {isHi ? 'दिशा क्षेत्र' : 'Cardinal Zone'}
               </span>
               <span className="text-xs font-black text-amber-400 mt-1 block">
@@ -166,7 +166,7 @@ export const DevtaPadaModal: React.FC<DevtaPadaModalProps> = ({
               "p-3 rounded-2xl border",
               isDark ? "bg-stone-900/60 border-white/10" : "bg-white/80 border-stone-200"
             )}>
-              <span className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
+              <span className="text-[12px] font-bold text-stone-500 uppercase tracking-wider block">
                 {isHi ? 'पंचतत्व' : 'Element'}
               </span>
               <span className="text-xs font-black text-cyan-400 mt-1 block">
@@ -243,7 +243,7 @@ export const DevtaPadaModal: React.FC<DevtaPadaModalProps> = ({
             <span>{prevPada.nameHi} ({prevPada.code})</span>
           </button>
 
-          <span className="text-[11px] font-mono font-bold text-stone-600">
+          <span className="text-[11px] font-mono font-bold text-stone-500">
             {currentIndex + 1} / 32
           </span>
 

@@ -178,7 +178,7 @@ export const VastuPanel = memo(({
                   </button>
                   <button
                     onClick={() => { onHaptic(); onDeleteRoom(r.id); }}
-                    className="text-stone-600 hover:text-red-500 transition-colors"
+                    className="text-stone-500 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -203,7 +203,7 @@ export const VastuPanel = memo(({
                     onHaptic(ImpactStyle.Light);
                   }}
                   className={cn(
-                    "px-2 py-1 rounded-lg text-[10.5px] font-bold border transition-transform active:scale-95 shadow-sm",
+                    "px-2 py-1 rounded-lg text-[12px] font-bold border transition-transform active:scale-95 shadow-sm",
                     palette.isLight ? "bg-stone-100 text-stone-800 border-stone-300 hover:bg-stone-200" : "bg-white/10 text-stone-200 border-white/20"
                   )}
                   title={language === 'hi' ? 'लाइव कंपास डिग्री का उपयोग करें' : 'Use live compass heading'}
@@ -363,7 +363,7 @@ export const VastuPanel = memo(({
                   <button
                     onClick={() => { setHouse9Grid(() => ({})); onHaptic(ImpactStyle.Light); }}
                     className={cn(
-                      "px-2 py-0.5 rounded-full text-[10.5px] font-bold border transition-transform active:scale-95 shadow-sm flex items-center gap-0.5",
+                      "px-2 py-0.5 rounded-full text-[12px] font-bold border transition-transform active:scale-95 shadow-sm flex items-center gap-0.5",
                       palette.isLight ? "bg-stone-100 text-stone-700 border-stone-300 hover:bg-stone-200" : "bg-white/10 text-stone-200 border-white/15"
                     )}
                     title={language === 'hi' ? 'ग्रिड साफ़ करें' : 'Reset Grid'}
@@ -394,7 +394,7 @@ export const VastuPanel = memo(({
                   "p-1.5 rounded-lg border flex flex-col justify-between",
                   palette.isLight ? "border-stone-300 bg-white" : "border-white/10 bg-stone-900/60"
                 )}>
-                  <span className={cn("text-[9.5px] font-black uppercase", palette.pillLabelText)}>{sec.label}</span>
+                  <span className={cn("text-[11px] font-black uppercase", palette.pillLabelText)}>{sec.label}</span>
                   <select
                     value={house9Grid[sec.key] || ''}
                     onChange={(e) => setHouse9Grid(prev => ({ ...prev, [sec.key]: e.target.value }))}

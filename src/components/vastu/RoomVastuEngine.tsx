@@ -291,13 +291,13 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <span className={cn(
-                "text-[10px] font-black uppercase tracking-[0.2em]",
+                "text-[12px] font-black uppercase tracking-[0.2em]",
                 palette.isLight ? "text-stone-700 font-extrabold" : "text-stone-300"
               )}>
                 {isHi ? 'कमरा वास्तु परीक्षक' : 'ROOM VASTU ENGINE'}
               </span>
               <span className={cn(
-                "px-2 py-0.5 rounded-full text-[9px] font-black font-mono uppercase tracking-wider border",
+                "px-2 py-0.5 rounded-full text-[11px] font-black font-mono uppercase tracking-wider border",
                 verdictData.verdict === 'auspicious'
                   ? (palette.isLight ? "bg-teal-100 text-teal-800 border-teal-400" : "bg-emerald-500/20 text-emerald-300 border-emerald-400/50")
                   : verdictData.verdict === 'acceptable'
@@ -318,14 +318,14 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
           "px-2.5 py-1 rounded-xl border flex flex-col items-end text-right",
           palette.isLight ? "bg-white/80 border-stone-300 text-stone-900" : "bg-black/40 border-white/10 text-white"
         )}>
-          <div className="flex items-center gap-1 text-[9px] font-mono font-bold opacity-75">
+          <div className="flex items-center gap-1 text-[11px] font-mono font-bold opacity-75">
             <span>{currentPada.code}</span>
             <span>•</span>
             <span>{displayDeg}°</span>
           </div>
           <div className="text-xs font-black flex items-center gap-1 text-amber-400">
             <span>{currentZone.code}</span>
-            <span className="text-[10px] font-medium opacity-85">({isHi ? currentZone.nameHi.split(' ')[0] : currentZone.nameEn.split(' ')[0]})</span>
+            <span className="text-[12px] font-medium opacity-85">({isHi ? currentZone.nameHi.split(' ')[0] : currentZone.nameEn.split(' ')[0]})</span>
           </div>
         </div>
       </div>
@@ -342,7 +342,7 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
                 onHaptic();
               }}
               className={cn(
-                "px-2.5 py-1.5 rounded-full text-[10px] font-black tracking-wide whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1 active:scale-95 shadow-sm",
+                "px-2.5 py-1.5 rounded-full text-[12px] font-black tracking-wide whitespace-nowrap transition-all duration-200 shrink-0 border flex items-center gap-1 active:scale-95 shadow-sm",
                 isSelected
                   ? `${palette.pillBg} ${palette.pillBorder} ${palette.headingText} font-extrabold scale-[1.03] shadow-md`
                   : (palette.isLight
@@ -386,7 +386,7 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
 
           {/* Element Pill */}
           <div className={cn(
-            "px-2 py-0.5 rounded-full text-[9px] font-bold border flex items-center gap-1 shrink-0",
+            "px-2 py-0.5 rounded-full text-[11px] font-bold border flex items-center gap-1 shrink-0",
             palette.pillBg,
             palette.pillBorder,
             palette.pillUnitText
@@ -443,7 +443,7 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
                       : (isHi ? `दाएं ${Math.abs(verdictData.minDeviation)}° घूमें ↷` : `Turn ${Math.abs(verdictData.minDeviation)}° Right ↷`)}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold opacity-80">
+                <span className="text-[12px] font-bold opacity-80">
                   {isHi ? `सर्वोत्तम: ${verdictData.nearestTargetZone.code} (${Math.round(verdictData.nearestTargetZone.centerDeg)}°)` : `Ideal: ${verdictData.nearestTargetZone.code} (${Math.round(verdictData.nearestTargetZone.centerDeg)}°)`}
                 </span>
               </div>
@@ -453,12 +453,12 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
 
         {/* Remedies Header Row */}
         <div className="flex items-center justify-between pt-0.5">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider", palette.headingText)}>
+          <div className={cn("flex items-center gap-1.5 text-[12px] font-black uppercase tracking-wider", palette.headingText)}>
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
             <span>{isHi ? 'बिना तोड़फोड़ के अचूक उपाय' : 'ZERO-DEMOLITION PRACTICAL REMEDIES'}</span>
           </div>
           <span className={cn(
-            "text-[9px] font-mono px-2 py-0.5 rounded-full border shrink-0",
+            "text-[11px] font-mono px-2 py-0.5 rounded-full border shrink-0",
             palette.pillBg,
             palette.pillBorder,
             palette.pillUnitText
@@ -479,7 +479,7 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
 
         {/* Best Facing & Color Tip Row */}
         <div className={cn(
-          "w-full pt-2 border-t flex flex-col gap-1 text-[10.5px]",
+          "w-full pt-2 border-t flex flex-col gap-1 text-[12px]",
           palette.isLight ? "border-stone-900/10" : "border-white/10"
         )}>
           <div>
@@ -495,7 +495,7 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
 
       {/* 4. Action Row: Save Audit Record & Ideal Zones Reference */}
       <div className="w-full flex items-center justify-between gap-2 pt-0.5">
-        <div className={cn("flex items-center gap-1 text-[10px] font-bold", palette.isLight ? "text-stone-800" : "text-stone-200")}>
+        <div className={cn("flex items-center gap-1 text-[12px] font-bold", palette.isLight ? "text-stone-800" : "text-stone-200")}>
           <span>{isHi ? 'आदर्श दिशाएं:' : 'Ideal Zones:'}</span>
           <span className={cn("font-mono font-black", palette.pillUnitText)}>{activeRoom.idealZones.join(', ')}</span>
         </div>
@@ -503,7 +503,7 @@ export const RoomVastuEngine: React.FC<RoomVastuEngineProps> = ({
         <button
           onClick={handleSaveAudit}
           className={cn(
-            "px-3.5 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md",
+            "px-3.5 py-1.5 rounded-full border text-[12px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all active:scale-95 shadow-md",
             savedSuccess
               ? "bg-emerald-500 text-stone-950 border-emerald-300"
               : `${palette.pillBg} ${palette.pillBorder} ${palette.headingText} hover:brightness-110`

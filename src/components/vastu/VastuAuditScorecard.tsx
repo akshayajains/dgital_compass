@@ -278,7 +278,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
       return {
         titleEn: 'Audit Pending — Tap rooms below to configure',
         titleHi: 'ऑडिट प्रतीक्षारत — नीचे कमरों की दिशा सेट करें',
-        color: 'text-stone-400',
+        color: 'text-stone-300',
         bg: 'bg-stone-500/10 border-stone-500/30',
         barColor: 'from-stone-500 to-stone-400'
       };
@@ -380,7 +380,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
               <span>{isHi ? 'वास्तु लाइव ऑडिट स्कोरकार्ड' : 'Vastu Live Audit Scorecard'}</span>
               <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
             </h3>
-            <p className={cn("text-[10px] font-semibold mt-0.5", palette.isLight ? "text-stone-700" : "text-stone-300")}>
+            <p className={cn("text-[12px] font-semibold mt-0.5", palette.isLight ? "text-stone-700" : "text-stone-300")}>
               {isHi ? 'गृह व कार्यालय कक्ष संरेखण और वैदिक दोष निवारण' : 'Vedic home alignment & instant remedial guide'}
             </p>
           </div>
@@ -424,7 +424,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
               <span className="text-xl font-black font-mono leading-none tracking-tight">
                 {totalScore !== null ? `${totalScore}%` : '—'}
               </span>
-              <span className={cn("text-[7.5px] font-bold uppercase tracking-wider mt-0.5", palette.isLight ? "text-stone-600" : "text-stone-400")}>{isHi ? 'स्कोर' : 'SCORE'}</span>
+              <span className={cn("text-[7.5px] font-bold uppercase tracking-wider mt-0.5", palette.isLight ? "text-stone-500" : "text-stone-300")}>{isHi ? 'स्कोर' : 'SCORE'}</span>
             </div>
           </div>
 
@@ -438,7 +438,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
               </span>
               <span className={cn(
                 "px-2 py-0.5 rounded-full border",
-                doshaCount > 0 ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-stone-500/10 text-stone-600 border-stone-500/20"
+                doshaCount > 0 ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "bg-stone-500/10 text-stone-500 border-stone-500/20"
               )}>
                 ⚠ {doshaCount} {isHi ? 'दोष' : 'Dosha'}
               </span>
@@ -473,7 +473,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
         <button
           onClick={() => setShowDoshaOnly(!showDoshaOnly)}
           className={cn(
-            "text-[10px] font-black px-2.5 py-1 rounded-full border transition-all active:scale-95",
+            "text-[12px] font-black px-2.5 py-1 rounded-full border transition-all active:scale-95",
             showDoshaOnly
               ? "bg-rose-500 text-white border-rose-600 shadow-sm"
               : `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText}`
@@ -520,8 +520,8 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                       {isHi ? room.nameHi : room.nameEn}
                     </span>
                     <span className={cn(
-                      "text-[10px] font-bold mt-0.5 flex items-center gap-1",
-                      !room.selectedDir ? (palette.isLight ? "text-stone-700" : "text-stone-400") : isAuspicious ? (palette.isLight ? "text-emerald-700" : "text-emerald-400") : isDosha ? "text-rose-400" : palette.pillUnitText
+                      "text-[12px] font-bold mt-0.5 flex items-center gap-1",
+                      !room.selectedDir ? (palette.isLight ? "text-stone-700" : "text-stone-300") : isAuspicious ? (palette.isLight ? "text-emerald-700" : "text-emerald-400") : isDosha ? "text-rose-400" : palette.pillUnitText
                     )}>
                       {!room.selectedDir
                         ? (isHi ? '○ दिशा सेट नहीं है (टैप करें)' : '○ Direction not set (tap)')
@@ -536,7 +536,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                   <span className={cn(
                     "px-2.5 py-1 rounded-lg font-black text-xs font-mono border tracking-tight",
                     !room.selectedDir
-                      ? (palette.isLight ? "bg-stone-100 text-stone-600 border-stone-300" : "bg-white/5 text-stone-400 border-white/10")
+                      ? (palette.isLight ? "bg-stone-100 text-stone-500 border-stone-300" : "bg-white/5 text-stone-300 border-white/10")
                       : isAuspicious
                       ? `${palette.pillBg} ${palette.pillBorder} ${palette.pillUnitText} shadow-sm`
                       : isDosha
@@ -547,9 +547,9 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                   </span>
 
                   {isExpanded ? (
-                    <ChevronUp className={cn("w-4 h-4", palette.isLight ? "text-stone-600" : "text-stone-400")} />
+                    <ChevronUp className={cn("w-4 h-4", palette.isLight ? "text-stone-500" : "text-stone-300")} />
                   ) : (
-                    <ChevronDown className={cn("w-4 h-4", palette.isLight ? "text-stone-600" : "text-stone-400")} />
+                    <ChevronDown className={cn("w-4 h-4", palette.isLight ? "text-stone-500" : "text-stone-300")} />
                   )}
                 </div>
               </div>
@@ -563,7 +563,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                   {/* Direction Picker Buttons */}
                   <div className="mt-2.5">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className={cn("text-[10px] font-bold uppercase tracking-wider", palette.isLight ? "text-stone-600" : "text-stone-400")}>
+                      <span className={cn("text-[12px] font-bold uppercase tracking-wider", palette.isLight ? "text-stone-500" : "text-stone-300")}>
                         {isHi ? 'दिशा चुनें:' : 'Select Direction:'}
                       </span>
                       {currentHeading !== null && (
@@ -572,7 +572,7 @@ export const VastuAuditScorecard: React.FC<VastuAuditScorecardProps> = ({
                             e.stopPropagation();
                             handleTagWithCurrentHeading(room.id);
                           }}
-                          className="flex items-center gap-1 text-[9px] font-black text-amber-500 hover:text-amber-400"
+                          className="flex items-center gap-1 text-[11px] font-black text-amber-500 hover:text-amber-400"
                         >
                           <Compass className="w-3 h-3" />
                           <span>{isHi ? 'वर्तमान दिशा टैग करें' : 'Tag Live Compass Direction'}</span>

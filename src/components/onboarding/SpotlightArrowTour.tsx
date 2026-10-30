@@ -215,7 +215,7 @@ export const SpotlightArrowTour: React.FC<SpotlightArrowTourProps> = ({
               <div className="flex items-center gap-1.5">
                 <span className="text-base">{step.icon}</span>
                 <span 
-                  className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border"
+                  className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border"
                   style={{ color: step.accentColor, borderColor: `${step.accentColor}60`, backgroundColor: `${step.accentColor}15` }}
                 >
                   {isHi ? `चरण ${currentStepIndex + 1} / ${TOUR_STEPS.length}` : `STEP ${currentStepIndex + 1} OF ${TOUR_STEPS.length}`}
@@ -224,7 +224,7 @@ export const SpotlightArrowTour: React.FC<SpotlightArrowTourProps> = ({
 
               <button
                 onClick={handleComplete}
-                className="text-[10px] font-bold opacity-60 hover:opacity-100 uppercase tracking-wider flex items-center gap-0.5"
+                className="text-[12px] font-bold opacity-60 hover:opacity-100 uppercase tracking-wider flex items-center gap-0.5"
               >
                 <span>{isHi ? 'समझ गए (Skip)' : 'Skip'}</span>
                 <X className="w-3 h-3" />
@@ -261,7 +261,7 @@ export const SpotlightArrowTour: React.FC<SpotlightArrowTourProps> = ({
                 {currentStepIndex > 0 && (
                   <button
                     onClick={handleBack}
-                    className="px-2.5 py-1 rounded-xl text-[10px] font-bold border border-current/15 opacity-75 hover:opacity-100"
+                    className="px-2.5 py-1 rounded-xl text-[12px] font-bold border border-current/15 opacity-75 hover:opacity-100"
                   >
                     {isHi ? 'पीछे' : 'Back'}
                   </button>

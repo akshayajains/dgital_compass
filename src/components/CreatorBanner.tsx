@@ -139,7 +139,7 @@ export const CreatorBanner: React.FC<Props> = ({ className }) => {
                 </div>
 
                 <span className={cn(
-                  "px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase border shrink-0 transition-all duration-500",
+                  "px-2 py-0.5 rounded-full text-[11px] font-black tracking-wider uppercase border shrink-0 transition-all duration-500",
                   current.badgeBg
                 )}>
                   {current.badge}
@@ -148,7 +148,7 @@ export const CreatorBanner: React.FC<Props> = ({ className }) => {
 
               {/* Subtitle / Description */}
               <p className={cn(
-                "text-[10.5px] sm:text-[11px] leading-tight font-medium tracking-wide mb-1.5 truncate",
+                "text-[12px] sm:text-[11px] leading-tight font-medium tracking-wide mb-1.5 truncate",
                 isLight ? "text-stone-800" : "text-stone-300"
               )}>
                 {current.subtitle}
@@ -160,7 +160,7 @@ export const CreatorBanner: React.FC<Props> = ({ className }) => {
                   <span
                     key={fIdx}
                     className={cn(
-                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] sm:text-[9.5px] font-bold tracking-tight border",
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] sm:text-[11px] font-bold tracking-tight border",
                       isLight 
                         ? "bg-stone-100 text-stone-900 border-stone-300" 
                         : "bg-white/[0.08] text-stone-200 border-white/15"
@@ -178,8 +178,8 @@ export const CreatorBanner: React.FC<Props> = ({ className }) => {
         {/* Dots + Tap Hint footer */}
         <div className="relative flex items-center justify-between mt-2 pt-1 border-t border-stone-200 dark:border-white/5">
           <span className={cn(
-            "text-[9.5px] font-bold tracking-wide flex items-center gap-1",
-            isLight ? "text-stone-700" : "text-stone-400"
+            "text-[11px] font-bold tracking-wide flex items-center gap-1",
+            isLight ? "text-stone-700" : "text-stone-300"
           )}>
             <Heart className="w-2.5 h-2.5 text-rose-500 fill-rose-500" />
             <span>{language === 'hi' ? 'सटीक व विश्वसनीय' : '100% Ad-Free & Accurate'}</span>

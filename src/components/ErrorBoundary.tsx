@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           <h3 className="text-lg font-bold text-stone-700 dark:text-stone-300 mb-2">
             Something went wrong
           </h3>
-          <p className="text-sm text-stone-600 dark:text-stone-600 mb-4 max-w-xs">
+          <p className="text-sm text-stone-500 dark:text-stone-500 mb-4 max-w-xs">
             This feature encountered an error and couldn't load properly.
           </p>
           <button

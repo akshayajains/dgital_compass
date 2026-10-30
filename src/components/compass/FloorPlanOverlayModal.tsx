@@ -95,7 +95,7 @@ export const FloorPlanOverlayModal = ({
                 <h3 className={cn("font-serif font-black text-sm", theme === 'light' ? "text-amber-950" : "text-white")}>
                   {language === 'hi' ? 'वास्तु ब्लूप्रिंट संरेखण' : 'Floor Plan Vastu Calibrator'}
                 </h3>
-                <p className="text-[10px] text-stone-600">
+                <p className="text-[12px] text-stone-500">
                   {language === 'hi' ? 'नक्शे पर 9x9 वास्तु मंडल ग्रिड बिछाएं' : 'Overlay 9x9 Vastu Purusha Mandala Grid'}
                 </p>
               </div>
@@ -103,7 +103,7 @@ export const FloorPlanOverlayModal = ({
 
             <button
               onClick={onClose}
-              className={cn("p-2 rounded-full active:scale-90 transition-transform", theme === 'light' ? "text-stone-600 hover:bg-stone-200 hover:text-stone-900" : "text-stone-400 hover:bg-white/10 hover:text-white")}
+              className={cn("p-2 rounded-full active:scale-90 transition-transform", theme === 'light' ? "text-stone-500 hover:bg-stone-200 hover:text-stone-900" : "text-stone-300 hover:bg-white/10 hover:text-white")}
             >
               <X className="w-5 h-5" />
             </button>
@@ -157,7 +157,7 @@ export const FloorPlanOverlayModal = ({
                             style={{ transform: `rotate(${-effectiveRotation}deg)` }}
                           >
                             <span className="text-[11px] font-black text-amber-300 drop-shadow">{item.code}</span>
-                            <span className="text-[8px] font-bold text-white/90 leading-tight">{item.label}</span>
+                            <span className="text-[12px] font-bold text-white/90 leading-tight">{item.label}</span>
                           </div>
                         </div>
                       ))}
@@ -166,10 +166,10 @@ export const FloorPlanOverlayModal = ({
                     // 16-Radial Zone Wheel
                     <div className="w-full h-full rounded-full border-2 border-amber-400 relative flex items-center justify-center">
                       <div className="absolute inset-0 rounded-full border border-dashed border-amber-300/50" />
-                      <div className="absolute top-2 font-black text-[10px] text-emerald-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>TRUE NORTH (0°)</div>
-                      <div className="absolute bottom-2 font-black text-[10px] text-red-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>SOUTH (180°)</div>
-                      <div className="absolute right-2 font-black text-[10px] text-orange-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>EAST (90°)</div>
-                      <div className="absolute left-2 font-black text-[10px] text-stone-300" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>WEST (270°)</div>
+                      <div className="absolute top-2 font-black text-[12px] text-emerald-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>TRUE NORTH (0°)</div>
+                      <div className="absolute bottom-2 font-black text-[12px] text-red-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>SOUTH (180°)</div>
+                      <div className="absolute right-2 font-black text-[12px] text-orange-400" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>EAST (90°)</div>
+                      <div className="absolute left-2 font-black text-[12px] text-stone-300" style={{ transform: `rotate(${-effectiveRotation}deg)` }}>WEST (270°)</div>
                     </div>
                   )}
 
@@ -186,7 +186,7 @@ export const FloorPlanOverlayModal = ({
                 <h4 className={cn("text-sm font-bold mb-1", theme === 'light' ? "text-stone-900" : "text-white")}>
                   {language === 'hi' ? 'घर का नक्शा चुनें' : 'Upload House Blueprint'}
                 </h4>
-                <p className={cn("text-xs mb-4", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                <p className={cn("text-xs mb-4", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                   {language === 'hi' ? 'अपनी गैलरी या फाइल से 2D फ्लोर प्लान की फोटो अपलोड करें।' : 'Select architectural 2D floor plan image from your gallery.'}
                 </p>
                 <button
@@ -212,7 +212,7 @@ export const FloorPlanOverlayModal = ({
             <div className={cn("p-4 border-t space-y-3", theme === 'light' ? "bg-stone-100 border-stone-200" : "bg-stone-900 border-white/10")}>
               {/* Rotation Slider */}
               <div className="flex items-center gap-3">
-                <span className={cn("text-[10px] font-black uppercase tracking-wider w-16", theme === 'light' ? "text-stone-600" : "text-stone-400")}>
+                <span className={cn("text-[12px] font-black uppercase tracking-wider w-16", theme === 'light' ? "text-stone-500" : "text-stone-300")}>
                   {language === 'hi' ? 'घूर्णन' : 'Rotate'}: {Math.round(effectiveRotation) % 360}°
                 </span>
                 <input
@@ -229,7 +229,7 @@ export const FloorPlanOverlayModal = ({
                 <button
                   onClick={autoAlignToCompass}
                   className={cn(
-                    "px-2.5 py-1 rounded-lg border text-[10px] font-black uppercase active:scale-90 flex items-center gap-1 transition-all",
+                    "px-2.5 py-1 rounded-lg border text-[12px] font-black uppercase active:scale-90 flex items-center gap-1 transition-all",
                     followCompass
                       ? "bg-amber-500 text-stone-950 border-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.5)]"
                       : "bg-amber-500/20 text-amber-400 border-amber-500/30"
@@ -243,7 +243,7 @@ export const FloorPlanOverlayModal = ({
               {/* Scale & Grid Type Toggle */}
               <div className="flex items-center justify-between gap-3 pt-1">
                 <div className="flex items-center gap-2">
-                  <span className={cn("text-[10px] font-bold", theme === 'light' ? "text-stone-600" : "text-stone-400")}>Scale:</span>
+                  <span className={cn("text-[12px] font-bold", theme === 'light' ? "text-stone-500" : "text-stone-300")}>Scale:</span>
                   <input
                     type="range"
                     min="0.5"
@@ -259,8 +259,8 @@ export const FloorPlanOverlayModal = ({
                   <button
                     onClick={() => setGridType('9grid')}
                     className={cn(
-                      "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all",
-                      gridType === '9grid' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-400 hover:text-white")
+                      "px-2.5 py-1 rounded-lg text-[12px] font-black transition-all",
+                      gridType === '9grid' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-300 hover:text-white")
                     )}
                   >
                     9-Grid
@@ -268,8 +268,8 @@ export const FloorPlanOverlayModal = ({
                   <button
                     onClick={() => setGridType('16radial')}
                     className={cn(
-                      "px-2.5 py-1 rounded-lg text-[10px] font-black transition-all",
-                      gridType === '16radial' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-400 hover:text-white")
+                      "px-2.5 py-1 rounded-lg text-[12px] font-black transition-all",
+                      gridType === '16radial' ? "bg-amber-500 text-stone-950" : (theme === 'light' ? "text-stone-500 hover:text-stone-900" : "text-stone-300 hover:text-white")
                     )}
                   >
                     16-Radial
@@ -278,7 +278,7 @@ export const FloorPlanOverlayModal = ({
 
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className={cn("p-1.5 rounded-lg active:scale-90", theme === 'light' ? "bg-stone-300 text-stone-600 hover:text-stone-900" : "bg-stone-800 text-stone-300 hover:text-white")}
+                  className={cn("p-1.5 rounded-lg active:scale-90", theme === 'light' ? "bg-stone-300 text-stone-500 hover:text-stone-900" : "bg-stone-800 text-stone-300 hover:text-white")}
                   title="Change Image"
                 >
                   <Upload className="w-4 h-4" />
