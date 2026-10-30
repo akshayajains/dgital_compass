@@ -2020,7 +2020,7 @@ export const CompassView = () => {
                 <span className="opacity-40 shrink-0 text-xs">•</span>
                 <span className="text-[11px] sm:text-xs font-mono font-bold opacity-90 truncate">
                   {location
-                    ? `N ${toDMS(location.latitude)}  E ${toDMS(location.longitude)} ±15m`
+                    ? (() => { const acc = location.accuracy != null ? Math.round(location.accuracy) : null; return `N ${toDMS(location.latitude)}  E ${toDMS(location.longitude)}${acc != null ? ` ±${acc}m` : ''}`; })()
                     : locationLoading
                       ? (language === 'hi' ? 'खोज रहे हैं…' : 'Locating…')
                       : locationError === 'ip'
